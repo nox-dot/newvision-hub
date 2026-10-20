@@ -449,17 +449,17 @@ function Icon({name,size=18,className=''}){
 const AppCtx = createContext(null);
 
 function AppProvider({children}){
-  const[decisions,setDecisions]=useLocalStorage('nv_decisions',[]);
-  const[events,setEvents]=useLocalStorage('nv_events',[]);
-  const[members,setMembers]=useLocalStorage('nv_members',[]);
-  const[quickChecklist,setQuickChecklist]=useLocalStorage('nv_checklist',[]);
-  const[quickLinks,setQuickLinks]=useLocalStorage('nv_qlinks',[]);
-  const[notifications,setNotifications]=useLocalStorage('nv_notifications',[]);
-  const[resources,setResources]=useLocalStorage('nv_resources',[]);
-  const[inventory,setInventory]=useLocalStorage('nv_inventory',[]);
-  const[expenses,setExpenses]=useLocalStorage('nv_expenses',[]);
-  const[sessions,setSessions]=useLocalStorage('nv_sessions',[]);
-  const[assignTasks,setAssignTasks]=useLocalStorage('nv_atasks',[]);
+  const[decisions,setDecisions]=useState([]);
+  const[events,setEvents]=useState([]);
+  const[members,setMembers]=useState([]);
+  const[quickChecklist,setQuickChecklist]=useState([]);
+  const[quickLinks,setQuickLinks]=useState([]);
+  const[notifications,setNotifications]=useState([]);
+  const[resources,setResources]=useState([]);
+  const[inventory,setInventory]=useState([]);
+  const[expenses,setExpenses]=useState([]);
+  const[sessions,setSessions]=useState([]);
+  const[assignTasks,setAssignTasks]=useState([]);
   const[darkMode,setDarkMode]=useLocalStorage('nv_dark',false);
   const[soundEnabled,setSoundEnabled]=useLocalStorage('nv_sound',true);
   const[toasts,setToasts]=useState([]);
@@ -471,10 +471,6 @@ function AppProvider({children}){
   const [lastSynced, setLastSynced] = useState(null);
   const [pushPermission, setPushPermission] = useState(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default');
 
-  const isRemoteUpdate = useRef({});
-  const syncTimers = useRef({});
-  const hasRemoteLoaded = useRef({});
-
   const[theme,setTheme]=useLocalStorage('nv_theme','orange');
   const[mascotType,setMascotType]=useLocalStorage('nv_mascot_type','vivi');
   const[catEnabled,setCatEnabled]=useLocalStorage('nv_cat_enabled',true);
@@ -485,36 +481,8 @@ function AppProvider({children}){
     }
   },[bcnPin,setBcnPin]);
   const[bcnUnlocked,setBcnUnlocked]=useState(false);
-  const[bcnNotes,setBcnNotes]=useLocalStorage('nv_bcn_notes',{});
-  const[bcnPlans,setBcnPlans]=useLocalStorage('nv_bcn_plans',[
-    {
-      id:'plan-1',
-      title:'Chiến dịch Tuyển CTV Gen mới (K81) – Đột phá truyền thông & Chuỗi Workshop Kỹ Năng',
-      deadline:'2026-11-15',
-      level:'Tuyệt mật',
-      pic:'Ban Chủ Nhiệm & BTT',
-      content:'Xây dựng format tuyển mới không thi test khô khan, tổ chức chuỗi mini-workshop kỹ năng thuyết trình & làm việc nhóm để thu hút sinh viên K81 Dược. Mục tiêu: 45 CTV chất lượng cao.',
-      milestones:[
-        {id:'m1',text:'Chốt đề xuất & timeline tuyển sinh',done:true},
-        {id:'m2',text:'Thiết kế bộ nhận diện chiến dịch Gen mới',done:false},
-        {id:'m3',text:'Mở đơn đăng ký & truyền thông lan tỏa',done:false},
-        {id:'m4',text:'Phỏng vấn vòng 2 & Team building chào đón',done:false},
-      ]
-    },
-    {
-      id:'plan-2',
-      title:'Chiến lược Quy hoạch & Kiện toàn Ban Chủ Nhiệm nhiệm kỳ 2026-2027',
-      deadline:'2026-12-20',
-      level:'Nội bộ BCN',
-      pic:'Ban Chủ Nhiệm',
-      content:'Đánh giá năng lực các Trưởng/Phó Ban đương nhiệm, quy hoạch nhân sự nguồn cho vị trí Chủ nhiệm và Phó Chủ nhiệm. Chuẩn bị hồ sơ chuyển giao công tác và tài liệu quản trị cốt lõi.',
-      milestones:[
-        {id:'m2-1',text:'Tổng kết KPI nhân sự các ban',done:true},
-        {id:'m2-2',text:'Họp kín BCN định hướng đề cử',done:false},
-        {id:'m2-3',text:'Đại hội CLB & công bố ban điều hành mới',done:false},
-      ]
-    }
-  ]);
+  const[bcnNotes,setBcnNotes]=useState({});
+  const[bcnPlans,setBcnPlans]=useState([]);
   const[catEvent,setCatEvent]=useState(null);
   const triggerCat=useCallback((action,payload=null)=>{
     setCatEvent({action,payload,id:Date.now()});
@@ -617,162 +585,158 @@ function AppProvider({children}){
     }
   },[playSound,showToast]);
 
-  const syncDoc=useCallback((key,data,isObj=false)=>{
-    if(!fbDb)return;
-    if(!hasRemoteLoaded.current[key])return;
-    if(isRemoteUpdate.current[key]){
-      isRemoteUpdate.current[key]=false;
-      return;
-    }
-    setCloudStatus('syncing');
-    if(syncTimers.current[key])clearTimeout(syncTimers.current[key]);
-    syncTimers.current[key]=setTimeout(async()=>{
-      try{
-        const payload=isObj
-          ?{data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}
-          :{items:data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-        await fbDb.collection('newvision_hub').doc(key).set(payload,{merge:true});
-        setCloudStatus('connected');
-        setLastSynced(new Date());
-      }catch(e){
-        console.warn(`Sync to cloud error for ${key}:`,e);
-        setCloudStatus('offline');
-      }
-    },600);
-  },[]);
-
-  useEffect(()=>{syncDoc('decisions',decisions)},[decisions,syncDoc]);
-  useEffect(()=>{syncDoc('events',events)},[events,syncDoc]);
-  useEffect(()=>{syncDoc('members',members)},[members,syncDoc]);
-  useEffect(()=>{syncDoc('sessions',sessions)},[sessions,syncDoc]);
-  useEffect(()=>{syncDoc('assignTasks',assignTasks)},[assignTasks,syncDoc]);
-  useEffect(()=>{syncDoc('quickChecklist',quickChecklist)},[quickChecklist,syncDoc]);
-  useEffect(()=>{syncDoc('quickLinks',quickLinks)},[quickLinks,syncDoc]);
-  useEffect(()=>{syncDoc('resources',resources)},[resources,syncDoc]);
-  useEffect(()=>{syncDoc('inventory',inventory)},[inventory,syncDoc]);
-  useEffect(()=>{syncDoc('expenses',expenses)},[expenses,syncDoc]);
-  useEffect(()=>{syncDoc('bcnPlans',bcnPlans)},[bcnPlans,syncDoc]);
-  useEffect(()=>{syncDoc('bcnNotes',bcnNotes,true)},[bcnNotes,syncDoc]);
-
-  const pushAllToCloud=useCallback(async()=>{
-    if(!fbDb){alert('Firebase chưa được khởi tạo.');return}
-    setCloudStatus('syncing');
-    try{
-      const batch=fbDb.batch();
-      const col=fbDb.collection('newvision_hub');
-      const now=firebase.firestore.FieldValue.serverTimestamp();
-      batch.set(col.doc('decisions'),{items:decisions,updatedAt:now},{merge:true});
-      batch.set(col.doc('events'),{items:events,updatedAt:now},{merge:true});
-      batch.set(col.doc('members'),{items:members,updatedAt:now},{merge:true});
-      batch.set(col.doc('sessions'),{items:sessions,updatedAt:now},{merge:true});
-      batch.set(col.doc('assignTasks'),{items:assignTasks,updatedAt:now},{merge:true});
-      batch.set(col.doc('quickChecklist'),{items:quickChecklist,updatedAt:now},{merge:true});
-      batch.set(col.doc('quickLinks'),{items:quickLinks,updatedAt:now},{merge:true});
-      batch.set(col.doc('resources'),{items:resources,updatedAt:now},{merge:true});
-      batch.set(col.doc('inventory'),{items:inventory,updatedAt:now},{merge:true});
-      batch.set(col.doc('expenses'),{items:expenses,updatedAt:now},{merge:true});
-      batch.set(col.doc('bcnPlans'),{items:bcnPlans,updatedAt:now},{merge:true});
-      batch.set(col.doc('bcnNotes'),{data:bcnNotes,updatedAt:now},{merge:true});
-      await batch.commit();
-      setCloudStatus('connected');
-      setLastSynced(new Date());
-      playSound('success');
-      showToast('Đã đẩy toàn bộ dữ liệu lên Firebase Cloud thành công!','success');
-    }catch(err){
-      console.error('pushAllToCloud error:',err);
-      setCloudStatus('offline');
-      showToast('Lỗi khi đẩy dữ liệu lên Cloud: '+err.message,'error');
-    }
-  },[decisions,events,members,sessions,assignTasks,quickChecklist,quickLinks,resources,inventory,expenses,bcnPlans,bcnNotes,playSound,showToast]);
-
-  const pullAllFromCloud=useCallback(async()=>{
-    if(!fbDb){alert('Firebase chưa được khởi tạo.');return}
-    setCloudStatus('syncing');
-    try{
-      const snap=await fbDb.collection('newvision_hub').get();
-      if(snap.empty){
-        showToast('Cloud Firestore chưa có dữ liệu nào.','warning');
-        setCloudStatus('connected');
-        return;
-      }
-      snap.forEach(doc=>{
-        const id=doc.id;
-        const d=doc.data();
-        isRemoteUpdate.current[id]=true;
-        if(id==='decisions'&&Array.isArray(d.items))setDecisions(d.items);
-        else if(id==='events'&&Array.isArray(d.items))setEvents(d.items);
-        else if(id==='members'&&Array.isArray(d.items))setMembers(d.items);
-        else if(id==='sessions'&&Array.isArray(d.items))setSessions(d.items);
-        else if(id==='assignTasks'&&Array.isArray(d.items))setAssignTasks(d.items);
-        else if(id==='quickChecklist'&&Array.isArray(d.items))setQuickChecklist(d.items);
-        else if(id==='quickLinks'&&Array.isArray(d.items))setQuickLinks(d.items);
-        else if(id==='resources'&&Array.isArray(d.items))setResources(d.items);
-        else if(id==='inventory'&&Array.isArray(d.items))setInventory(d.items);
-        else if(id==='expenses'&&Array.isArray(d.items))setExpenses(d.items);
-        else if(id==='bcnPlans'&&Array.isArray(d.items))setBcnPlans(d.items);
-        else if(id==='bcnNotes'&&d.data)setBcnNotes(d.data);
-      });
-      setCloudStatus('connected');
-      setLastSynced(new Date());
-      playSound('success');
-      showToast('Đã kéo toàn bộ dữ liệu từ Cloud thành công!','success');
-    }catch(err){
-      console.error('pullAllFromCloud error:',err);
-      setCloudStatus('offline');
-      showToast('Lỗi khi kéo từ Cloud: '+err.message,'error');
-    }
-  },[playSound,showToast,setDecisions,setEvents,setMembers,setSessions,setAssignTasks,setQuickChecklist,setQuickLinks,setResources,setInventory,setExpenses,setBcnPlans,setBcnNotes]);
-
+  // Realtime Firestore onSnapshot Subscriptions for All Core Collections
   useEffect(()=>{
     if(!fbDb){
       setCloudStatus('offline');
       return;
     }
     setCloudStatus('syncing');
-    let unsub=null;
-    try{
-      unsub=fbDb.collection('newvision_hub').onSnapshot(snapshot=>{
-        if(snapshot.empty){
-          setCloudStatus('connected');
-          ['decisions','events','members','sessions','assignTasks','quickChecklist','quickLinks','resources','inventory','expenses','bcnPlans','bcnNotes'].forEach(k=>{
-            hasRemoteLoaded.current[k]=true;
-          });
-          return;
-        }
-        snapshot.docChanges().forEach(change=>{
-          const id=change.doc.id;
-          const d=change.doc.data();
-          hasRemoteLoaded.current[id]=true;
-          isRemoteUpdate.current[id]=true;
+    const unsubs=[];
 
-          if(id==='decisions'&&Array.isArray(d.items))setDecisions(d.items);
-          else if(id==='events'&&Array.isArray(d.items))setEvents(d.items);
-          else if(id==='members'&&Array.isArray(d.items))setMembers(d.items);
-          else if(id==='sessions'&&Array.isArray(d.items))setSessions(d.items);
-          else if(id==='assignTasks'&&Array.isArray(d.items))setAssignTasks(d.items);
-          else if(id==='quickChecklist'&&Array.isArray(d.items))setQuickChecklist(d.items);
-          else if(id==='quickLinks'&&Array.isArray(d.items))setQuickLinks(d.items);
-          else if(id==='resources'&&Array.isArray(d.items))setResources(d.items);
-          else if(id==='inventory'&&Array.isArray(d.items))setInventory(d.items);
-          else if(id==='expenses'&&Array.isArray(d.items))setExpenses(d.items);
-          else if(id==='bcnPlans'&&Array.isArray(d.items))setBcnPlans(d.items);
-          else if(id==='bcnNotes'&&d.data)setBcnNotes(d.data);
+    const listenCol=(colName,setter,sortFn)=>{
+      try{
+        const unsub=fbDb.collection(colName).onSnapshot(snap=>{
+          let list=snap.docs.map(d=>({id:d.id,...d.data()}));
+          if(sortFn)list=sortFn(list);
+          setter(list);
+          setCloudStatus('connected');
+          setLastSynced(new Date());
+        },err=>{
+          console.error(`Firestore realtime sync error (${colName}):`,err);
+          setCloudStatus('offline');
         });
+        unsubs.push(unsub);
+      }catch(err){
+        console.error(`Firestore subscription exception (${colName}):`,err);
+        setCloudStatus('offline');
+      }
+    };
+
+    listenCol('members',setMembers,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('events',setEvents,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('decisions',setDecisions,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('expenses',setExpenses,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('resources',setResources,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('inventory',setInventory,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('sessions',setSessions,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
+    listenCol('assignTasks',setAssignTasks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
+    listenCol('quickChecklist',setQuickChecklist,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
+    listenCol('quickLinks',setQuickLinks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
+    listenCol('bcnPlans',setBcnPlans,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+
+    try{
+      const unsubNotes=fbDb.collection('bcnNotes').doc('general').onSnapshot(d=>{
+        if(d.exists&&d.data()?.data){
+          setBcnNotes(d.data().data);
+        }else{
+          setBcnNotes({});
+        }
         setCloudStatus('connected');
         setLastSynced(new Date());
       },err=>{
-        console.warn('Firestore realtime sync listener error:',err);
-        setCloudStatus('offline');
+        console.error('Firestore bcnNotes sync error:',err);
       });
+      unsubs.push(unsubNotes);
     }catch(err){
-      console.warn('Firestore subscription exception:',err);
-      setCloudStatus('offline');
+      console.error('Firestore bcnNotes subscribe exception:',err);
     }
 
+    // Auto-migration: if root collection 'members' is empty, check legacy 'newvision_hub/members'
+    (async()=>{
+      try{
+        const snap=await fbDb.collection('members').limit(1).get();
+        if(snap.empty){
+          const leg=await fbDb.collection('newvision_hub').doc('members').get();
+          if(leg.exists&&Array.isArray(leg.data()?.items)&&leg.data().items.length>0){
+            const batch=fbDb.batch();
+            leg.data().items.forEach(m=>{
+              const id=m.id||uid();
+              batch.set(fbDb.collection('members').doc(id),{...m,id});
+            });
+            await batch.commit();
+            console.log('Legacy members migrated to root collection members');
+          }
+        }
+      }catch(err){
+        console.warn('Legacy migration check notice:',err);
+      }
+    })();
+
     return()=>{
-      if(typeof unsub==='function')unsub();
+      unsubs.forEach(u=>{try{if(typeof u==='function')u()}catch(e){}});
     };
-  },[setDecisions,setEvents,setMembers,setSessions,setAssignTasks,setQuickChecklist,setQuickLinks,setResources,setInventory,setExpenses,setBcnPlans,setBcnNotes]);
+  },[]);
+
+  const pushAllToCloud=useCallback(async()=>{
+    if(!fbDb){alert('Firebase chưa được khởi tạo.');return}
+    setCloudStatus('syncing');
+    try{
+      const batch=fbDb.batch();
+      members.forEach(m=>batch.set(fbDb.collection('members').doc(m.id||uid()),m,{merge:true}));
+      events.forEach(e=>batch.set(fbDb.collection('events').doc(e.id||uid()),e,{merge:true}));
+      decisions.forEach(d=>batch.set(fbDb.collection('decisions').doc(d.id||uid()),d,{merge:true}));
+      expenses.forEach(x=>batch.set(fbDb.collection('expenses').doc(x.id||uid()),x,{merge:true}));
+      resources.forEach(r=>batch.set(fbDb.collection('resources').doc(r.id||uid()),r,{merge:true}));
+      inventory.forEach(i=>batch.set(fbDb.collection('inventory').doc(i.id||uid()),i,{merge:true}));
+      sessions.forEach(s=>batch.set(fbDb.collection('sessions').doc(s.id||uid()),s,{merge:true}));
+      assignTasks.forEach(t=>batch.set(fbDb.collection('assignTasks').doc(t.id||uid()),t,{merge:true}));
+      quickChecklist.forEach(c=>batch.set(fbDb.collection('quickChecklist').doc(c.id||uid()),c,{merge:true}));
+      quickLinks.forEach(l=>batch.set(fbDb.collection('quickLinks').doc(l.id||uid()),l,{merge:true}));
+      bcnPlans.forEach(p=>batch.set(fbDb.collection('bcnPlans').doc(p.id||uid()),p,{merge:true}));
+      batch.set(fbDb.collection('bcnNotes').doc('general'),{data:bcnNotes},{merge:true});
+      await batch.commit();
+      setCloudStatus('connected');
+      setLastSynced(new Date());
+      playSound('success');
+      showToast('Đã đồng bộ toàn bộ dữ liệu lên Cloud Firestore thành công!','success');
+    }catch(err){
+      console.error('pushAllToCloud error:',err);
+      setCloudStatus('offline');
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  },[members,events,decisions,expenses,resources,inventory,sessions,assignTasks,quickChecklist,quickLinks,bcnPlans,bcnNotes,playSound,showToast]);
+
+  const pullAllFromCloud=useCallback(async()=>{
+    if(!fbDb){alert('Firebase chưa được khởi tạo.');return}
+    setCloudStatus('syncing');
+    try{
+      const[mSnap,eSnap,dSnap,expSnap,rSnap,iSnap,sSnap,aSnap,cSnap,lSnap,pSnap,nDoc]=await Promise.all([
+        fbDb.collection('members').get(),
+        fbDb.collection('events').get(),
+        fbDb.collection('decisions').get(),
+        fbDb.collection('expenses').get(),
+        fbDb.collection('resources').get(),
+        fbDb.collection('inventory').get(),
+        fbDb.collection('sessions').get(),
+        fbDb.collection('assignTasks').get(),
+        fbDb.collection('quickChecklist').get(),
+        fbDb.collection('quickLinks').get(),
+        fbDb.collection('bcnPlans').get(),
+        fbDb.collection('bcnNotes').doc('general').get(),
+      ]);
+      setMembers(mSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setEvents(eSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setDecisions(dSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setExpenses(expSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setResources(rSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setInventory(iSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setSessions(sSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setAssignTasks(aSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setQuickChecklist(cSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setQuickLinks(lSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setBcnPlans(pSnap.docs.map(d=>({id:d.id,...d.data()})));
+      if(nDoc.exists)setBcnNotes(nDoc.data()?.data||{});
+      setCloudStatus('connected');
+      setLastSynced(new Date());
+      playSound('success');
+      showToast('Đã tải lại toàn bộ dữ liệu từ Cloud Firestore thành công!','success');
+    }catch(err){
+      console.error('pullAllFromCloud error:',err);
+      setCloudStatus('offline');
+      alert('Lỗi tải dữ liệu Firebase: '+err.message);
+    }
+  },[playSound,showToast]);
 
   const markRead=useCallback(id=>setNotifications(p=>p.map(n=>n.id===id?{...n,read:true}:n)),[]);
   const markAllRead=useCallback(()=>setNotifications(p=>p.map(n=>({...n,read:true}))),[]);
@@ -1390,24 +1354,33 @@ function SettingsModal({open,onClose}){
     const file=e.target.files[0];
     if(!file)return;
     const reader=new FileReader();
-    reader.onload=ev=>{
+    reader.onload=async ev=>{
       try{
         const d=JSON.parse(ev.target.result);
-        if(d.decisions)setDecisions(d.decisions);
-        if(d.events)setEvents(d.events);
-        if(d.members)setMembers(d.members);
-        if(d.sessions)setSessions(d.sessions);
-        if(d.assignTasks)setAssignTasks(d.assignTasks);
-        if(d.quickChecklist)setQuickChecklist(d.quickChecklist);
-        if(d.quickLinks)setQuickLinks(d.quickLinks);
-        if(d.resources)setResources(d.resources);
-        if(d.inventory)setInventory(d.inventory);
-        if(d.expenses)setExpenses(d.expenses);
+        if(!fbDb){
+          alert('Lỗi lưu Firebase: Chưa kết nối được Firebase Firestore!');
+          return;
+        }
+        const batch=fbDb.batch();
+        if(Array.isArray(d.members))d.members.forEach(m=>batch.set(fbDb.collection('members').doc(m.id||uid()),m,{merge:true}));
+        if(Array.isArray(d.events))d.events.forEach(e=>batch.set(fbDb.collection('events').doc(e.id||uid()),e,{merge:true}));
+        if(Array.isArray(d.decisions))d.decisions.forEach(x=>batch.set(fbDb.collection('decisions').doc(x.id||uid()),x,{merge:true}));
+        if(Array.isArray(d.expenses))d.expenses.forEach(x=>batch.set(fbDb.collection('expenses').doc(x.id||uid()),x,{merge:true}));
+        if(Array.isArray(d.resources))d.resources.forEach(r=>batch.set(fbDb.collection('resources').doc(r.id||uid()),r,{merge:true}));
+        if(Array.isArray(d.inventory))d.inventory.forEach(i=>batch.set(fbDb.collection('inventory').doc(i.id||uid()),i,{merge:true}));
+        if(Array.isArray(d.sessions))d.sessions.forEach(s=>batch.set(fbDb.collection('sessions').doc(s.id||uid()),s,{merge:true}));
+        if(Array.isArray(d.assignTasks))d.assignTasks.forEach(t=>batch.set(fbDb.collection('assignTasks').doc(t.id||uid()),t,{merge:true}));
+        if(Array.isArray(d.quickChecklist))d.quickChecklist.forEach(c=>batch.set(fbDb.collection('quickChecklist').doc(c.id||uid()),c,{merge:true}));
+        if(Array.isArray(d.quickLinks))d.quickLinks.forEach(l=>batch.set(fbDb.collection('quickLinks').doc(l.id||uid()),l,{merge:true}));
+        if(Array.isArray(d.bcnPlans))d.bcnPlans.forEach(p=>batch.set(fbDb.collection('bcnPlans').doc(p.id||uid()),p,{merge:true}));
+        if(d.bcnNotes&&typeof d.bcnNotes==='object')batch.set(fbDb.collection('bcnNotes').doc('general'),{data:d.bcnNotes},{merge:true});
+        await batch.commit();
         playSound('success');
-        addNotification('✅ Nhập dữ liệu backup thành công!','success');
+        addNotification('✅ Nhập dữ liệu backup lên Cloud Firestore thành công!','success');
         onClose();
-      }catch{
-        alert('File JSON không hợp lệ!');
+      }catch(err){
+        console.error('Import error:',err);
+        alert('Lỗi lưu Firebase: '+err.message);
       }
     };
     reader.readAsText(file);
@@ -1715,46 +1688,107 @@ function BcnRoomPage(){
     addNotification('🔒 Đã khóa Phòng Ban Chủ Nhiệm an toàn!','info');
   };
 
-  const saveMemberBcnNote=(memberId,noteText)=>{
-    setBcnNotes(p=>({...p,[memberId]:noteText}));
-    playSound('pop');
-    addNotification('📝 Đã lưu ghi chú BCN cho thành viên!','success');
+  const saveMemberBcnNote=async(memberId,noteText)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('bcnNotes').doc('general').set({
+        data:{...bcnNotes,[memberId]:noteText}
+      },{merge:true});
+      playSound('pop');
+      addNotification('📝 Đã lưu ghi chú BCN cho thành viên!','success');
+    }catch(err){
+      console.error('Lỗi lưu ghi chú BCN:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
 
-  const setMemberEval=(memberId,newEval)=>{
-    setMembers(p=>p.map(m=>m.id===memberId?{...m,eval:newEval}:m));
-    playSound('pop');
-    addNotification(`Đã cập nhật đánh giá thành viên thành: ${newEval}`,'info');
+  const setMemberEval=async(memberId,newEval)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('members').doc(memberId).set({eval:newEval},{merge:true});
+      playSound('pop');
+      addNotification(`Đã cập nhật đánh giá thành viên thành: ${newEval}`,'info');
+    }catch(err){
+      console.error('Lỗi lưu đánh giá thành viên:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
 
-  const handleApproveExpense=exp=>{
-    setExpenses(p=>p.map(e=>e.id===exp.id?{...e,status:'Đã quyết toán'}:e));
-    playSound('success');
-    triggerCat('celebrate');
-    addNotification(`✅ Đã duyệt quyết toán cho ${exp.person||'thành viên'}: ${fmtVND(exp.amount)}`,'success');
+  const handleApproveExpense=async(exp)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('expenses').doc(exp.id).set({status:'Đã quyết toán'},{merge:true});
+      playSound('success');
+      triggerCat('celebrate');
+      addNotification(`✅ Đã duyệt quyết toán cho ${exp.person||'thành viên'}: ${fmtVND(exp.amount)}`,'success');
+    }catch(err){
+      console.error('Lỗi duyệt quyết toán:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
 
-  const handleRejectExpense=exp=>{
-    setExpenses(p=>p.map(e=>e.id===exp.id?{...e,status:'Cần giải trình',note:(e.note||'')+' [BCN yêu cầu giải trình thêm]'}:e));
-    playSound('pop');
-    addNotification(`⚠️ Đã yêu cầu giải trình khoản chi "${exp.name}"`,'warning');
+  const handleRejectExpense=async(exp)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('expenses').doc(exp.id).set({
+        status:'Cần giải trình',
+        note:(exp.note||'')+' [BCN yêu cầu giải trình thêm]'
+      },{merge:true});
+      playSound('pop');
+      addNotification(`⚠️ Đã yêu cầu giải trình khoản chi "${exp.name}"`,'warning');
+    }catch(err){
+      console.error('Lỗi từ chối quyết toán:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
 
   const openAddPlan=()=>{setEditingPlan(null);setPlanForm(emptyPlan);setPlanModal(true)};
   const openEditPlan=p=>{setEditingPlan(p.id);setPlanForm({...p});setPlanModal(true)};
-  const handleSavePlan=()=>{
+  const handleSavePlan=async()=>{
     if(!planForm.title.trim()){alert('Vui lòng nhập tên chiến lược!');return}
-    if(editingPlan)setBcnPlans(p=>p.map(x=>x.id===editingPlan?{...x,...planForm}:x));
-    else setBcnPlans(p=>[{...planForm,id:uid(),createdAt:new Date().toISOString()},...p]);
-    setPlanModal(false);
-    playSound('success');
-    addNotification('🎯 Đã lưu kế hoạch tác chiến mật!','success');
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      if(editingPlan){
+        await fbDb.collection('bcnPlans').doc(editingPlan).set(planForm,{merge:true});
+      }else{
+        const id=uid();
+        await fbDb.collection('bcnPlans').doc(id).set({
+          ...planForm,
+          id,
+          createdAt:new Date().toISOString()
+        });
+      }
+      setPlanModal(false);
+      playSound('success');
+      addNotification('🎯 Đã lưu kế hoạch tác chiến mật!','success');
+    }catch(err){
+      console.error('Lỗi lưu kế hoạch BCN:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
-  const toggleMilestone=(planId,mId)=>{
-    setBcnPlans(p=>p.map(pl=>{
-      if(pl.id!==planId)return pl;
-      return{...pl,milestones:(pl.milestones||[]).map(m=>m.id===mId?{...m,done:!m.done}:m)};
-    }));
+  const toggleMilestone=async(planId,mId)=>{
+    const pl=bcnPlans.find(x=>x.id===planId);
+    if(!pl)return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const updatedMilestones=(pl.milestones||[]).map(m=>m.id===mId?{...m,done:!m.done}:m);
+      await fbDb.collection('bcnPlans').doc(planId).set({milestones:updatedMilestones},{merge:true});
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi cập nhật mốc tiến độ:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const handleDeletePlan=async(id)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('bcnPlans').doc(id).delete();
+      playSound('pop');
+      addNotification('Đã xóa kế hoạch BCN','info');
+    }catch(err){
+      console.error('Lỗi xóa kế hoạch:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
   const addMilestoneToForm=()=>{
     if(!newMilestone.trim())return;
@@ -2059,7 +2093,7 @@ function BcnRoomPage(){
                   <span className="text-slate-400">Phụ trách: <strong>{p.pic||'BCN'}</strong></span>
                   <div className="flex gap-2">
                     <button onClick={()=>openEditPlan(p)} className="text-blue-500 hover:text-blue-700 font-medium">Sửa</button>
-                    <button onClick={()=>setBcnPlans(prev=>prev.filter(x=>x.id!==p.id))} className="text-red-400 hover:text-red-600 font-medium">Xóa</button>
+                    <button onClick={()=>handleDeletePlan(p.id)} className="text-red-400 hover:text-red-600 font-medium">Xóa</button>
                   </div>
                 </div>
               </div>
@@ -2253,21 +2287,92 @@ function Dashboard({setActiveTab}){
     }
   }
 
-  const addCLItem=()=>{
+  const addCLItem=async()=>{
     if(!newItem.trim())return;
-    setQuickChecklist(p=>[...p,{id:uid(),text:newItem.trim(),done:false}]);
-    triggerCat('dash');
-    setNewItem('');
-    setShowCLForm(false);
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const id=uid();
+      await fbDb.collection('quickChecklist').doc(id).set({
+        id,
+        text:newItem.trim(),
+        done:false,
+        createdAt:new Date().toISOString()
+      });
+      triggerCat('dash');
+      setNewItem('');
+      setShowCLForm(false);
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi thêm checklist:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
-  const toggleCL=id=>{
+  const toggleCL=async(id)=>{
     const item=quickChecklist.find(i=>i.id===id);
-    if(item&&!item.done)triggerCat('celebrate');
-    setQuickChecklist(p=>p.map(i=>i.id===id?{...i,done:!i.done}:i));
+    if(!item)return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const newDone=!item.done;
+      if(newDone)triggerCat('celebrate');
+      await fbDb.collection('quickChecklist').doc(id).set({done:newDone},{merge:true});
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi cập nhật checklist:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
-  const delCL=id=>setQuickChecklist(p=>p.filter(i=>i.id!==id));
-  const addLink=()=>{if(!newLink.title.trim()||!newLink.url.trim())return;setQuickLinks(p=>[...p,{id:uid(),...newLink}]);setNewLink({title:'',url:''});setShowLinkForm(false)};
-  const delLink=id=>setQuickLinks(p=>p.filter(l=>l.id!==id));
+  const resetCL=async()=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const batch=fbDb.batch();
+      quickChecklist.forEach(i=>{
+        batch.set(fbDb.collection('quickChecklist').doc(i.id),{done:false},{merge:true});
+      });
+      await batch.commit();
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi reset checklist:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const delCL=async(id)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('quickChecklist').doc(id).delete();
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi xóa checklist:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const addLink=async()=>{
+    if(!newLink.title.trim()||!newLink.url.trim())return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const id=uid();
+      await fbDb.collection('quickLinks').doc(id).set({
+        id,
+        ...newLink,
+        createdAt:new Date().toISOString()
+      });
+      setNewLink({title:'',url:''});
+      setShowLinkForm(false);
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi thêm quick link:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const delLink=async(id)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('quickLinks').doc(id).delete();
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi xóa quick link:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
 
   const stats=[
     {label:'Việc đang chạy',value:activeTasks.length,icon:'list-todo',gradient:'from-blue-600 to-blue-800',onClick:()=>setActiveTab('events')},
@@ -2299,7 +2404,7 @@ function Dashboard({setActiveTab}){
               <span className="font-bold text-sm text-slate-800">Checklist 15 Phút Trước Giờ G</span>
             </div>
             <div className="flex gap-1">
-              {quickChecklist.some(i=>i.done)&&<button onClick={()=>setQuickChecklist(p=>p.map(i=>({...i,done:false})))} title="Reset" className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400"><Icon name="rotate-ccw" size={13}/></button>}
+              {quickChecklist.some(i=>i.done)&&<button onClick={resetCL} title="Reset" className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400"><Icon name="rotate-ccw" size={13}/></button>}
               <button onClick={()=>setShowCLForm(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>Thêm</button>
             </div>
           </div>
@@ -2456,57 +2561,116 @@ function DecisionsPage(){
   const openEdit=d=>{setEditing(d.id);setForm({...emptyForm,...d});setModal(true)};
   const handleClose=()=>{setModal(false);setEditing(null);setForm(emptyForm)};
 
-  const handleSave=()=>{
+  const handleSave=async()=>{
     if(!form.title.trim()){alert('Vui lòng nhập tên vấn đề!');return}
     if(form.status==='Đã chốt chính thức'&&!form.resolution.trim()){alert('Bắt buộc nhập phương án chốt!');return}
-    if(editing){
-      const old=decisions.find(d=>d.id===editing);
-      setDecisions(p=>p.map(d=>d.id===editing?{...d,...form}:d));
-      if(old&&old.status!=='Đã chốt chính thức'&&form.status==='Đã chốt chính thức'){
-        addNotification(`✅ Vấn đề "${form.title}" đã chốt chính thức!`,'success');
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      if(editing){
+        const old=decisions.find(d=>d.id===editing);
+        await fbDb.collection('decisions').doc(editing).set(form,{merge:true});
+        playSound('success');
+        if(old&&old.status!=='Đã chốt chính thức'&&form.status==='Đã chốt chính thức'){
+          addNotification(`✅ Vấn đề "${form.title}" đã chốt chính thức!`,'success');
+          triggerMascot('gavel','⚖️ Đã chốt chính thức!');
+        }
+      }else{
+        const id=uid();
+        const newD={...form,id,poll:{options:[],locked:false},createdAt:new Date().toISOString()};
+        await fbDb.collection('decisions').doc(id).set(newD);
+        playSound('success');
+        if(form.status==='Đã chốt chính thức'){
+          addNotification(`✅ Vấn đề "${form.title}" đã chốt!`,'success');
+          triggerMascot('gavel','⚖️ Đã chốt!');
+        }else{
+          triggerMascot('write','📝 Vấn đề mới ghi nhận!');
+        }
+      }
+      handleClose();
+    }catch(err){
+      console.error('Lỗi lưu quyết định:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+
+  const handleStatusChange=async(d,ns)=>{
+    if(ns==='Đã chốt chính thức'&&!d.resolution){openEdit({...d,status:ns});return}
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('decisions').doc(d.id).set({status:ns},{merge:true});
+      playSound('pop');
+      if(ns==='Đã chốt chính thức'){
+        addNotification(`✅ "${d.title}" đã chốt!`,'success');
         triggerMascot('gavel','⚖️ Đã chốt chính thức!');
       }
-    }else{
-      const newD={...form,id:uid(),poll:{options:[],locked:false},createdAt:new Date().toISOString()};
-      setDecisions(p=>[newD,...p]);
-      if(form.status==='Đã chốt chính thức'){addNotification(`✅ Vấn đề "${form.title}" đã chốt!`,'success');triggerMascot('gavel','⚖️ Đã chốt!')}
-      else triggerMascot('write','📝 Vấn đề mới ghi nhận!');
+    }catch(err){
+      console.error('Lỗi đổi trạng thái:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
-    handleClose();
   };
 
-  const handleStatusChange=(d,ns)=>{
-    if(ns==='Đã chốt chính thức'&&!d.resolution){openEdit({...d,status:ns});return}
-    setDecisions(p=>p.map(x=>x.id===d.id?{...x,status:ns}:x));
-    if(ns==='Đã chốt chính thức'){addNotification(`✅ "${d.title}" đã chốt!`,'success');triggerMascot('gavel','⚖️ Đã chốt chính thức!')}
-  };
-
-  const addPollOption=(dId)=>{
+  const addPollOption=async(dId)=>{
     const txt=(pollInput[dId]||'').trim();
     if(!txt)return;
-    setDecisions(p=>p.map(d=>{
-      if(d.id!==dId)return d;
+    const d=decisions.find(x=>x.id===dId);
+    if(!d)return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const poll=d.poll||{options:[],locked:false};
-      return{...d,poll:{...poll,options:[...poll.options,{id:uid(),text:txt,votes:0}]}};
-    }));
-    setPollInput(p=>({...p,[dId]:''}));
+      const updatedPoll={...poll,options:[...poll.options,{id:uid(),text:txt,votes:0}]};
+      await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
+      setPollInput(p=>({...p,[dId]:''}));
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi thêm phương án:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
-  const vote=(dId,optId)=>setDecisions(p=>p.map(d=>{
-    if(d.id!==dId||(d.poll&&d.poll.locked))return d;
-    const poll=d.poll||{options:[],locked:false};
-    return{...d,poll:{...poll,options:poll.options.map(o=>o.id===optId?{...o,votes:(o.votes||0)+1}:o)}};
-  }));
+  const vote=async(dId,optId)=>{
+    const d=decisions.find(x=>x.id===dId);
+    if(!d||(d.poll&&d.poll.locked))return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const poll=d.poll||{options:[],locked:false};
+      const updatedPoll={...poll,options:poll.options.map(o=>o.id===optId?{...o,votes:(o.votes||0)+1}:o)};
+      await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi bỏ phiếu:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
   const lockPoll=(dId)=>{
     const d=decisions.find(x=>x.id===dId);
     if(!d||!d.poll||d.poll.options.length===0)return;
     const winner=d.poll.options.reduce((a,b)=>(b.votes||0)>(a.votes||0)?b:a,d.poll.options[0]);
     openEdit({...d,resolution:winner.text,poll:{...d.poll,locked:true}});
   };
-  const delPollOpt=(dId,optId)=>setDecisions(p=>p.map(d=>{
-    if(d.id!==dId)return d;
-    const poll=d.poll||{options:[],locked:false};
-    return{...d,poll:{...poll,options:poll.options.filter(o=>o.id!==optId)}};
-  }));
+  const delPollOpt=async(dId,optId)=>{
+    const d=decisions.find(x=>x.id===dId);
+    if(!d)return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const poll=d.poll||{options:[],locked:false};
+      const updatedPoll={...poll,options:poll.options.filter(o=>o.id!==optId)};
+      await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi xóa phương án:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const handleDeleteDecision=async(id)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('decisions').doc(id).delete();
+      playSound('pop');
+      addNotification('Đã xóa vấn đề','info');
+    }catch(err){
+      console.error('Lỗi xóa quyết định:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
 
   let filtered=decisions;
   if(filterBan)filtered=filtered.filter(d=>d.ban===filterBan);
@@ -2626,7 +2790,7 @@ function DecisionsPage(){
           <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu thay đổi':'Ghi nhận'}</button></div>
         </div>
       </Modal>
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>setDecisions(p=>p.filter(d=>d.id!==confirmDel))} message="Bạn có chắc muốn xóa vấn đề này?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteDecision(confirmDel)} message="Bạn có chắc muốn xóa vấn đề này?"/>
     </div>
   );
 }
@@ -2821,29 +2985,73 @@ function EventDetail({event,onBack}){
   const openEditTask=t=>{setEditingTask(t.id);setTaskForm({...t});setTaskModal(true)};
   const handleTaskClose=()=>{setTaskModal(false);setEditingTask(null)};
 
-  const handleTaskSave=()=>{
+  const handleTaskSave=async()=>{
     if(!taskForm.title.trim()){alert('Vui lòng nhập tên công việc!');return}
-    if(editingTask){
-      setEvents(p=>p.map(e=>e.id===curEvent.id?{...e,tasks:(e.tasks||[]).map(t=>t.id===editingTask?{...t,...taskForm}:t)}:e));
-    }else{
-      const newT={...taskForm,id:uid(),createdAt:new Date().toISOString()};
-      setEvents(p=>p.map(e=>e.id===curEvent.id?{...e,tasks:[...(e.tasks||[]),newT]}:e));
-      if(taskForm.assignee.trim()){addNotification(`📋 Đã giao việc "${taskForm.title}" cho ${taskForm.assignee}`,'info');triggerMascot('write',`📋 Giao cho ${taskForm.assignee}!`)}
-      else triggerMascot('write','📝 Đầu việc mới!');
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      let updatedTasks;
+      if(editingTask){
+        updatedTasks=(curEvent.tasks||[]).map(t=>t.id===editingTask?{...t,...taskForm}:t);
+      }else{
+        const newT={...taskForm,id:uid(),createdAt:new Date().toISOString()};
+        updatedTasks=[...(curEvent.tasks||[]),newT];
+        if(taskForm.assignee.trim()){
+          addNotification(`📋 Đã giao việc "${taskForm.title}" cho ${taskForm.assignee}`,'info');
+          triggerMascot('write',`📋 Giao cho ${taskForm.assignee}!`);
+        }else{
+          triggerMascot('write','📝 Đầu việc mới!');
+        }
+      }
+      await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
+      playSound('success');
+      handleTaskClose();
+    }catch(err){
+      console.error('Lỗi lưu công việc sự kiện:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
-    handleTaskClose();
   };
 
-  const toggleTask=taskId=>{
+  const toggleTask=async(taskId)=>{
     const task=(curEvent.tasks||[]).find(t=>t.id===taskId);
+    if(!task)return;
     const newDone=!task.done;
-    setEvents(p=>p.map(e=>e.id===curEvent.id?{...e,tasks:(e.tasks||[]).map(t=>t.id===taskId?{...t,done:newDone}:t)}:e));
-    if(newDone){addNotification(`✅ Hoàn thành: "${task.title}"`,'success');triggerMascot('celebrate','🎉 Xuất sắc!')}
-    else addNotification(`🔄 Mở lại: "${task.title}"`,'warning');
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const updatedTasks=(curEvent.tasks||[]).map(t=>t.id===taskId?{...t,done:newDone}:t);
+      await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
+      playSound('pop');
+      if(newDone){
+        addNotification(`✅ Hoàn thành: "${task.title}"`,'success');
+        triggerMascot('celebrate','🎉 Xuất sắc!');
+      }else{
+        addNotification(`🔄 Mở lại: "${task.title}"`,'warning');
+      }
+    }catch(err){
+      console.error('Lỗi đổi trạng thái công việc:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
 
-  const deleteTask=taskId=>setEvents(p=>p.map(e=>e.id===curEvent.id?{...e,tasks:(e.tasks||[]).filter(t=>t.id!==taskId)}:e));
-  const updateLiveData=updEv=>setEvents(p=>p.map(e=>e.id===updEv.id?updEv:e));
+  const deleteTask=async(taskId)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const updatedTasks=(curEvent.tasks||[]).filter(t=>t.id!==taskId);
+      await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi xóa công việc:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const updateLiveData=async(updEv)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('events').doc(updEv.id).set(updEv,{merge:true});
+    }catch(err){
+      console.error('Lỗi lưu Live Event:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
 
   const tasksByPhase=phase=>(curEvent.tasks||[]).filter(t=>{
     if(t.phase!==phase)return false;
@@ -2979,11 +3187,37 @@ function EventsPage(){
   const openAdd=()=>{setEditing(null);setForm(emptyForm);setModal(true)};
   const openEdit=(e2,ev)=>{e2.stopPropagation();setEditing(ev.id);setForm({name:ev.name,date:ev.date,location:ev.location,note:ev.note});setModal(true)};
   const handleClose=()=>{setModal(false);setEditing(null)};
-  const handleSave=()=>{
+  const handleSave=async()=>{
     if(!form.name.trim()){alert('Vui lòng nhập tên sự kiện!');return}
-    if(editing)setEvents(p=>p.map(e=>e.id===editing?{...e,...form}:e));
-    else setEvents(p=>[{...form,id:uid(),tasks:[],createdAt:new Date().toISOString()},...p]);
-    handleClose();
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      if(editing){
+        await fbDb.collection('events').doc(editing).set(form,{merge:true});
+        playSound('success');
+        addNotification(`Đã cập nhật sự kiện: ${form.name}`,'success');
+      }else{
+        const id=uid();
+        const newEv={...form,id,tasks:[],createdAt:new Date().toISOString()};
+        await fbDb.collection('events').doc(id).set(newEv);
+        playSound('success');
+        addNotification(`Đã tạo sự kiện mới: ${form.name}`,'success');
+      }
+      handleClose();
+    }catch(err){
+      console.error('Lỗi lưu sự kiện:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const handleDeleteEvent=async(id)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('events').doc(id).delete();
+      playSound('pop');
+      addNotification('Đã xóa sự kiện','info');
+    }catch(err){
+      console.error('Lỗi xóa sự kiện:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
 
   const now=new Date();
@@ -3038,7 +3272,7 @@ function EventsPage(){
           <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu thay đổi':'Tạo sự kiện'}</button></div>
         </div>
       </Modal>
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>setEvents(p=>p.filter(e=>e.id!==confirmDel))} message="Xóa sự kiện và toàn bộ công việc bên trong?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteEvent(confirmDel)} message="Xóa sự kiện và toàn bộ công việc bên trong?"/>
     </div>
   );
 }
@@ -3203,17 +3437,35 @@ function MembersPage(){
   const openEdit=m=>{setEditing(m.id);setForm({...emptyForm,...m,gen:m.gen||m.khoa||'',lopHup:m.lopHup||'',skills:m.skills||[]});setModal(true)};
   const handleClose=()=>{setModal(false);setEditing(null)};
 
-  const handleSave=()=>{
+  const handleSave=async()=>{
     if(!form.name.trim()){alert('Vui lòng nhập họ tên!');return}
     const finalKhoa=form.gen?(form.lopHup?`${form.gen} · ${form.lopHup}`:form.gen):(form.lopHup||form.khoa||'');
     const memberData={...form,khoa:finalKhoa};
-    if(editing){
-      setMembers(p=>p.map(m=>m.id===editing?{...m,...memberData}:m));
-    }else{
-      setMembers(p=>[...p,{...memberData,id:uid(),attendance:{},taskStatus:{},createdAt:new Date().toISOString()}]);
-      triggerCat('dash');
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      if(editing){
+        await fbDb.collection('members').doc(editing).set(memberData,{merge:true});
+        playSound('success');
+        addNotification(`Đã cập nhật thông tin: ${form.name}`,'success');
+      }else{
+        const id=uid();
+        const newDoc={
+          ...memberData,
+          id,
+          attendance:{},
+          taskStatus:{},
+          createdAt:new Date().toISOString()
+        };
+        await fbDb.collection('members').doc(id).set(newDoc);
+        playSound('success');
+        triggerCat('dash');
+        addNotification(`Đã thêm thành viên mới: ${form.name}`,'success');
+      }
+      handleClose();
+    }catch(err){
+      console.error('Lỗi lưu thành viên:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
-    handleClose();
   };
 
   const toggleSkill=skill=>{
@@ -3221,12 +3473,106 @@ function MembersPage(){
     setForm(p=>({...p,skills:cur.includes(skill)?cur.filter(s=>s!==skill):[...cur,skill]}));
   };
 
-  const setAttend=(mId,sId,val)=>setMembers(p=>p.map(m=>m.id===mId?{...m,attendance:{...m.attendance,[sId]:val}}:m));
-  const setTaskStat=(mId,tId,val)=>setMembers(p=>p.map(m=>m.id===mId?{...m,taskStatus:{...m.taskStatus,[tId]:val}}:m));
-  const setNote=(mId,note)=>setMembers(p=>p.map(m=>m.id===mId?{...m,note}:m));
-  const setEval=(mId,val)=>setMembers(p=>p.map(m=>m.id===mId?{...m,eval:val}:m));
-  const addSession=()=>{if(!newSession.trim())return;setSessions(p=>[...p,{id:uid(),name:newSession.trim()}]);setNewSession('')};
-  const addATask=()=>{if(!newATask.trim())return;setAssignTasks(p=>[...p,{id:uid(),name:newATask.trim()}]);setNewATask('')};
+  const setAttend=async(mId,sId,val)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const m=members.find(x=>x.id===mId);
+      const curAtt=m?.attendance||{};
+      await fbDb.collection('members').doc(mId).set({attendance:{...curAtt,[sId]:val}},{merge:true});
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi lưu điểm danh:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const setTaskStat=async(mId,tId,val)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const m=members.find(x=>x.id===mId);
+      const curStat=m?.taskStatus||{};
+      await fbDb.collection('members').doc(mId).set({taskStatus:{...curStat,[tId]:val}},{merge:true});
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi lưu bài tập:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const setNote=async(mId,note)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('members').doc(mId).set({note},{merge:true});
+    }catch(err){
+      console.error('Lỗi lưu ghi chú:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const setEval=async(mId,val)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('members').doc(mId).set({eval:val},{merge:true});
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi lưu đánh giá:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const addSession=async()=>{
+    if(!newSession.trim())return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const id=uid();
+      await fbDb.collection('sessions').doc(id).set({id,name:newSession.trim(),createdAt:new Date().toISOString()});
+      setNewSession('');
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi thêm buổi sinh hoạt:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const deleteSession=async(id)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('sessions').doc(id).delete();
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi xóa buổi sinh hoạt:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const addATask=async()=>{
+    if(!newATask.trim())return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const id=uid();
+      await fbDb.collection('assignTasks').doc(id).set({id,name:newATask.trim(),createdAt:new Date().toISOString()});
+      setNewATask('');
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi thêm nhiệm vụ:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const deleteATask=async(id)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('assignTasks').doc(id).delete();
+      playSound('pop');
+    }catch(err){
+      console.error('Lỗi xóa nhiệm vụ:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+  const handleDeleteMember=async(id)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('members').doc(id).delete();
+      playSound('pop');
+      addNotification('Đã xóa thành viên','info');
+    }catch(err){
+      console.error('Lỗi xóa thành viên:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
 
   const bans=[...new Set(members.map(m=>m.ban||'Chưa phân ban'))];
   let filteredMembers=members;
@@ -3346,7 +3692,7 @@ function MembersPage(){
               <thead><tr className="border-b border-slate-100">
                 <th className="text-left p-3 font-semibold text-slate-700 sticky left-0 bg-white min-w-[140px]">Thành viên</th>
                 {sessions.map(s=><th key={s.id} className="p-3 font-semibold text-slate-700 text-center min-w-[130px]">
-                  <div className="flex items-center justify-between gap-1"><span className="truncate text-xs">{s.name}</span><button onClick={()=>setSessions(p=>p.filter(x=>x.id!==s.id))} className="text-red-300 hover:text-red-500"><Icon name="x" size={12}/></button></div>
+                  <div className="flex items-center justify-between gap-1"><span className="truncate text-xs">{s.name}</span><button onClick={()=>deleteSession(s.id)} className="text-red-300 hover:text-red-500"><Icon name="x" size={12}/></button></div>
                 </th>)}
               </tr></thead>
               <tbody>
@@ -3382,7 +3728,7 @@ function MembersPage(){
               <thead><tr className="border-b border-slate-100">
                 <th className="text-left p-3 font-semibold text-slate-700 sticky left-0 bg-white min-w-[140px]">Thành viên</th>
                 {assignTasks.map(t=><th key={t.id} className="p-3 font-semibold text-slate-700 text-center min-w-[130px]">
-                  <div className="flex items-center justify-between gap-1"><span className="truncate text-xs">{t.name}</span><button onClick={()=>setAssignTasks(p=>p.filter(x=>x.id!==t.id))} className="text-red-300 hover:text-red-500"><Icon name="x" size={12}/></button></div>
+                  <div className="flex items-center justify-between gap-1"><span className="truncate text-xs">{t.name}</span><button onClick={()=>deleteATask(t.id)} className="text-red-300 hover:text-red-500"><Icon name="x" size={12}/></button></div>
                 </th>)}
               </tr></thead>
               <tbody>
@@ -3459,7 +3805,7 @@ function MembersPage(){
       <Modal open={sessionModal} onClose={()=>setSessionModal(false)} title="Quản lý buổi sinh hoạt">
         <div className="space-y-3">
           <div className="flex gap-2"><input value={newSession} onChange={e=>setNewSession(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addSession()} className="form-input flex-1" placeholder="VD: Họp Ban tuần 1 tháng 10..."/><button onClick={addSession} className="btn-primary px-4">Thêm</button></div>
-          <div className="space-y-1 max-h-48 overflow-y-auto">{sessions.map(s=><div key={s.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg"><span className="text-sm">{s.name}</span><button onClick={()=>setSessions(p=>p.filter(x=>x.id!==s.id))} className="text-red-400 hover:text-red-600"><Icon name="trash-2" size={14}/></button></div>)}{sessions.length===0&&<p className="text-sm text-slate-400 text-center py-4">Chưa có buổi nào</p>}</div>
+          <div className="space-y-1 max-h-48 overflow-y-auto">{sessions.map(s=><div key={s.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg"><span className="text-sm">{s.name}</span><button onClick={()=>deleteSession(s.id)} className="text-red-400 hover:text-red-600"><Icon name="trash-2" size={14}/></button></div>)}{sessions.length===0&&<p className="text-sm text-slate-400 text-center py-4">Chưa có buổi nào</p>}</div>
           <button onClick={()=>setSessionModal(false)} className="btn-secondary w-full">Đóng</button>
         </div>
       </Modal>
@@ -3467,12 +3813,12 @@ function MembersPage(){
       <Modal open={taskModal} onClose={()=>setTaskModal(false)} title="Quản lý bài tập / nhiệm vụ">
         <div className="space-y-3">
           <div className="flex gap-2"><input value={newATask} onChange={e=>setNewATask(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addATask()} className="form-input flex-1" placeholder="VD: Bài tập kỹ năng tuần 1..."/><button onClick={addATask} className="btn-primary px-4">Thêm</button></div>
-          <div className="space-y-1 max-h-48 overflow-y-auto">{assignTasks.map(t=><div key={t.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg"><span className="text-sm">{t.name}</span><button onClick={()=>setAssignTasks(p=>p.filter(x=>x.id!==t.id))} className="text-red-400 hover:text-red-600"><Icon name="trash-2" size={14}/></button></div>)}{assignTasks.length===0&&<p className="text-sm text-slate-400 text-center py-4">Chưa có bài tập nào</p>}</div>
+          <div className="space-y-1 max-h-48 overflow-y-auto">{assignTasks.map(t=><div key={t.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg"><span className="text-sm">{t.name}</span><button onClick={()=>deleteATask(t.id)} className="text-red-400 hover:text-red-600"><Icon name="trash-2" size={14}/></button></div>)}{assignTasks.length===0&&<p className="text-sm text-slate-400 text-center py-4">Chưa có bài tập nào</p>}</div>
           <button onClick={()=>setTaskModal(false)} className="btn-secondary w-full">Đóng</button>
         </div>
       </Modal>
 
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>setMembers(p=>p.filter(m=>m.id!==confirmDel))} message="Xóa thành viên và toàn bộ dữ liệu liên quan?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteMember(confirmDel)} message="Xóa thành viên và toàn bộ dữ liệu liên quan?"/>
     </div>
   );
 }
@@ -3511,24 +3857,65 @@ function ResourcesPage(){
   };
   const handleClose=()=>{setModal(false);setEditing(null)};
 
-  const handleSave=()=>{
-    if(tab==='links'){
-      if(!linkForm.title.trim()||!linkForm.url.trim()){alert('Vui lòng nhập tên và URL!');return}
-      if(editing)setResources(p=>p.map(r=>r.id===editing?{...r,...linkForm}:r));
-      else setResources(p=>[{...linkForm,id:uid(),createdAt:new Date().toISOString()},...p]);
-    }else if(tab==='inventory'){
-      if(!invForm.name.trim()){alert('Vui lòng nhập tên đồ vật!');return}
-      if(editing)setInventory(p=>p.map(i=>i.id===editing?{...i,...invForm}:i));
-      else setInventory(p=>[{...invForm,id:uid(),createdAt:new Date().toISOString()},...p]);
-    }else if(tab==='expenses'){
-      if(!expForm.name.trim()){alert('Vui lòng nhập tên khoản chi!');return}
-      if(editing)setExpenses(p=>p.map(e=>e.id===editing?{...e,...expForm}:e));
-      else{
-        setExpenses(p=>[{...expForm,id:uid(),createdAt:new Date().toISOString()},...p]);
-        if(expForm.status==='Đã chi - Chờ hoàn tiền')addNotification(`💰 Khoản chi chờ hoàn tiền: ${expForm.name} – ${fmtVND(expForm.amount)}`,'warning');
+  const handleSave=async()=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      if(tab==='links'){
+        if(!linkForm.title.trim()||!linkForm.url.trim()){alert('Vui lòng nhập tên và URL!');return}
+        if(editing){
+          await fbDb.collection('resources').doc(editing).set(linkForm,{merge:true});
+          playSound('success');
+          addNotification(`Đã cập nhật link: ${linkForm.title}`,'success');
+        }else{
+          const id=uid();
+          await fbDb.collection('resources').doc(id).set({...linkForm,id,createdAt:new Date().toISOString()});
+          playSound('success');
+          addNotification(`Đã thêm link mới: ${linkForm.title}`,'success');
+        }
+      }else if(tab==='inventory'){
+        if(!invForm.name.trim()){alert('Vui lòng nhập tên đồ vật!');return}
+        if(editing){
+          await fbDb.collection('inventory').doc(editing).set(invForm,{merge:true});
+          playSound('success');
+          addNotification(`Đã cập nhật vật dụng: ${invForm.name}`,'success');
+        }else{
+          const id=uid();
+          await fbDb.collection('inventory').doc(id).set({...invForm,id,createdAt:new Date().toISOString()});
+          playSound('success');
+          addNotification(`Đã thêm vật dụng mới: ${invForm.name}`,'success');
+        }
+      }else if(tab==='expenses'){
+        if(!expForm.name.trim()){alert('Vui lòng nhập tên khoản chi!');return}
+        if(editing){
+          await fbDb.collection('expenses').doc(editing).set(expForm,{merge:true});
+          playSound('success');
+          addNotification(`Đã cập nhật khoản chi: ${expForm.name}`,'success');
+        }else{
+          const id=uid();
+          await fbDb.collection('expenses').doc(id).set({...expForm,id,createdAt:new Date().toISOString()});
+          playSound('success');
+          addNotification(`Đã thêm khoản chi mới: ${expForm.name}`,'success');
+          if(expForm.status==='Đã chi - Chờ hoàn tiền')addNotification(`💰 Khoản chi chờ hoàn tiền: ${expForm.name} – ${fmtVND(expForm.amount)}`,'warning');
+        }
       }
+      handleClose();
+    }catch(err){
+      console.error('Lỗi lưu tài nguyên/quỹ/tài sản:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
-    handleClose();
+  };
+
+  const handleDeleteItem=async()=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const colName=tab==='links'?'resources':tab==='inventory'?'inventory':'expenses';
+      await fbDb.collection(colName).doc(confirmDel).delete();
+      playSound('pop');
+      addNotification('Đã xóa mục thành công','info');
+    }catch(err){
+      console.error('Lỗi xóa mục:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
   };
 
   let filteredResources=resources;
@@ -3712,11 +4099,7 @@ function ResourcesPage(){
         )}
       </Modal>
 
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>{
-        if(tab==='links')setResources(p=>p.filter(r=>r.id!==confirmDel));
-        if(tab==='inventory')setInventory(p=>p.filter(i=>i.id!==confirmDel));
-        if(tab==='expenses')setExpenses(p=>p.filter(e=>e.id!==confirmDel));
-      }} message="Bạn có chắc muốn xóa mục này?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={handleDeleteItem} message="Bạn có chắc muốn xóa mục này?"/>
     </div>
   );
 }
