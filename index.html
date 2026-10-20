@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NewVision Hub – CLB Kỹ Năng Mềm ĐH Dược HN</title>
+  <title>NewVision HUP – CLB Kỹ Năng Mềm ĐH Dược HN</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <script>
@@ -478,7 +478,7 @@ function AppProvider({children}){
   const[theme,setTheme]=useLocalStorage('nv_theme','orange');
   const[mascotType,setMascotType]=useLocalStorage('nv_mascot_type','vivi');
   const[catEnabled,setCatEnabled]=useLocalStorage('nv_cat_enabled',true);
-  const[bcnPin,setBcnPin]=useLocalStorage('nv_bcn_pin','1337');
+  const[bcnPin,setBcnPin]=useLocalStorage('nv_bcn_pin','1303');
   const[bcnUnlocked,setBcnUnlocked]=useState(false);
   const[bcnNotes,setBcnNotes]=useLocalStorage('nv_bcn_notes',{});
   const[bcnPlans,setBcnPlans]=useLocalStorage('nv_bcn_plans',[
@@ -571,7 +571,7 @@ function AppProvider({children}){
     const n={id:Date.now()+Math.random(),message,type,read:false,timestamp:new Date().toISOString()};
     setNotifications(p=>[n,...p.slice(0,199)]);
     showToast(message,type);
-    const pushTitle=type==='error'?'🚨 BÁO ĐỘNG SOS - NewVision Hub':type==='success'?'✨ NewVision Hub':type==='warning'?'⚠️ NewVision Hub':'📢 NewVision Hub';
+    const pushTitle=type==='error'?'🚨 BÁO ĐỘNG SOS - NewVision HUP':type==='success'?'✨ NewVision HUP':type==='warning'?'⚠️ NewVision HUP':'📢 NewVision HUP';
     showWebPush(pushTitle,message,{tag:type,requireInteraction:type==='error'});
   },[showToast]);
 
@@ -584,7 +584,7 @@ function AppProvider({children}){
       const perm=await Notification.requestPermission();
       setPushPermission(perm);
       if(perm==='granted'){
-        showWebPush('🔔 NewVision Hub','Thông báo đẩy Web Push đã được kích hoạt thành công!');
+        showWebPush('🔔 NewVision HUP','Thông báo đẩy Web Push đã được kích hoạt thành công!');
         playSound('success');
         showToast('Đã bật thông báo đẩy Web Push!','success');
         if(fbMessaging&&fbDb){
@@ -1362,37 +1362,21 @@ function ScreenCatCompanion(){
 function SettingsModal({open,onClose}){
   const{
     theme,setTheme,mascotType,setMascotType,catEnabled,setCatEnabled,soundEnabled,setSoundEnabled,
-    bcnPin,setBcnPin,decisions,events,members,sessions,assignTasks,quickChecklist,quickLinks,
+    decisions,events,members,sessions,assignTasks,quickChecklist,quickLinks,
     resources,inventory,expenses,notifications,
     setDecisions,setEvents,setMembers,setSessions,setAssignTasks,setQuickChecklist,setQuickLinks,
     setResources,setInventory,setExpenses,addNotification,playSound,
     cloudStatus,lastSynced,pushPermission,requestWebPush,pushAllToCloud,pullAllFromCloud,showWebPush
   }=useContext(AppCtx);
 
-  const[pinEdit,setPinEdit]=useState(bcnPin||'1337');
-  const[pinSaved,setPinSaved]=useState(false);
   const fileInputRef=useRef(null);
-
-  useEffect(()=>{
-    setPinEdit(bcnPin||'1337');
-    setPinSaved(false);
-  },[open,bcnPin]);
-
-  const handleSavePin=()=>{
-    if(!pinEdit.trim()||pinEdit.length<4){alert('Mã PIN phải có ít nhất 4 ký tự!');return}
-    setBcnPin(pinEdit.trim());
-    setPinSaved(true);
-    playSound('success');
-    addNotification('🔒 Đã đổi mã PIN Ban Chủ Nhiệm thành công!','success');
-    setTimeout(()=>setPinSaved(false),2000);
-  };
 
   const handleExport=()=>{
     exportJSON({
-      exportedAt:new Date().toISOString(),version:'2.5',clb:'NewVision Hub – CLB Kỹ năng mềm ĐH Dược HN',
+      exportedAt:new Date().toISOString(),version:'2.5',clb:'NewVision HUP – CLB Kỹ năng mềm ĐH Dược HN',
       decisions,events,members,sessions,assignTasks,quickChecklist,quickLinks,
       resources,inventory,expenses,notifications:notifications.slice(0,100),
-    },`newvision-hub-${new Date().toISOString().slice(0,10)}.json`);
+    },`newvision-hup-${new Date().toISOString().slice(0,10)}.json`);
     playSound('success');
     addNotification('📦 Đã xuất backup dữ liệu thành công!','success');
   };
@@ -1509,30 +1493,6 @@ function SettingsModal({open,onClose}){
           </div>
         </div>
 
-        <div className="card p-4 border border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Icon name="shield" size={18} className="text-amber-600"/>
-              <h4 className="font-bold text-sm text-amber-900 dark:text-amber-200">Mã PIN Phòng Ban Chủ Nhiệm</h4>
-            </div>
-            <span className="text-xs text-amber-600 font-medium">Bảo mật nội bộ</span>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Mã PIN dùng để mở khóa Phòng BCN bí mật. Mặc định là <strong>1337</strong>.</p>
-          <div className="flex items-center gap-2 max-w-xs">
-            <input
-              type="text"
-              maxLength={8}
-              value={pinEdit}
-              onChange={e=>setPinEdit(e.target.value)}
-              className="form-input text-sm font-mono tracking-widest text-center"
-              placeholder="VD: 1337"
-            />
-            <button onClick={handleSavePin} className="btn-primary text-xs py-2 px-3 whitespace-nowrap">
-              {pinSaved?'✓ Đã Lưu':'Lưu Mã PIN'}
-            </button>
-          </div>
-        </div>
-
         {/* FIREBASE REALTIME & WEB PUSH NOTIFICATION SECTION */}
         <div className="card p-4 border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/60 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10">
           <div className="flex items-center justify-between mb-3">
@@ -1604,7 +1564,7 @@ function SettingsModal({open,onClose}){
             ) : (
               <button
                 onClick={()=>{
-                  showWebPush('🎉 Test Thông Báo Web Push','Hệ thống thông báo đẩy NewVision Hub đang hoạt động hoàn hảo trên máy tính của bạn!');
+                  showWebPush('🎉 Test Thông Báo Web Push','Hệ thống thông báo đẩy NewVision HUP đang hoạt động hoàn hảo trên máy tính của bạn!');
                   playSound('success');
                   addNotification('🧪 Đã gửi thử thông báo đẩy Web Push lên màn hình!','success');
                 }}
@@ -1665,7 +1625,7 @@ function SettingsModal({open,onClose}){
         </div>
 
         <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs text-slate-400">
-          <span>NewVision Hub v2.5 Pro · ĐH Dược Hà Nội</span>
+          <span>NewVision HUP v2.5 Pro · ĐH Dược Hà Nội</span>
           <button onClick={onClose} className="btn-secondary text-xs py-1.5 px-4">Đóng</button>
         </div>
       </div>
@@ -1678,19 +1638,30 @@ function SettingsModal({open,onClose}){
 // ============================================================
 function BcnRoomPage(){
   const{
-    bcnPin,bcnUnlocked,setBcnUnlocked,members,setMembers,
+    bcnPin,setBcnPin,bcnUnlocked,setBcnUnlocked,members,setMembers,
     expenses,setExpenses,bcnNotes,setBcnNotes,bcnPlans,setBcnPlans,
     sessions,assignTasks,addNotification,playSound,triggerCat
   }=useContext(AppCtx);
 
   const[pinInput,setPinInput]=useState('');
   const[shaking,setShaking]=useState(false);
+  const[pinEdit,setPinEdit]=useState('');
+  const[pinSaved,setPinSaved]=useState(false);
   const[tab,setTab]=useState('radar');
   const[planModal,setPlanModal]=useState(false);
   const[editingPlan,setEditingPlan]=useState(null);
   const[newMilestone,setNewMilestone]=useState('');
   const emptyPlan={title:'',deadline:'',level:'Tuyệt mật',pic:'',content:'',milestones:[]};
   const[planForm,setPlanForm]=useState(emptyPlan);
+
+  const handleSavePin=()=>{
+    if(!pinEdit.trim()||pinEdit.length<4){alert('Mã PIN mới phải có ít nhất 4 ký tự!');return}
+    setBcnPin(pinEdit.trim());
+    setPinSaved(true);
+    playSound('success');
+    addNotification('🔒 Đã đổi mã PIN Ban Chủ Nhiệm thành công!','success');
+    setTimeout(()=>{setPinSaved(false);setPinEdit('');},2000);
+  };
 
   useEffect(()=>{
     if(bcnUnlocked)return;
@@ -1872,6 +1843,32 @@ function BcnRoomPage(){
         <button onClick={handleLockNow} className="btn-danger flex items-center gap-1.5 text-xs py-2 px-3">
           <Icon name="lock" size={14}/>Khóa Phòng Ngay
         </button>
+      </div>
+
+      {/* KHU VỰC THIẾT LẬP MÃ PIN BẢO MẬT BCN */}
+      <div className="card p-3.5 border border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <Icon name="key" size={16}/>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-amber-900 dark:text-amber-200">Đổi Mã PIN Ban Chủ Nhiệm</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Chỉ thành viên BCN đã mở khóa mới có quyền đổi mã này</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="password"
+            maxLength={8}
+            value={pinEdit}
+            onChange={e=>setPinEdit(e.target.value)}
+            className="form-input text-xs font-mono tracking-widest text-center w-28 py-1.5"
+            placeholder="PIN mới..."
+          />
+          <button onClick={handleSavePin} className="btn-primary text-xs py-1.5 px-3 whitespace-nowrap">
+            {pinSaved ? '✓ Đã Lưu' : 'Lưu PIN'}
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
@@ -2216,11 +2213,40 @@ function Dashboard({setActiveTab}){
   const[newItem,setNewItem]=useState('');
   const[showLinkForm,setShowLinkForm]=useState(false);
   const[newLink,setNewLink]=useState({title:'',url:''});
+  const[now,setNow]=useState(Date.now());
+  const[targetGTime,setTargetGTime]=useLocalStorage('nv_target_g_time','');
+  const[showGTimeModal,setShowGTimeModal]=useState(false);
+  const[customGInput,setCustomGInput]=useState('');
+
+  useEffect(()=>{
+    const timer=setInterval(()=>setNow(Date.now()),1000);
+    return()=>clearInterval(timer);
+  },[]);
 
   const allTasks=events.flatMap(e=>(e.tasks||[]).map(t=>({...t,eventId:e.id})));
   const activeTasks=allTasks.filter(t=>!t.done);
   const overdueTasks=allTasks.filter(t=>!t.done&&isOverdue(t.deadline));
   const pendingDecisions=decisions.filter(d=>d.status!=='Đã chốt chính thức');
+
+  const nextEvent=events.filter(e=>e.date&&new Date(e.date)>=new Date(Date.now()-86400000)).sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
+  const effectiveGTime=targetGTime||(nextEvent?`${nextEvent.date}T18:00`:'');
+  const diffG=effectiveGTime?(new Date(effectiveGTime).getTime()-now):null;
+
+  let gCountdownText='--:--:--';
+  let isGPassed=false;
+  if(diffG!==null){
+    if(diffG<=0){
+      isGPassed=true;
+      gCountdownText='⚡ ĐÃ ĐẾN GIỜ G!';
+    }else{
+      const days=Math.floor(diffG/(1000*60*60*24));
+      const hours=Math.floor((diffG/(1000*60*60))%24);
+      const mins=Math.floor((diffG/(1000*60))%60);
+      const secs=Math.floor((diffG/1000)%60);
+      const pad=n=>n.toString().padStart(2,'0');
+      gCountdownText=`${days>0?days+'d ':''}${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+    }
+  }
 
   const addCLItem=()=>{
     if(!newItem.trim())return;
@@ -2249,7 +2275,7 @@ function Dashboard({setActiveTab}){
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-slate-800">Bảng Điều Khiển</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Tổng quan hoạt động CLB NewVision – ĐH Dược HN</p>
+        <p className="text-sm text-slate-500 mt-0.5">Tổng quan hoạt động CLB NewVision HUP – ĐH Dược HN</p>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((s,i)=>(
@@ -2271,6 +2297,28 @@ function Dashboard({setActiveTab}){
               {quickChecklist.some(i=>i.done)&&<button onClick={()=>setQuickChecklist(p=>p.map(i=>({...i,done:false})))} title="Reset" className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400"><Icon name="rotate-ccw" size={13}/></button>}
               <button onClick={()=>setShowCLForm(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>Thêm</button>
             </div>
+          </div>
+
+          {/* ĐỒNG HỒ ĐẾM NGƯỢC GIỜ G THỜI GIAN THỰC */}
+          <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/5 rounded-xl p-2.5 mb-3 border border-orange-200 dark:border-orange-900/50 flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+              </span>
+              <span className="text-xs font-bold text-orange-950 dark:text-orange-200">Đếm Ngược Giờ G:</span>
+              <span className={`font-mono font-black text-sm tracking-wider ${isGPassed?'text-emerald-600 dark:text-emerald-400':'text-orange-600 dark:text-orange-400'}`}>
+                {gCountdownText}
+              </span>
+            </div>
+            <button
+              onClick={()=>{setCustomGInput(effectiveGTime||'');setShowGTimeModal(true)}}
+              className="text-[10px] text-orange-600 hover:text-orange-800 font-semibold flex items-center gap-1 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-orange-200 dark:border-slate-700 shadow-sm flex-shrink-0"
+              title="Cài đặt Giờ G"
+            >
+              <Icon name="clock" size={11}/>
+              {effectiveGTime ? new Date(effectiveGTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : 'Chọn giờ'}
+            </button>
           </div>
           {showCLForm&&(
             <div className="flex gap-2 mb-3">
@@ -2341,6 +2389,46 @@ function Dashboard({setActiveTab}){
           </div>
         </div>
       </div>
+
+      {showGTimeModal&&(
+        <Modal open={showGTimeModal} onClose={()=>setShowGTimeModal(false)} title="Cài Đặt Mốc Giờ G Sự Kiện">
+          <div className="space-y-3">
+            <p className="text-xs text-slate-500">Thiết lập mốc thời gian diễn ra sự kiện (Giờ G) để đồng hồ đếm ngược trực tiếp:</p>
+            <div>
+              <label className="form-label">Chọn Ngày & Giờ G</label>
+              <input
+                type="datetime-local"
+                value={customGInput}
+                onChange={e=>setCustomGInput(e.target.value)}
+                className="form-input text-sm"
+              />
+            </div>
+            {nextEvent&&(
+              <button
+                type="button"
+                onClick={()=>setCustomGInput(`${nextEvent.date}T18:00`)}
+                className="text-xs text-orange-600 hover:underline flex items-center gap-1 font-medium"
+              >
+                📅 Lấy theo sự kiện gần nhất: {nextEvent.name} ({fmtDate(nextEvent.date)})
+              </button>
+            )}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={()=>{setTargetGTime('');setShowGTimeModal(false)}}
+                className="btn-secondary flex-1 text-xs"
+              >
+                Mặc định theo sự kiện
+              </button>
+              <button
+                onClick={()=>{if(customGInput)setTargetGTime(customGInput);setShowGTimeModal(false)}}
+                className="btn-primary flex-1 text-xs"
+              >
+                Lưu Mốc Giờ G
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -2719,6 +2807,7 @@ function EventDetail({event,onBack}){
   const[editingTask,setEditingTask]=useState(null);
   const[confirmDel,setConfirmDel]=useState(null);
   const[liveMode,setLiveMode]=useState(false);
+  const[taskBanFilter,setTaskBanFilter]=useState('');
   const emptyTask={title:'',assignee:'',ban:'',deadline:'',link:'',phase:TASK_PHASES[0],done:false};
   const[taskForm,setTaskForm]=useState(emptyTask);
 
@@ -2751,7 +2840,17 @@ function EventDetail({event,onBack}){
   const deleteTask=taskId=>setEvents(p=>p.map(e=>e.id===curEvent.id?{...e,tasks:(e.tasks||[]).filter(t=>t.id!==taskId)}:e));
   const updateLiveData=updEv=>setEvents(p=>p.map(e=>e.id===updEv.id?updEv:e));
 
-  const tasksByPhase=phase=>(curEvent.tasks||[]).filter(t=>t.phase===phase);
+  const tasksByPhase=phase=>(curEvent.tasks||[]).filter(t=>{
+    if(t.phase!==phase)return false;
+    if(!taskBanFilter)return true;
+    const b=(t.ban||'').toLowerCase();
+    if(taskBanFilter==='Nội vụ')return b.includes('nội vụ');
+    if(taskBanFilter==='Truyền thông')return b.includes('truyền thông');
+    if(taskBanFilter==='Chuyên môn')return b.includes('sự kiện')||b.includes('chuyên môn');
+    if(taskBanFilter==='Đối ngoại')return b.includes('đối ngoại');
+    if(taskBanFilter==='Toàn CLB')return b.includes('toàn clb');
+    return t.ban===taskBanFilter;
+  });
   const totalTasks=(curEvent.tasks||[]).length;
   const doneTasks=(curEvent.tasks||[]).filter(t=>t.done).length;
   const progress=totalTasks>0?Math.round(doneTasks/totalTasks*100):0;
@@ -2788,6 +2887,36 @@ function EventDetail({event,onBack}){
       )}
 
       {curEvent.note&&<div className="card p-3 bg-amber-50 border-amber-200 text-sm text-amber-800"><Icon name="sticky-note" size={14} className="inline mr-1.5"/>Ghi chú: {curEvent.note}</div>}
+
+      {/* BỘ LỌC BAN CHO CÔNG VIỆC */}
+      <div className="card p-3 flex items-center justify-between gap-2 overflow-x-auto">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mr-1">
+            <Icon name="filter" size={13}/> Lọc theo ban:
+          </span>
+          {['', 'Nội vụ', 'Truyền thông', 'Chuyên môn', 'Đối ngoại', 'Toàn CLB'].map(b => (
+            <button
+              key={b}
+              onClick={() => setTaskBanFilter(b)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition whitespace-nowrap ${
+                taskBanFilter === b
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              {b || 'Tất cả ban'}
+            </button>
+          ))}
+        </div>
+        {taskBanFilter && (
+          <button
+            onClick={() => setTaskBanFilter('')}
+            className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 flex-shrink-0"
+          >
+            <Icon name="x-circle" size={12}/>Xóa lọc
+          </button>
+        )}
+      </div>
 
       {TASK_PHASES.map(phase=>(
         <div key={phase} className="card p-4">
@@ -2936,6 +3065,7 @@ function MemberProfileModal({member,open,onClose,sessions,assignTasks,events}){
               <span className={`status-badge text-xs ${member.role==='Ban Chủ Nhiệm'?'tag-blue':member.role==='CTV'?'tag-gray':'tag-green'}`}>{member.role}</span>
               {member.ban&&<span className="status-badge tag-gray text-xs">{member.ban}</span>}
               {member.khoa&&<span className="status-badge tag-purple text-xs">{member.khoa}</span>}
+              {member.lopHup&&<span className="status-badge tag-blue text-xs">{member.lopHup}</span>}
               <span className={`status-badge text-xs ${evalColor(member.eval||'Đạt')}`}>{member.eval||'Đạt'}</span>
             </div>
             <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-slate-400">
@@ -3030,7 +3160,7 @@ body{font-family:'Segoe UI',sans-serif;padding:32px;color:#1e293b;background:#f8
   ${skills.length>0?`<div style="margin-top:14px"><strong style="font-size:12px;color:#475569">Thế mạnh chuyên môn:</strong><div style="margin-top:6px">${skills.map(s=>`<span class="tag">${s}</span>`).join('')}</div></div>`:''}
   ${member.note?`<div class="note"><strong>Nhận xét thái độ:</strong> "${member.note}"</div>`:''}
   <div style="margin-top:20px;padding-top:10px;border-top:1px dashed #cbd5e1;display:flex;justify-content:space-between;font-size:11px;color:#94a3b8">
-    <span>NewVision Hub Talent Profile</span>
+    <span>NewVision HUP Talent Profile</span>
     <span>Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}</span>
   </div>
 </div><script>window.onload=function(){window.print()}<\/script></body></html>`;
@@ -3054,26 +3184,28 @@ function MembersPage(){
   const[editing,setEditing]=useState(null);
   const[confirmDel,setConfirmDel]=useState(null);
   const[selectedBan,setSelectedBan]=useState('');
-  const[selectedKhoa,setSelectedKhoa]=useState('');
+  const[searchKhoaLop,setSearchKhoaLop]=useState('');
   const[sessionModal,setSessionModal]=useState(false);
   const[taskModal,setTaskModal]=useState(false);
   const[newSession,setNewSession]=useState('');
   const[newATask,setNewATask]=useState('');
   const[viewMode,setViewMode]=useState('members');
   const[profileMember,setProfileMember]=useState(null);
-  const emptyForm={name:'',role:'Thành viên chính thức',ban:'',khoa:'',phone:'',email:'',note:'',eval:'Đạt',skills:[],attendance:{},taskStatus:{}};
+  const emptyForm={name:'',role:'Thành viên chính thức',ban:'',gen:'',lopHup:'',khoa:'',phone:'',email:'',note:'',eval:'Đạt',skills:[],attendance:{},taskStatus:{}};
   const[form,setForm]=useState(emptyForm);
 
   const openAdd=()=>{setEditing(null);setForm(emptyForm);setModal(true)};
-  const openEdit=m=>{setEditing(m.id);setForm({...emptyForm,...m,skills:m.skills||[]});setModal(true)};
+  const openEdit=m=>{setEditing(m.id);setForm({...emptyForm,...m,gen:m.gen||m.khoa||'',lopHup:m.lopHup||'',skills:m.skills||[]});setModal(true)};
   const handleClose=()=>{setModal(false);setEditing(null)};
 
   const handleSave=()=>{
     if(!form.name.trim()){alert('Vui lòng nhập họ tên!');return}
+    const finalKhoa=form.gen?(form.lopHup?`${form.gen} · ${form.lopHup}`:form.gen):(form.lopHup||form.khoa||'');
+    const memberData={...form,khoa:finalKhoa};
     if(editing){
-      setMembers(p=>p.map(m=>m.id===editing?{...m,...form}:m));
+      setMembers(p=>p.map(m=>m.id===editing?{...m,...memberData}:m));
     }else{
-      setMembers(p=>[...p,{...form,id:uid(),attendance:{},taskStatus:{},createdAt:new Date().toISOString()}]);
+      setMembers(p=>[...p,{...memberData,id:uid(),attendance:{},taskStatus:{},createdAt:new Date().toISOString()}]);
       triggerCat('dash');
     }
     handleClose();
@@ -3092,16 +3224,23 @@ function MembersPage(){
   const addATask=()=>{if(!newATask.trim())return;setAssignTasks(p=>[...p,{id:uid(),name:newATask.trim()}]);setNewATask('')};
 
   const bans=[...new Set(members.map(m=>m.ban||'Chưa phân ban'))];
-  const khoasList=[...new Set([...CLASS_YEARS,...members.map(m=>m.khoa).filter(Boolean)])];
   let filteredMembers=members;
   if(selectedBan)filteredMembers=filteredMembers.filter(m=>(m.ban||'Chưa phân ban')===selectedBan);
-  if(selectedKhoa)filteredMembers=filteredMembers.filter(m=>m.khoa===selectedKhoa);
+  if(searchKhoaLop.trim()){
+    const q=searchKhoaLop.trim().toLowerCase();
+    filteredMembers=filteredMembers.filter(m=>
+      (m.gen&&m.gen.toLowerCase().includes(q))||
+      (m.lopHup&&m.lopHup.toLowerCase().includes(q))||
+      (m.khoa&&m.khoa.toLowerCase().includes(q))||
+      (m.name&&m.name.toLowerCase().includes(q))
+    );
+  }
   const groupedByBan=bans.reduce((acc,b)=>({...acc,[b]:filteredMembers.filter(m=>(m.ban||'Chưa phân ban')===b)}),{});
 
   return(
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-bold text-slate-800">Talent Hub – Thành Viên & CTV</h1><p className="text-xs text-slate-500 mt-0.5">Hồ sơ năng lực, chấm công và đánh giá tổng kết</p></div>
+        <div><h1 className="text-xl font-bold text-slate-800">Thành Viên & CTV NewVision HUP</h1><p className="text-xs text-slate-500 mt-0.5">Hồ sơ năng lực, chấm công và đánh giá tổng kết</p></div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="user-plus" size={15}/>Thêm mới</button>
       </div>
       <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
@@ -3114,12 +3253,23 @@ function MembersPage(){
           <option value="">Tất cả ban</option>
           {bans.map(b=><option key={b}>{b}</option>)}
         </select>
-        <select value={selectedKhoa} onChange={e=>setSelectedKhoa(e.target.value)} className="form-input text-sm w-auto">
-          <option value="">Tất cả Khóa / Gen</option>
-          {khoasList.map(k=><option key={k}>{k}</option>)}
-        </select>
-        {(selectedBan||selectedKhoa)&&(
-          <button onClick={()=>{setSelectedBan('');setSelectedKhoa('')}} className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1">
+        <div className="relative flex-1 min-w-[210px] max-w-xs">
+          <Icon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"/>
+          <input
+            type="text"
+            value={searchKhoaLop}
+            onChange={e=>setSearchKhoaLop(e.target.value)}
+            className="form-input text-sm pl-8 pr-7 py-1.5 w-full"
+            placeholder="Tìm theo Khóa, Gen hoặc Lớp..."
+          />
+          {searchKhoaLop&&(
+            <button onClick={()=>setSearchKhoaLop('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <Icon name="x" size={12}/>
+            </button>
+          )}
+        </div>
+        {(selectedBan||searchKhoaLop)&&(
+          <button onClick={()=>{setSelectedBan('');setSearchKhoaLop('')}} className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1">
             <Icon name="x-circle" size={13}/>Xóa lọc
           </button>
         )}
@@ -3146,7 +3296,8 @@ function MembersPage(){
                       <div className="flex flex-wrap items-center gap-1.5">
                         <p className="font-semibold text-slate-800 text-sm">{m.name}</p>
                         <span className={`status-badge text-[11px] ${m.role==='Ban Chủ Nhiệm'?'tag-blue':m.role==='CTV'?'tag-gray':'tag-green'}`}>{m.role}</span>
-                        {m.khoa&&<span className="status-badge tag-purple text-[11px]">{m.khoa}</span>}
+                        {(m.gen||m.khoa)&&<span className="status-badge tag-purple text-[11px]">{m.gen||m.khoa}</span>}
+                        {m.lopHup&&<span className="status-badge tag-blue text-[11px]">{m.lopHup}</span>}
                         <span className={`status-badge text-[11px] ${evalColor(m.eval||'Đạt')}`}>{m.eval||'Đạt'}</span>
                       </div>
                       <div className="flex flex-wrap gap-2 mt-0.5 text-xs text-slate-400">
@@ -3264,23 +3415,25 @@ function MembersPage(){
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="form-label">Khóa/Lớp / Gen</label>
+              <label className="form-label">Khóa / Gen CLB</label>
               <input
-                list="khoa-suggestions"
-                value={form.khoa||''}
-                onChange={e=>setForm(p=>({...p,khoa:e.target.value}))}
+                value={form.gen||form.khoa||''}
+                onChange={e=>setForm(p=>({...p,gen:e.target.value}))}
                 className="form-input"
-                placeholder="VD: K80, A4K79, Gen 15..."
+                placeholder="VD: Gen 17, K17, Gen 18..."
               />
-              <datalist id="khoa-suggestions">
-                {CLASS_YEARS.map(k=><option key={k} value={k}/>)}
-                <option value="Gen 14 - K79"/>
-                <option value="Gen 15 - K80"/>
-                <option value="Gen 16 - K81"/>
-              </datalist>
             </div>
-            <div><label className="form-label">Đánh giá tổng kết</label><select value={form.eval} onChange={e=>setForm(p=>({...p,eval:e.target.value}))} className="form-input">{EVAL_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
+            <div>
+              <label className="form-label">Lớp / Khóa trường HUP</label>
+              <input
+                value={form.lopHup||''}
+                onChange={e=>setForm(p=>({...p,lopHup:e.target.value}))}
+                className="form-input"
+                placeholder="VD: A4K80, A1K79, S1K3..."
+              />
+            </div>
           </div>
+          <div><label className="form-label">Đánh giá tổng kết</label><select value={form.eval} onChange={e=>setForm(p=>({...p,eval:e.target.value}))} className="form-input">{EVAL_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className="form-label">Số điện thoại</label><input value={form.phone} onChange={e=>setForm(p=>({...p,phone:e.target.value}))} className="form-input" placeholder="0912345678"/></div>
             <div><label className="form-label">Email</label><input type="email" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} className="form-input" placeholder="email@example.com"/></div>
@@ -3686,7 +3839,7 @@ function App(){
             <div className="flex items-center gap-2.5 cursor-pointer" onClick={()=>setActiveTab('dashboard')}>
               <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-md theme-brand-bg" style={{background:'var(--brand-gradient)'}}><Icon name="eye" size={15} className="text-white"/></div>
               <div>
-                <span className="font-extrabold text-slate-800 text-base tracking-tight">NewVision Hub</span>
+                <span className="font-extrabold text-slate-800 text-base tracking-tight">NewVision HUP</span>
                 <span className="hidden sm:block text-[10px] text-slate-400 leading-none">CLB Kỹ năng mềm – ĐH Dược HN</span>
               </div>
             </div>
@@ -3761,7 +3914,7 @@ function App(){
           <div className="mt-auto pt-4 border-t border-slate-100 px-2">
             <div className="flex items-center gap-2 text-[10px] text-slate-400">
               <div className="w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0 theme-brand-bg" style={{background:'var(--brand-gradient)'}}><Icon name="eye" size={10} className="text-white"/></div>
-              <div><p className="font-bold text-slate-600 dark:text-slate-300 text-[11px]">NewVision Hub v2.5</p><p>ĐH Dược HN · LocalStorage ✓</p></div>
+              <div><p className="font-bold text-slate-600 dark:text-slate-300 text-[11px]">NewVision HUP v2.5</p><p>ĐH Dược HN • Cloud Firestore ✓</p></div>
             </div>
           </div>
         </aside>
@@ -3773,7 +3926,7 @@ function App(){
               <div className="flex items-center justify-between mb-4 px-2">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center theme-brand-bg" style={{background:'var(--brand-gradient)'}}><Icon name="eye" size={15} className="text-white"/></div>
-                  <div><span className="font-extrabold text-slate-800">NewVision Hub</span><p className="text-[10px] text-slate-400">CLB Kỹ năng mềm – ĐH Dược HN</p></div>
+                  <div><span className="font-extrabold text-slate-800">NewVision HUP</span><p className="text-[10px] text-slate-400">CLB Kỹ năng mềm – ĐH Dược HN</p></div>
                 </div>
                 <button onClick={()=>setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100"><Icon name="x" size={18} className="text-slate-500"/></button>
               </div>
