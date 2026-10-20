@@ -203,6 +203,73 @@
     .dark ::-webkit-scrollbar-track{background:#1e293b}
     .dark ::-webkit-scrollbar-thumb{background:#475569}
     .dark .mascot-bubble::after{border-top-color:#1e293b}
+
+    /* ===== MOBILE OPTIMIZATIONS (@media max-width: 768px) ===== */
+    @media (max-width: 768px) {
+      /* 1. Main content container padding-bottom to avoid being hidden by bottom nav */
+      main {
+        padding-bottom: 80px !important;
+      }
+
+      /* 2. Mascot Cú/Đại bàng: thu nhỏ max-width 50px, cách đáy 75px, lệch phải */
+      .mascot-container {
+        bottom: 75px !important;
+        right: 12px !important;
+        max-width: 50px !important;
+      }
+      .mascot-container .mascot-vivi,
+      .mascot-container .w-16 {
+        width: 44px !important;
+        height: 54px !important;
+      }
+      .mascot-container .mascot-bubble {
+        font-size: 10px !important;
+        max-width: 130px !important;
+        padding: 4px 8px !important;
+      }
+
+      /* Ẩn linh vật phụ (mèo chạy tự do) trên mobile để không đè nút (+) và che khuất nút chạm */
+      .screen-cat-companion {
+        display: none !important;
+      }
+
+      /* Nút tròn (+) FAB cách đáy 80px bên trái */
+      .fab-container {
+        bottom: 80px !important;
+        left: 14px !important;
+      }
+
+      /* 3. Thanh Bottom Navigation: 6 mục dàn đều vừa khít chiều ngang màn hình điện thoại */
+      .bottom-nav-bar {
+        height: 58px !important;
+      }
+      .bottom-nav-bar > div {
+        height: 58px !important;
+      }
+      .bottom-nav-item {
+        padding: 3px 1px !important;
+        min-width: 0 !important;
+      }
+      .bottom-nav-item .nav-icon svg {
+        width: 17px !important;
+        height: 17px !important;
+      }
+      .bottom-nav-item .nav-label {
+        font-size: 10px !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.3px !important;
+        max-width: 100% !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        padding: 0 1px !important;
+      }
+      .bottom-nav-item .nav-dot {
+        margin-top: 1px !important;
+        width: 4px !important;
+        height: 4px !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -965,7 +1032,7 @@ function Mascot(){
   const mascotTitle=mascotType==='eagle'?'Đại bàng NewVision – Bấm để nhận lời cổ vũ!':'Vi Vi – Bấm để nhận lời cổ vũ!';
 
   return(
-    <div className="fixed bottom-20 right-3 md:bottom-8 z-[80] flex flex-col items-center gap-1 select-none">
+    <div className="mascot-container fixed bottom-20 right-3 md:bottom-8 z-[80] flex flex-col items-center gap-1 select-none">
       {showBubble&&bubText&&(
         <div className="mascot-bubble relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-2xl rounded-br-sm px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-100 shadow-xl max-w-[175px] text-center bubble-pop mb-1">
           {bubText}
@@ -1179,7 +1246,7 @@ function ScreenCatCompanion(){
 
   return(
     <div
-      className="fixed z-[95] pointer-events-auto select-none transition-transform duration-75"
+      className="screen-cat-companion fixed z-[95] pointer-events-auto select-none transition-transform duration-75"
       style={{
         left:`${pos.x}px`,
         top:`${pos.y}px`,
@@ -1649,7 +1716,7 @@ function BcnRoomPage(){
     }else{
       setShaking(true);
       playSound('sos');
-      addNotification('Mã PIN không chính xác! (Mặc định: 1337)','error');
+      addNotification('Mã PIN không chính xác! Vui lòng thử lại.','error');
       setTimeout(()=>{
         setShaking(false);
         setPinInput('');
@@ -1782,7 +1849,6 @@ function BcnRoomPage(){
               ⌫
             </button>
           </div>
-          <p className="text-[11px] text-slate-400">Mã PIN mặc định: <code className="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded font-mono font-bold text-amber-600">1337</code></p>
         </div>
       </div>
     );
@@ -3557,7 +3623,7 @@ function FAB({setActiveTab}){
     {label:'Thêm link tài liệu',icon:'link',color:'bg-purple-500 text-white',tab:'resources'},
   ];
   return(
-    <div ref={ref} className="md:hidden fixed bottom-20 left-4 z-[70]">
+    <div ref={ref} className="fab-container md:hidden fixed bottom-20 left-4 z-[70]">
       {open&&(
         <div className="absolute bottom-14 left-0 space-y-2">
           {actions.map((a,i)=>(
@@ -3730,12 +3796,12 @@ function App(){
         </main>
       </div>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 shadow-lg">
+      <nav className="bottom-nav-bar md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 shadow-lg">
         <div className="grid grid-cols-6 h-16">
           {NAV_ITEMS.map(item=>(
             <button key={item.id} onClick={()=>setActiveTab(item.id)} className={`bottom-nav-item flex flex-col items-center justify-center gap-0.5 ${activeTab===item.id?'active':''}`}>
               <Icon name={item.icon} size={18} className={`nav-icon ${activeTab===item.id?'text-orange-600':item.isBcn?'text-amber-500':'text-slate-400'}`}/>
-              <span className={`nav-label text-[9px] font-medium truncate max-w-[54px] ${activeTab===item.id?'text-orange-600':item.isBcn?'text-amber-600':'text-slate-400'}`}>{item.label}</span>
+              <span className={`nav-label text-[10px] font-medium truncate max-w-full ${activeTab===item.id?'text-orange-600':item.isBcn?'text-amber-600':'text-slate-400'}`}>{item.label}</span>
               <div className="nav-dot"/>
             </button>
           ))}
