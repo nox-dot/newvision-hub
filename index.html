@@ -313,6 +313,44 @@ function playSound(type) {
 }
 window.playSound = playSound;
 
+// ============================================================
+// GLOBAL SAFE NOTIFICATION DISPATCHER
+// ============================================================
+function addNotification(title, message, type = 'info') {
+  try {
+    let msg = message;
+    let t = type;
+    let head = title;
+    if (arguments.length === 1) {
+      msg = title;
+      head = 'Thông báo';
+      t = 'info';
+    } else if (arguments.length === 2 && ['info', 'success', 'warning', 'error'].includes(message)) {
+      t = message;
+      msg = title;
+      head = 'Thông báo';
+    }
+    if (typeof window !== 'undefined' && typeof window.__dispatchNotification === 'function') {
+      window.__dispatchNotification(msg || head, t);
+    }
+    if (typeof notifications !== 'undefined' && Array.isArray(notifications)) {
+      notifications.unshift({
+        id: Date.now().toString(),
+        title: head || 'Thông báo',
+        message: msg || '',
+        time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+        type: t,
+        read: false
+      });
+      if (typeof renderNotifications === 'function') renderNotifications();
+      if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+    }
+  } catch (err) {
+    console.warn("Lỗi khi thêm notification:", err);
+  }
+}
+window.addNotification = addNotification;
+
 const { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext } = React;
 
 // ============================================================
@@ -549,12 +587,25 @@ function AppProvider({children}){
   },[]);
 
   const addNotification=useCallback((message,type='info')=>{
-    const n={id:Date.now()+Math.random(),message,type,read:false,timestamp:new Date().toISOString()};
-    setNotifications(p=>[n,...p.slice(0,199)]);
-    showToast(message,type);
-    const pushTitle=type==='error'?'🚨 BÁO ĐỘNG SOS - NewVision HUP':type==='success'?'✨ NewVision HUP':type==='warning'?'⚠️ NewVision HUP':'📢 NewVision HUP';
-    showWebPush(pushTitle,message,{tag:type,requireInteraction:type==='error'});
+    try{
+      const n={id:Date.now()+Math.random(),message,type,read:false,timestamp:new Date().toISOString()};
+      setNotifications(p=>[n,...p.slice(0,199)]);
+      showToast(message,type);
+      const pushTitle=type==='error'?'🚨 BÁO ĐỘNG SOS - NewVision HUP':type==='success'?'✨ NewVision HUP':type==='warning'?'⚠️ NewVision HUP':'📢 NewVision HUP';
+      showWebPush(pushTitle,message,{tag:type,requireInteraction:type==='error'});
+    }catch(err){
+      console.warn('Lỗi khi thêm notification:',err);
+    }
   },[showToast]);
+
+  useEffect(()=>{
+    window.__dispatchNotification = (msg, t) => {
+      try {
+        addNotification(msg, t);
+      } catch(e) {}
+    };
+    return () => { window.__dispatchNotification = null; };
+  },[addNotification]);
 
   const requestWebPush=useCallback(async()=>{
     if(typeof window==='undefined'||!('Notification' in window)){
@@ -607,8 +658,28 @@ function AppProvider({children}){
       try{
         let isFirstSnap = true;
         const unsub=fbDb.collection(colName).onSnapshot(snap=>{
-          let list=snap.docs.map(d=>({id:d.id,...d.data()}));
-          if(sortFn)list=sortFn(list);
+          // Khởi tạo mảng trống mới hoàn toàn cho mỗi snapshot, không cộng dồn danh sách cũ
+          const seenIds = new Set();
+          const seenNames = new Set();
+          let list = [];
+
+          snap.docs.forEach(d => {
+            const data = d.data();
+            const id = d.id;
+            if (seenIds.has(id)) return;
+            seenIds.add(id);
+
+            // Khử trùng lặp tuyệt đối cho thành viên nếu có bản ghi trùng lặp
+            if (colName === 'members') {
+              const nameKey = (data.name || '').trim().toLowerCase() + '|' + (data.ban || '').trim() + '|' + (data.khoa || data.gen || '').trim();
+              if (nameKey && seenNames.has(nameKey)) return;
+              if (nameKey) seenNames.add(nameKey);
+            }
+
+            list.push({ id, ...data });
+          });
+
+          if(sortFn) list = sortFn(list);
           setter(list);
           setCloudStatus('connected');
           setLastSynced(new Date());
@@ -1477,7 +1548,7 @@ function SettingsModal({open,onClose}){
       resources,inventory,expenses,notifications:notifications.slice(0,100),
     },`newvision-hup-${new Date().toISOString().slice(0,10)}.json`);
     try{playSound('success');}catch(e){}
-    addNotification('📦 Đã xuất backup dữ liệu thành công!','success');
+    try{addNotification('📦 Đã xuất backup dữ liệu thành công!','success');}catch(e){}
   };
 
   const handleImport=e=>{
@@ -1506,7 +1577,7 @@ function SettingsModal({open,onClose}){
         if(d.bcnNotes&&typeof d.bcnNotes==='object')batch.set(fbDb.collection('bcnNotes').doc('general'),{data:d.bcnNotes},{merge:true});
         await batch.commit();
         try{playSound('success');}catch(e){}
-        addNotification('✅ Nhập dữ liệu backup lên Cloud Firestore thành công!','success');
+        try{addNotification('✅ Nhập dữ liệu backup lên Cloud Firestore thành công!','success');}catch(e){}
         onClose();
       }catch(err){
         console.error('Import error:',err);
@@ -1674,7 +1745,7 @@ function SettingsModal({open,onClose}){
                 onClick={()=>{
                   showWebPush('🎉 Test Thông Báo Web Push','Hệ thống thông báo đẩy NewVision HUP đang hoạt động hoàn hảo trên máy tính của bạn!');
                   try{playSound('success');}catch(e){}
-                  addNotification('🧪 Đã gửi thử thông báo đẩy Web Push lên màn hình!','success');
+                  try{addNotification('🧪 Đã gửi thử thông báo đẩy Web Push lên màn hình!','success');}catch(e){}
                 }}
                 className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 text-slate-700 hover:text-blue-600"
               >
@@ -1767,7 +1838,7 @@ function BcnRoomPage(){
     setBcnPin(pinEdit.trim());
     setPinSaved(true);
     try{playSound('success');}catch(e){}
-    addNotification('🔒 Đã đổi mã PIN Ban Chủ Nhiệm thành công!','success');
+    try{addNotification('🔒 Đã đổi mã PIN Ban Chủ Nhiệm thành công!','success');}catch(e){}
     setTimeout(()=>{setPinSaved(false);setPinEdit('');},2000);
   };
 
@@ -1790,12 +1861,12 @@ function BcnRoomPage(){
     if(input===bcnPin){
       try{playSound('success');}catch(e){}
       setBcnUnlocked(true);
-      addNotification('🔓 Mở khóa thành công Phòng Ban Chủ Nhiệm!','success');
+      try{addNotification('🔓 Mở khóa thành công Phòng Ban Chủ Nhiệm!','success');}catch(e){}
       setPinInput('');
     }else{
       setShaking(true);
       try{playSound('sos');}catch(e){}
-      addNotification('Mã PIN không chính xác! Vui lòng thử lại.','error');
+      try{addNotification('Mã PIN không chính xác! Vui lòng thử lại.','error');}catch(e){}
       setTimeout(()=>{
         setShaking(false);
         setPinInput('');
@@ -1815,7 +1886,7 @@ function BcnRoomPage(){
   const handleLockNow=()=>{
     setBcnUnlocked(false);
     try{playSound('pop');}catch(e){}
-    addNotification('🔒 Đã khóa Phòng Ban Chủ Nhiệm an toàn!','info');
+    try{addNotification('🔒 Đã khóa Phòng Ban Chủ Nhiệm an toàn!','info');}catch(e){}
   };
 
   const saveMemberBcnNote=async(memberId,noteText)=>{
@@ -1825,7 +1896,7 @@ function BcnRoomPage(){
         data:{...bcnNotes,[memberId]:noteText}
       },{merge:true});
       try{playSound('pop');}catch(e){}
-      addNotification('📝 Đã lưu ghi chú BCN cho thành viên!','success');
+      try{addNotification('📝 Đã lưu ghi chú BCN cho thành viên!','success');}catch(e){}
     }catch(err){
       console.error('Lỗi lưu ghi chú BCN:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -1837,7 +1908,7 @@ function BcnRoomPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(memberId).set({eval:newEval},{merge:true});
       try{playSound('pop');}catch(e){}
-      addNotification(`Đã cập nhật đánh giá thành viên thành: ${newEval}`,'info');
+      try{addNotification(`Đã cập nhật đánh giá thành viên thành: ${newEval}`,'info');}catch(e){}
     }catch(err){
       console.error('Lỗi lưu đánh giá thành viên:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -1850,7 +1921,7 @@ function BcnRoomPage(){
       await fbDb.collection('expenses').doc(exp.id).set({status:'Đã quyết toán'},{merge:true});
       try{playSound('success');}catch(e){}
       triggerCat('celebrate');
-      addNotification(`✅ Đã duyệt quyết toán cho ${exp.person||'thành viên'}: ${fmtVND(exp.amount)}`,'success');
+      try{addNotification(`✅ Đã duyệt quyết toán cho ${exp.person||'thành viên'}: ${fmtVND(exp.amount)}`,'success');}catch(e){}
     }catch(err){
       console.error('Lỗi duyệt quyết toán:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -1865,7 +1936,7 @@ function BcnRoomPage(){
         note:(exp.note||'')+' [BCN yêu cầu giải trình thêm]'
       },{merge:true});
       try{playSound('pop');}catch(e){}
-      addNotification(`⚠️ Đã yêu cầu giải trình khoản chi "${exp.name}"`,'warning');
+      try{addNotification(`⚠️ Đã yêu cầu giải trình khoản chi "${exp.name}"`,'warning');}catch(e){}
     }catch(err){
       console.error('Lỗi từ chối quyết toán:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -1890,7 +1961,7 @@ function BcnRoomPage(){
       }
       setPlanModal(false);
       try{playSound('success');}catch(e){}
-      addNotification('🎯 Đã lưu kế hoạch tác chiến mật!','success');
+      try{addNotification('🎯 Đã lưu kế hoạch tác chiến mật!','success');}catch(e){}
     }catch(err){
       console.error('Lỗi lưu kế hoạch BCN:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -1914,7 +1985,7 @@ function BcnRoomPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('bcnPlans').doc(id).delete();
       try{playSound('pop');}catch(e){}
-      addNotification('Đã xóa kế hoạch BCN','info');
+      try{addNotification('Đã xóa kế hoạch BCN','info');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa kế hoạch:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2701,7 +2772,7 @@ function DecisionsPage(){
         await fbDb.collection('decisions').doc(editing).set(form,{merge:true});
         try{playSound('success');}catch(e){}
         if(old&&old.status!=='Đã chốt chính thức'&&form.status==='Đã chốt chính thức'){
-          addNotification(`✅ Vấn đề "${form.title}" đã chốt chính thức!`,'success');
+          try{addNotification(`✅ Vấn đề "${form.title}" đã chốt chính thức!`,'success');}catch(e){}
           triggerMascot('gavel','⚖️ Đã chốt chính thức!');
         }
       }else{
@@ -2710,7 +2781,7 @@ function DecisionsPage(){
         await fbDb.collection('decisions').doc(id).set(newD);
         try{playSound('success');}catch(e){}
         if(form.status==='Đã chốt chính thức'){
-          addNotification(`✅ Vấn đề "${form.title}" đã chốt!`,'success');
+          try{addNotification(`✅ Vấn đề "${form.title}" đã chốt!`,'success');}catch(e){}
           triggerMascot('gavel','⚖️ Đã chốt!');
         }else{
           triggerMascot('write','📝 Vấn đề mới ghi nhận!');
@@ -2730,7 +2801,7 @@ function DecisionsPage(){
       await fbDb.collection('decisions').doc(d.id).set({status:ns},{merge:true});
       try{playSound('pop');}catch(e){}
       if(ns==='Đã chốt chính thức'){
-        addNotification(`✅ "${d.title}" đã chốt!`,'success');
+        try{addNotification(`✅ "${d.title}" đã chốt!`,'success');}catch(e){}
         triggerMascot('gavel','⚖️ Đã chốt chính thức!');
       }
     }catch(err){
@@ -2795,7 +2866,7 @@ function DecisionsPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('decisions').doc(id).delete();
       try{playSound('pop');}catch(e){}
-      addNotification('Đã xóa vấn đề','info');
+      try{addNotification('Đã xóa vấn đề','info');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa quyết định:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2975,7 +3046,7 @@ function LiveEventMode({event,onBack,onUpdate}){
     if(!sosText.trim())return;
     const inc={id:uid(),time:new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),desc:sosText.trim(),resolved:false};
     onUpdate({...event,liveData:{...ld,incidents:[inc,...(ld.incidents||[])]}});
-    addNotification(`🚨 SOS tại "${event.name}": ${sosText.slice(0,60)}`,'error');
+    try{addNotification(`🚨 SOS tại "${event.name}": ${sosText.slice(0,60)}`,'error');}catch(e){}
     triggerMascot('sos','🚨 SOS! Đang xử lý sự cố!');
     setSosText('');setSosModal(false);
   };
@@ -3128,7 +3199,7 @@ function EventDetail({event,onBack}){
         savedTask={...taskForm,id:uid(),createdAt:new Date().toISOString()};
         updatedTasks=[...(curEvent.tasks||[]),savedTask];
         if(taskForm.assignee.trim()){
-          addNotification(`📋 Đã giao việc "${taskForm.title}" cho ${taskForm.assignee}`,'info');
+          try{addNotification(`📋 Đã giao việc "${taskForm.title}" cho ${taskForm.assignee}`,'info');}catch(e){}
           triggerMascot('write',`📋 Giao cho ${taskForm.assignee}!`);
         }else{
           triggerMascot('write','📝 Đầu việc mới!');
@@ -3173,10 +3244,10 @@ function EventDetail({event,onBack}){
         try{playSound('pop');}catch(e){}
       }catch(e){}
       if(newDone){
-        addNotification(`✅ Hoàn thành: "${task.title}"`,'success');
+        try{addNotification(`✅ Hoàn thành: "${task.title}"`,'success');}catch(e){}
         if(!isInitialSnapshot)triggerMascot('celebrate','🎉 Xuất sắc!');
       }else{
-        addNotification(`🔄 Mở lại: "${task.title}"`,'warning');
+        try{addNotification(`🔄 Mở lại: "${task.title}"`,'warning');}catch(e){}
       }
     }catch(err){
       console.error('Lỗi đổi trạng thái công việc:',err);
@@ -3327,7 +3398,7 @@ function EventDetail({event,onBack}){
 // EVENTS PAGE
 // ============================================================
 function EventsPage(){
-  const{events,setEvents}=useContext(AppCtx);
+  const{events,setEvents,addNotification,playSound}=useContext(AppCtx);
   const[selectedEvent,setSelectedEvent]=useState(null);
   const[modal,setModal]=useState(false);
   const[editing,setEditing]=useState(null);
@@ -3351,13 +3422,13 @@ function EventsPage(){
       if(editing){
         await fbDb.collection('events').doc(editing).set(form,{merge:true});
         try{playSound('success');}catch(e){}
-        addNotification(`Đã cập nhật sự kiện: ${form.name}`,'success');
+        try{addNotification(`Đã cập nhật sự kiện: ${form.name}`,'success');}catch(e){}
       }else{
         const id=uid();
         const newEv={...form,id,tasks:[],createdAt:new Date().toISOString()};
         await fbDb.collection('events').doc(id).set(newEv);
         try{playSound('success');}catch(e){}
-        addNotification(`Đã tạo sự kiện mới: ${form.name}`,'success');
+        try{addNotification(`Đã tạo sự kiện mới: ${form.name}`,'success');}catch(e){}
       }
       handleClose();
     }catch(err){
@@ -3370,7 +3441,7 @@ function EventsPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('events').doc(id).delete();
       try{playSound('pop');}catch(e){}
-      addNotification('Đã xóa sự kiện','info');
+      try{addNotification('Đã xóa sự kiện','info');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa sự kiện:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3575,7 +3646,7 @@ body{font-family:'Segoe UI',sans-serif;padding:32px;color:#1e293b;background:#f8
 // MEMBERS PAGE
 // ============================================================
 function MembersPage(){
-  const{members,setMembers,sessions,setSessions,assignTasks,setAssignTasks,events,triggerCat}=useContext(AppCtx);
+  const{members,setMembers,sessions,setSessions,assignTasks,setAssignTasks,events,triggerCat,addNotification,playSound}=useContext(AppCtx);
   const[modal,setModal]=useState(false);
   const[editing,setEditing]=useState(null);
   const[confirmDel,setConfirmDel]=useState(null);
@@ -3603,20 +3674,22 @@ function MembersPage(){
       if(editing){
         await fbDb.collection('members').doc(editing).set(memberData,{merge:true});
         try{playSound('success');}catch(e){}
-        addNotification(`Đã cập nhật thông tin: ${form.name}`,'success');
+        try{addNotification(`Đã cập nhật thông tin: ${form.name}`,'success');}catch(e){}
       }else{
-        const id=uid();
+        // Kiểm tra xem thành viên này đã tồn tại chưa để tránh tạo trùng lặp
+        const existing = members.find(m => (m.name||'').trim().toLowerCase() === form.name.trim().toLowerCase() && (m.ban||'').trim() === (form.ban||'').trim());
+        const id = existing ? existing.id : uid();
         const newDoc={
           ...memberData,
           id,
-          attendance:{},
-          taskStatus:{},
-          createdAt:new Date().toISOString()
+          attendance: existing?.attendance || {},
+          taskStatus: existing?.taskStatus || {},
+          createdAt: existing?.createdAt || new Date().toISOString()
         };
-        await fbDb.collection('members').doc(id).set(newDoc);
+        await fbDb.collection('members').doc(id).set(newDoc, {merge:true});
         try{playSound('success');}catch(e){}
-        triggerCat('dash');
-        addNotification(`Đã thêm thành viên mới: ${form.name}`,'success');
+        try{triggerCat('dash');}catch(e){}
+        try{addNotification(`Đã thêm thành viên mới: ${form.name}`,'success');}catch(e){}
       }
       handleClose();
     }catch(err){
@@ -3724,15 +3797,32 @@ function MembersPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(id).delete();
       try{playSound('pop');}catch(e){}
-      addNotification('Đã xóa thành viên','info');
+      try{addNotification('Đã xóa thành viên','info');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa thành viên:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
-  const bans=[...new Set(members.map(m=>m.ban||'Chưa phân ban'))];
-  let filteredMembers=members;
+  // Khử trùng lặp thành viên trước khi duyệt mảng để render giao diện
+  const uniqueMembers = useMemo(()=>{
+    const seenIds = new Set();
+    const seenNames = new Set();
+    const cleanList = [];
+    (members || []).forEach(m => {
+      if(!m || !m.id) return;
+      if(seenIds.has(m.id)) return;
+      seenIds.add(m.id);
+      const nameKey = (m.name || '').trim().toLowerCase() + '|' + (m.ban || '').trim() + '|' + (m.khoa || m.gen || '').trim();
+      if(nameKey && seenNames.has(nameKey)) return;
+      if(nameKey) seenNames.add(nameKey);
+      cleanList.push(m);
+    });
+    return cleanList;
+  },[members]);
+
+  const bans=[...new Set(uniqueMembers.map(m=>m.ban||'Chưa phân ban'))];
+  let filteredMembers=uniqueMembers;
   if(selectedBan)filteredMembers=filteredMembers.filter(m=>(m.ban||'Chưa phân ban')===selectedBan);
   if(searchKhoaLop.trim()){
     const q=searchKhoaLop.trim().toLowerCase();
@@ -4022,37 +4112,39 @@ function ResourcesPage(){
         if(editing){
           await fbDb.collection('resources').doc(editing).set(linkForm,{merge:true});
           try{playSound('success');}catch(e){}
-          addNotification(`Đã cập nhật link: ${linkForm.title}`,'success');
+          try{addNotification(`Đã cập nhật link: ${linkForm.title}`,'success');}catch(e){}
         }else{
           const id=uid();
           await fbDb.collection('resources').doc(id).set({...linkForm,id,createdAt:new Date().toISOString()});
           try{playSound('success');}catch(e){}
-          addNotification(`Đã thêm link mới: ${linkForm.title}`,'success');
+          try{addNotification(`Đã thêm link mới: ${linkForm.title}`,'success');}catch(e){}
         }
       }else if(tab==='inventory'){
         if(!invForm.name.trim()){alert('Vui lòng nhập tên đồ vật!');return}
         if(editing){
           await fbDb.collection('inventory').doc(editing).set(invForm,{merge:true});
           try{playSound('success');}catch(e){}
-          addNotification(`Đã cập nhật vật dụng: ${invForm.name}`,'success');
+          try{addNotification(`Đã cập nhật vật dụng: ${invForm.name}`,'success');}catch(e){}
         }else{
           const id=uid();
           await fbDb.collection('inventory').doc(id).set({...invForm,id,createdAt:new Date().toISOString()});
           try{playSound('success');}catch(e){}
-          addNotification(`Đã thêm vật dụng mới: ${invForm.name}`,'success');
+          try{addNotification(`Đã thêm vật dụng mới: ${invForm.name}`,'success');}catch(e){}
         }
       }else if(tab==='expenses'){
         if(!expForm.name.trim()){alert('Vui lòng nhập tên khoản chi!');return}
         if(editing){
           await fbDb.collection('expenses').doc(editing).set(expForm,{merge:true});
           try{playSound('success');}catch(e){}
-          addNotification(`Đã cập nhật khoản chi: ${expForm.name}`,'success');
+          try{addNotification(`Đã cập nhật khoản chi: ${expForm.name}`,'success');}catch(e){}
         }else{
           const id=uid();
           await fbDb.collection('expenses').doc(id).set({...expForm,id,createdAt:new Date().toISOString()});
           try{playSound('success');}catch(e){}
-          addNotification(`Đã thêm khoản chi mới: ${expForm.name}`,'success');
-          if(expForm.status==='Đã chi - Chờ hoàn tiền')addNotification(`💰 Khoản chi chờ hoàn tiền: ${expForm.name} – ${fmtVND(expForm.amount)}`,'warning');
+          try{addNotification(`Đã thêm khoản chi mới: ${expForm.name}`,'success');}catch(e){}
+          if(expForm.status==='Đã chi - Chờ hoàn tiền'){
+            try{addNotification(`💰 Khoản chi chờ hoàn tiền: ${expForm.name} – ${fmtVND(expForm.amount)}`,'warning');}catch(e){}
+          }
         }
       }
       handleClose();
@@ -4068,7 +4160,7 @@ function ResourcesPage(){
       const colName=tab==='links'?'resources':tab==='inventory'?'inventory':'expenses';
       await fbDb.collection(colName).doc(confirmDel).delete();
       try{playSound('pop');}catch(e){}
-      addNotification('Đã xóa mục thành công','info');
+      try{addNotification('Đã xóa mục thành công','info');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa mục:',err);
       alert('Lỗi lưu Firebase: '+err.message);
