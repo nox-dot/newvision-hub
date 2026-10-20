@@ -479,6 +479,11 @@ function AppProvider({children}){
   const[mascotType,setMascotType]=useLocalStorage('nv_mascot_type','vivi');
   const[catEnabled,setCatEnabled]=useLocalStorage('nv_cat_enabled',true);
   const[bcnPin,setBcnPin]=useLocalStorage('nv_bcn_pin','1303');
+  useEffect(()=>{
+    if(bcnPin==='1337'){
+      setBcnPin('1303');
+    }
+  },[bcnPin,setBcnPin]);
   const[bcnUnlocked,setBcnUnlocked]=useState(false);
   const[bcnNotes,setBcnNotes]=useLocalStorage('nv_bcn_notes',{});
   const[bcnPlans,setBcnPlans]=useLocalStorage('nv_bcn_plans',[
