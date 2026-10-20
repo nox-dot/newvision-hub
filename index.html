@@ -45,6 +45,7 @@
     @keyframes catSleepZ{0%{opacity:0;transform:translateY(0) scale(0.6)}50%{opacity:1}100%{opacity:0;transform:translateY(-18px) scale(1.1)}}
     @keyframes parachuteSway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
     @keyframes catLanding{0%{transform:scale(1.3,0.65)}60%{transform:scale(0.95,1.08)}100%{transform:scale(1,1)}}
+    @keyframes catBounce{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-16px) scale(1.08,0.92)}70%{transform:translateY(-5px) scale(0.98,1.02)}}
     @keyframes catBackflip{0%{transform:translateY(0) rotate(0deg) scale(1)}35%{transform:translateY(-80px) rotate(-180deg) scale(1.15)}70%{transform:translateY(-95px) rotate(-360deg) scale(1.1)}100%{transform:translateY(0) rotate(-360deg) scale(1)}}
     @keyframes dashSparkle{0%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(0.2)}}
 
@@ -67,6 +68,7 @@
     .pulse-shield{animation:pulseShield 2s infinite ease-in-out}
     .cat-landing-anim{animation:catLanding .35s cubic-bezier(.34,1.56,.64,1)}
     .cat-flip-anim{animation:catBackflip .85s cubic-bezier(.34,1.56,.64,1)}
+    .cat-bounce-anim{animation:catBounce .32s cubic-bezier(.34,1.56,.64,1)}
 
     /* ===== COLOR THEMES ===== */
     :root, .theme-orange {
@@ -286,6 +288,31 @@
 <div id="root"></div>
 
 <script type="text/babel">
+// ============================================================
+// GLOBAL SAFE SOUND PLAYER
+// ============================================================
+function playSound(type) {
+  try {
+    const isSoundOn = typeof localStorage !== 'undefined' ? localStorage.getItem('nv_sound') : null;
+    if (isSoundOn === 'false') return;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const audioContext = new AudioCtx();
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.frequency.value = type === 'success' ? 587.33 : type === 'pop' ? 700 : type === 'sos' ? 220 : type === 'gavel' ? 160 : 440;
+    gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    osc.start();
+    osc.stop(audioContext.currentTime + 0.2);
+  } catch (e) {
+    console.warn("Không thể phát âm thanh:", e);
+  }
+}
+window.playSound = playSound;
+
 const { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext } = React;
 
 // ============================================================
@@ -484,7 +511,11 @@ function AppProvider({children}){
   const[bcnNotes,setBcnNotes]=useState({});
   const[bcnPlans,setBcnPlans]=useState([]);
   const[catEvent,setCatEvent]=useState(null);
+  const isInitialSnapshotRef=useRef(true);
+  const[isInitialSnapshot,setIsInitialSnapshot]=useState(true);
+
   const triggerCat=useCallback((action,payload=null)=>{
+    if(isInitialSnapshotRef.current && (action==='celebrate'||action==='dash')) return;
     setCatEvent({action,payload,id:Date.now()});
   },[]);
 
@@ -499,36 +530,13 @@ function AppProvider({children}){
   },[darkMode]);
 
   const playSound=useCallback((type)=>{
-    if(!soundEnabled)return;
     try{
-      const ctx=new(window.AudioContext||window.webkitAudioContext)();
-      const o=ctx.createOscillator(),g=ctx.createGain();
-      o.connect(g);g.connect(ctx.destination);
-      const t=ctx.currentTime;
-      if(type==='success'){
-        o.type='sine';
-        o.frequency.setValueAtTime(523,t);o.frequency.setValueAtTime(659,t+.12);o.frequency.setValueAtTime(784,t+.24);
-        g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+.55);
-        o.start(t);o.stop(t+.55);
-      }else if(type==='pop'){
-        o.type='sine';o.frequency.setValueAtTime(700,t);
-        g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.001,t+.1);
-        o.start(t);o.stop(t+.12);
-      }else if(type==='sos'){
-        o.type='sawtooth';
-        o.frequency.setValueAtTime(220,t);o.frequency.setValueAtTime(440,t+.15);o.frequency.setValueAtTime(220,t+.3);o.frequency.setValueAtTime(440,t+.45);
-        g.gain.setValueAtTime(.28,t);g.gain.exponentialRampToValueAtTime(.001,t+.6);
-        o.start(t);o.stop(t+.6);
-      }else if(type==='gavel'){
-        o.type='triangle';
-        o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(60,t+.25);
-        g.gain.setValueAtTime(.4,t);g.gain.exponentialRampToValueAtTime(.001,t+.35);
-        o.start(t);o.stop(t+.35);
-      }
+      if(soundEnabled)window.playSound(type);
     }catch(e){}
   },[soundEnabled]);
 
   const triggerMascot=useCallback((state,msg='')=>{
+    if(isInitialSnapshotRef.current && state==='celebrate') return;
     setMascotState(state);setMascotMsg(msg);
     if(mascotTimer.current)clearTimeout(mascotTimer.current);
     mascotTimer.current=setTimeout(()=>{setMascotState('idle');setMascotMsg('')},2800);
@@ -558,7 +566,7 @@ function AppProvider({children}){
       setPushPermission(perm);
       if(perm==='granted'){
         showWebPush('🔔 NewVision HUP','Thông báo đẩy Web Push đã được kích hoạt thành công!');
-        playSound('success');
+        try{playSound('success');}catch(e){}
         showToast('Đã bật thông báo đẩy Web Push!','success');
         if(fbMessaging&&fbDb){
           try{
@@ -593,15 +601,22 @@ function AppProvider({children}){
     }
     setCloudStatus('syncing');
     const unsubs=[];
+    let isInitialSnapshot = true;
 
     const listenCol=(colName,setter,sortFn)=>{
       try{
+        let isFirstSnap = true;
         const unsub=fbDb.collection(colName).onSnapshot(snap=>{
           let list=snap.docs.map(d=>({id:d.id,...d.data()}));
           if(sortFn)list=sortFn(list);
           setter(list);
           setCloudStatus('connected');
           setLastSynced(new Date());
+
+          if(isFirstSnap){
+            isFirstSnap = false;
+            // Trong lần quét nạp dữ liệu đầu tiên khi mở trang, TUYỆT ĐỐI KHÔNG kích hoạt âm thanh, pháo hoa hoặc bong bóng chúc mừng của mèo cho bất kỳ task nào đã có trạng thái done
+          }
         },err=>{
           console.error(`Firestore realtime sync error (${colName}):`,err);
           setCloudStatus('offline');
@@ -663,7 +678,14 @@ function AppProvider({children}){
       }
     })();
 
+    const initTimer = setTimeout(()=>{
+      isInitialSnapshot = false;
+      isInitialSnapshotRef.current = false;
+      setIsInitialSnapshot(false);
+    }, 1500);
+
     return()=>{
+      clearTimeout(initTimer);
       unsubs.forEach(u=>{try{if(typeof u==='function')u()}catch(e){}});
     };
   },[]);
@@ -688,7 +710,7 @@ function AppProvider({children}){
       await batch.commit();
       setCloudStatus('connected');
       setLastSynced(new Date());
-      playSound('success');
+      try{playSound('success');}catch(e){}
       showToast('Đã đồng bộ toàn bộ dữ liệu lên Cloud Firestore thành công!','success');
     }catch(err){
       console.error('pushAllToCloud error:',err);
@@ -729,7 +751,7 @@ function AppProvider({children}){
       if(nDoc.exists)setBcnNotes(nDoc.data()?.data||{});
       setCloudStatus('connected');
       setLastSynced(new Date());
-      playSound('success');
+      try{playSound('success');}catch(e){}
       showToast('Đã tải lại toàn bộ dữ liệu từ Cloud Firestore thành công!','success');
     }catch(err){
       console.error('pullAllFromCloud error:',err);
@@ -759,6 +781,7 @@ function AppProvider({children}){
       catEvent,triggerCat,
       toasts,dismissToast,mascotState,mascotMsg,triggerMascot,playSound,
       cloudStatus,setCloudStatus,lastSynced,pushPermission,requestWebPush,showWebPush,pushAllToCloud,pullAllFromCloud,
+      isInitialSnapshot,
     }}>
       {children}
     </AppCtx.Provider>
@@ -973,7 +996,7 @@ function ViViSVG({state}){
 }
 
 function Mascot(){
-  const{mascotState,mascotMsg,triggerMascot,playSound,events,mascotType}=useContext(AppCtx);
+  const{mascotState,mascotMsg,triggerMascot,playSound,events,mascotType,isInitialSnapshot}=useContext(AppCtx);
   const[showBubble,setShowBubble]=useState(false);
   const[bubText,setBubText]=useState('');
 
@@ -982,11 +1005,11 @@ function Mascot(){
 
   useEffect(()=>{
     if(mascotState==='celebrate'){
-      if(window.confetti)window.confetti({particleCount:140,spread:78,origin:{x:.88,y:.9},colors:['#f97316','#ea580c','#6366f1','#ec4899','#f59e0b','#10b981']});
-      playSound('success');
-    }else if(mascotState==='sos')playSound('sos');
-    else if(mascotState==='gavel')playSound('gavel');
-    else if(mascotState==='wave')playSound('pop');
+      if(!isInitialSnapshot && window.confetti)window.confetti({particleCount:140,spread:78,origin:{x:.88,y:.9},colors:['#f97316','#ea580c','#6366f1','#ec4899','#f59e0b','#10b981']});
+      try{playSound('success');}catch(e){}
+    }else if(mascotState==='sos'){try{playSound('sos');}catch(e){}}
+    else if(mascotState==='gavel'){try{playSound('gavel');}catch(e){}}
+    else if(mascotState==='wave'){try{playSound('pop');}catch(e){}}
     if(mascotMsg){setShowBubble(true);setBubText(mascotMsg)}
     else{setTimeout(()=>setShowBubble(false),200)}
   },[mascotState,mascotMsg,playSound]);
@@ -1028,42 +1051,69 @@ function ScreenCatCompanion(){
   const[facing,setFacing]=useState(1);
   const[speech,setSpeech]=useState('');
   const[sparks,setSparks]=useState([]);
-  const isDraggingRef=useRef(false);
+  const[isBlinking,setIsBlinking]=useState(false);
+
+  const isPointerDownRef=useRef(false);
+  const hasDraggedRef=useRef(false);
+  const justFinishedDragRef=useRef(false);
+  const dragStartRef=useRef({x:0,y:0});
   const dragOffsetRef=useRef({x:0,y:0});
   const targetXRef=useRef(120);
-  const mouseRef=useRef({x:-1000,y:-1000,lastMoved:0});
   const vyRef=useRef(0);
   const speechTimerRef=useRef(null);
+  const lastInteractionTimeRef=useRef(Date.now());
+  const lastUserActivityRef=useRef(Date.now());
+  const lastClickTimeRef=useRef(0);
 
   const getFloorY=useCallback(()=>{
     return window.innerWidth<768?window.innerHeight-108:window.innerHeight-52;
   },[]);
 
-  const showCatSpeech=useCallback((text,duration=2400)=>{
+  const showCatSpeech=useCallback((text,duration=1500)=>{
     setSpeech(text);
     if(speechTimerRef.current)clearTimeout(speechTimerRef.current);
     speechTimerRef.current=setTimeout(()=>setSpeech(''),duration);
   },[]);
 
+  // Lắng nghe thao tác người dùng toàn trang: sau 20s không chạm web, mèo tự động ngủ
+  useEffect(()=>{
+    if(!catEnabled)return;
+    const onUserAct=()=>{
+      lastUserActivityRef.current=Date.now();
+      setState(s=>(s==='sleep'?'idle':s));
+    };
+    window.addEventListener('mousemove',onUserAct,{passive:true});
+    window.addEventListener('keydown',onUserAct,{passive:true});
+    window.addEventListener('scroll',onUserAct,{passive:true});
+    window.addEventListener('touchstart',onUserAct,{passive:true});
+    return()=>{
+      window.removeEventListener('mousemove',onUserAct);
+      window.removeEventListener('keydown',onUserAct);
+      window.removeEventListener('scroll',onUserAct);
+      window.removeEventListener('touchstart',onUserAct);
+    };
+  },[catEnabled]);
+
+  // Sự kiện kích hoạt từ hệ thống (khi hoàn thành task hoặc sự kiện đặc biệt)
   useEffect(()=>{
     if(!catEnabled||!catEvent)return;
     if(catEvent.action==='dash'){
       setState('dash');
       setFacing(1);
-      showCatSpeech('Vèo vèo~! 🚀🐾',1800);
-      playSound('pop');
+      showCatSpeech('Vèo vèo~! 🚀🐾',1500);
+      try{playSound('pop');}catch(e){}
       const newSparks=Array.from({length:6},(_,i)=>({
         id:Date.now()+i,x:Math.random()*40-20,y:Math.random()*20-10,emoji:['✨','⭐','💫'][i%3]
       }));
       setSparks(newSparks);
       setTimeout(()=>setSparks([]),1500);
-      setTimeout(()=>setState('idle'),1800);
+      setTimeout(()=>setState('idle'),1600);
     }else if(catEvent.action==='celebrate'){
       setState('celebrate');
-      playSound('success');
-      showCatSpeech('Hoan hô! Xong việc rồi! 🎉🐱',2600);
+      try{playSound('success');}catch(e){}
+      showCatSpeech('Hoan hô! Xong việc rồi! 🎉🐱',2000);
       if(window.confetti){
-        window.confetti({particleCount:50,spread:60,origin:{x:Math.min(Math.max(pos.x/window.innerWidth,0.1),0.9),y:Math.min(pos.y/window.innerHeight,0.9)}});
+        window.confetti({particleCount:40,spread:55,origin:{x:Math.min(Math.max(pos.x/window.innerWidth,0.1),0.9),y:Math.min(pos.y/window.innerHeight,0.9)}});
       }
       setTimeout(()=>setState('idle'),1200);
     }
@@ -1078,36 +1128,65 @@ function ScreenCatCompanion(){
     return()=>window.removeEventListener('resize',handleResize);
   },[catEnabled,getFloorY]);
 
+  // Xử lý kéo thả (Pointer move / Pointer up)
   useEffect(()=>{
     if(!catEnabled)return;
-    const handleMouseMove=e=>{
-      mouseRef.current={x:e.clientX,y:e.clientY,lastMoved:Date.now()};
-      if(isDraggingRef.current){
-        setPos({x:e.clientX-dragOffsetRef.current.x,y:e.clientY-dragOffsetRef.current.y});
+    const handlePointerMove=e=>{
+      if(!isPointerDownRef.current)return;
+      const clientX=e.clientX??e.touches?.[0]?.clientX;
+      const clientY=e.clientY??e.touches?.[0]?.clientY;
+      if(clientX===undefined||clientY===undefined)return;
+
+      const dist=Math.hypot(clientX-dragStartRef.current.x,clientY-dragStartRef.current.y);
+      // Nếu di chuyển quá 5px, xác định đây là hành động kéo (drag) chứ KHÔNG PHẢI click
+      if(dist>5){
+        hasDraggedRef.current=true;
+        setState('drag');
+        const newX=Math.max(10,Math.min(window.innerWidth-60,clientX-dragOffsetRef.current.x));
+        const newY=Math.max(10,Math.min(window.innerHeight-30,clientY-dragOffsetRef.current.y));
+        setPos({x:newX,y:newY});
       }
     };
-    const handleMouseUp=()=>{
-      if(isDraggingRef.current){
-        isDraggingRef.current=false;
+
+    const handlePointerUp=()=>{
+      if(!isPointerDownRef.current)return;
+      isPointerDownRef.current=false;
+      const now=Date.now();
+      lastUserActivityRef.current=now;
+
+      if(hasDraggedRef.current){
+        // Đánh dấu vừa kéo thả để chặn sự kiện click chuột ăn theo
+        justFinishedDragRef.current=true;
+        setTimeout(()=>{justFinishedDragRef.current=false},220);
+
+        // Thả mèo ở đâu thì cho phép mèo đứng ở đó một lát (10 giây không tự động đi dạo)
+        lastInteractionTimeRef.current=now;
+
         const floorY=getFloorY();
         if(pos.y<floorY-15){
           setState('fall');
           vyRef.current=0;
-          showCatSpeech('🪂 Bung dù tiếp đất!',2000);
         }else{
           setPos(p=>({...p,y:floorY}));
           setState('idle');
         }
+        // TUYỆT ĐỐI KHÔNG kích hoạt hiệu ứng pháo hoa hay chúc mừng khi người dùng vừa kéo thả mèo xong
       }
     };
-    window.addEventListener('mousemove',handleMouseMove);
-    window.addEventListener('mouseup',handleMouseUp);
-    return()=>{
-      window.removeEventListener('mousemove',handleMouseMove);
-      window.removeEventListener('mouseup',handleMouseUp);
-    };
-  },[catEnabled,getFloorY,pos.y,showCatSpeech]);
 
+    window.addEventListener('mousemove',handlePointerMove);
+    window.addEventListener('mouseup',handlePointerUp);
+    window.addEventListener('touchmove',handlePointerMove,{passive:false});
+    window.addEventListener('touchend',handlePointerUp);
+    return()=>{
+      window.removeEventListener('mousemove',handlePointerMove);
+      window.removeEventListener('mouseup',handlePointerUp);
+      window.removeEventListener('touchmove',handlePointerMove);
+      window.removeEventListener('touchend',handlePointerUp);
+    };
+  },[catEnabled,getFloorY,pos.y]);
+
+  // Hiệu ứng rơi bung dù khi thả từ trên cao
   useEffect(()=>{
     if(!catEnabled||state!=='fall')return;
     let animId;
@@ -1120,7 +1199,7 @@ function ScreenCatCompanion(){
         if(nextY>=floorY){
           vyRef.current=0;
           setState('landing');
-          playSound('pop');
+          try{playSound('pop');}catch(e){}
           setTimeout(()=>setState('idle'),400);
           return{x:p.x,y:floorY};
         }
@@ -1132,36 +1211,49 @@ function ScreenCatCompanion(){
     return()=>cancelAnimationFrame(animId);
   },[catEnabled,state,getFloorY,playSound]);
 
+  // Vòng lặp hành vi tự nhiên: 20s idle ngủ, 10s sau thả mới đi dạo, quay lại lề an toàn
   useEffect(()=>{
     if(!catEnabled)return;
     const interval=setInterval(()=>{
-      if(isDraggingRef.current||state==='fall'||state==='dash'||state==='celebrate'||state==='landing')return;
+      if(isPointerDownRef.current||state==='fall'||state==='drag'||state==='dash'||state==='celebrate'||state==='landing'||state==='bounce')return;
       const now=Date.now();
-      const mouseActive=now-mouseRef.current.lastMoved<2000;
-      const mouseDistX=mouseRef.current.x-pos.x;
-      if(mouseActive&&Math.abs(mouseDistX)>80&&Math.abs(mouseDistX)<450){
-        setFacing(mouseDistX>0?1:-1);
-        targetXRef.current=Math.max(20,Math.min(window.innerWidth-70,pos.x+(mouseDistX>0?90:-90)));
+
+      // Trạng thái nhàn rỗi (Idle): Khi người dùng không chạm vào web 20 giây, mèo tự động chuyển tư thế nằm ngủ
+      if(now-lastUserActivityRef.current>=20000){
+        if(state!=='sleep')setState('sleep');
+        return;
+      }
+
+      // Thả mèo ở đâu thì đứng yên 10 giây trước khi tự động đi dạo
+      if(now-lastInteractionTimeRef.current<10000)return;
+
+      // Nếu nằm sát viền quá (lề trái < 25px hoặc lề phải > width - 75px), quay lại lề an toàn
+      if(pos.x<25||pos.x>window.innerWidth-75){
+        const safeX=pos.x<25?70:window.innerWidth-120;
+        targetXRef.current=safeX;
+        setFacing(safeX>pos.x?1:-1);
         setState('walk');
         return;
       }
+
+      // Đi dạo nhẹ nhàng thong thả
       const r=Math.random();
-      if(r<0.38){
-        const newX=Math.floor(Math.random()*(window.innerWidth-120))+20;
+      if(r<0.28){
+        const delta=(Math.random()*70+30)*(Math.random()>0.5?1:-1);
+        const newX=Math.max(30,Math.min(window.innerWidth-80,pos.x+delta));
         targetXRef.current=newX;
         setFacing(newX>pos.x?1:-1);
         setState('walk');
       }else if(r<0.65){
         setState('idle');
-      }else if(r<0.82){
+      }else if(r<0.85){
         setState('lick');
-      }else{
-        setState('sleep');
       }
-    },3800);
+    },3600);
     return()=>clearInterval(interval);
   },[catEnabled,state,pos.x]);
 
+  // Bước chân khi đi dạo
   useEffect(()=>{
     if(!catEnabled||state!=='walk')return;
     let animId;
@@ -1172,7 +1264,7 @@ function ScreenCatCompanion(){
           setState('idle');
           return p;
         }
-        const speed=1.6;
+        const speed=1.4;
         return{...p,x:p.x+(dx>0?speed:-speed)};
       });
       animId=requestAnimationFrame(step);
@@ -1181,27 +1273,62 @@ function ScreenCatCompanion(){
     return()=>cancelAnimationFrame(animId);
   },[catEnabled,state]);
 
-  const handleMouseDown=e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    isDraggingRef.current=true;
-    dragOffsetRef.current={x:e.clientX-pos.x,y:e.clientY-pos.y};
-    setState('drag');
-    playSound('pop');
-    showCatSpeech('Nyah?! 🙀 Buông tớ ra nào!',2500);
+  const handlePointerStart=e=>{
+    const clientX=e.clientX??e.touches?.[0]?.clientX;
+    const clientY=e.clientY??e.touches?.[0]?.clientY;
+    if(clientX===undefined||clientY===undefined)return;
+
+    isPointerDownRef.current=true;
+    hasDraggedRef.current=false;
+    dragStartRef.current={x:clientX,y:clientY};
+    dragOffsetRef.current={x:clientX-pos.x,y:clientY-pos.y};
   };
 
+  // Xử lý CLICK CHỦ ĐỘNG vào chú mèo
   const handleClick=()=>{
-    if(isDraggingRef.current)return;
-    playSound('pop');
-    const msgs=[
-      'Meow~ NewVision bứt phá! 🐾',
-      'Purrrr... Tớ cổ vũ bạn nè! 🐱✨',
-      'Ngoan ghê, vuốt ve tớ nữa đi! 💖',
-      'Meow meow~ Năng suất hôm nay 100%! 🚀',
-      'Việc khó mấy NewVision cũng làm được! 💪'
-    ];
-    showCatSpeech(msgs[Math.floor(Math.random()*msgs.length)]);
+    // Nếu di chuyển quá 5px hoặc vừa kéo thả xong thì KHÔNG PHẢI click
+    if(hasDraggedRef.current||justFinishedDragRef.current)return;
+
+    const now=Date.now();
+    lastUserActivityRef.current=now;
+    lastInteractionTimeRef.current=now;
+
+    if(state==='sleep'){
+      setState('idle');
+    }
+
+    // Cờ chống spam (cooldown 3 giây): Nếu bấm liên tục chỉ nhấp nháy mắt, không nhảy chữ dồn dập
+    if(now-lastClickTimeRef.current<3000){
+      setIsBlinking(true);
+      setTimeout(()=>setIsBlinking(false),350);
+      return;
+    }
+    lastClickTimeRef.current=now;
+
+    // Tuyệt đối KHÔNG bắn pháo hoa confetti toàn màn hình
+    // Phản hồi ngẫu nhiên 1 trong các hành động dễ thương:
+    const choice=Math.floor(Math.random()*3);
+    if(choice===0){
+      // 1. Kêu "Meow! 🐾" nhẹ kèm âm thanh nhỏ
+      try{playSound('pop');}catch(e){}
+      showCatSpeech('Meow! 🐾',1500);
+    }else if(choice===1){
+      // 2. Nhảy dựng lên nhẹ (hiệu ứng bounce/nhún chân 0.3s)
+      try{playSound('pop');}catch(e){}
+      setState('bounce');
+      setTimeout(()=>setState('idle'),320);
+      showCatSpeech('Boing! 🐾',1500);
+    }else{
+      // 3. Hiện bóng thoại ngắn 1.5s tự biến mất
+      const msgs=[
+        'Cố lên bạn ơi! ✨',
+        'NewVision đỉnh nóc kịch trần! 🔥',
+        'Nghỉ ngơi uống nước nhé! 🍵'
+      ];
+      const msg=msgs[Math.floor(Math.random()*msgs.length)];
+      try{playSound('pop');}catch(e){}
+      showCatSpeech(msg,1500);
+    }
   };
 
   if(!catEnabled)return null;
@@ -1212,6 +1339,7 @@ function ScreenCatCompanion(){
   const isFall=state==='fall';
   const isLanding=state==='landing';
   const isCelebrate=state==='celebrate';
+  const isBounce=state==='bounce';
 
   return(
     <div
@@ -1220,9 +1348,11 @@ function ScreenCatCompanion(){
         left:`${pos.x}px`,
         top:`${pos.y}px`,
         transform:`scaleX(${facing}) ${isLanding?'scale(1.25, 0.7)':''}`,
-        cursor:isDrag?'grabbing':'grab'
+        cursor:isDrag?'grabbing':'grab',
+        touchAction:'none'
       }}
-      onMouseDown={handleMouseDown}
+      onMouseDown={handlePointerStart}
+      onTouchStart={handlePointerStart}
       onClick={handleClick}
       title="Bé mèo NewVision – Kéo thả hoặc bấm để chơi đùa!"
     >
@@ -1257,7 +1387,7 @@ function ScreenCatCompanion(){
           {s.emoji}
         </span>
       ))}
-      <div className={`w-12 h-10 ${isCelebrate?'cat-flip-anim':isLanding?'cat-landing-anim':''}`}>
+      <div className={`w-12 h-10 ${isCelebrate?'cat-flip-anim':isLanding?'cat-landing-anim':isBounce?'cat-bounce-anim':''}`}>
         <svg viewBox="0 0 52 44" className="w-full h-full drop-shadow-md overflow-visible">
           <path
             d={isSleep?"M6,32 Q12,38 20,36":isDrag?"M8,36 Q8,44 14,42":"M8,26 Q2,16 6,8"}
@@ -1273,7 +1403,7 @@ function ScreenCatCompanion(){
           <polygon points="27,9 26,4 30,7" fill="#f472b6"/>
           <polygon points="36,7 42,2 41,11" fill="#ea580c"/>
           <polygon points="38,7 41,4 40,9" fill="#f472b6"/>
-          {isSleep?(
+          {isSleep||isBlinking?(
             <g stroke="#334155" strokeWidth="1.2" strokeLinecap="round" fill="none">
               <path d="M31,18 Q33,16 35,18"/>
               <path d="M38,18 Q40,16 42,18"/>
@@ -1346,7 +1476,7 @@ function SettingsModal({open,onClose}){
       decisions,events,members,sessions,assignTasks,quickChecklist,quickLinks,
       resources,inventory,expenses,notifications:notifications.slice(0,100),
     },`newvision-hup-${new Date().toISOString().slice(0,10)}.json`);
-    playSound('success');
+    try{playSound('success');}catch(e){}
     addNotification('📦 Đã xuất backup dữ liệu thành công!','success');
   };
 
@@ -1375,7 +1505,7 @@ function SettingsModal({open,onClose}){
         if(Array.isArray(d.bcnPlans))d.bcnPlans.forEach(p=>batch.set(fbDb.collection('bcnPlans').doc(p.id||uid()),p,{merge:true}));
         if(d.bcnNotes&&typeof d.bcnNotes==='object')batch.set(fbDb.collection('bcnNotes').doc('general'),{data:d.bcnNotes},{merge:true});
         await batch.commit();
-        playSound('success');
+        try{playSound('success');}catch(e){}
         addNotification('✅ Nhập dữ liệu backup lên Cloud Firestore thành công!','success');
         onClose();
       }catch(err){
@@ -1396,7 +1526,7 @@ function SettingsModal({open,onClose}){
             {COLOR_THEMES.map(t=>(
               <div
                 key={t.id}
-                onClick={()=>{setTheme(t.id);playSound('pop')}}
+                onClick={()=>{setTheme(t.id);try{playSound('pop');}catch(e){}}}
                 className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${theme===t.id?'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 shadow-sm':'border-slate-200 hover:border-slate-300 dark:border-slate-700'}`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -1419,7 +1549,7 @@ function SettingsModal({open,onClose}){
             {MASCOT_TYPES.map(m=>(
               <div
                 key={m.id}
-                onClick={()=>{setMascotType(m.id);playSound('pop')}}
+                onClick={()=>{setMascotType(m.id);try{playSound('pop');}catch(e){}}}
                 className={`p-3.5 rounded-xl border-2 cursor-pointer flex items-center gap-3 transition-all ${mascotType===m.id?'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 shadow-sm':'border-slate-200 hover:border-slate-300 dark:border-slate-700'}`}
               >
                 <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
@@ -1447,7 +1577,7 @@ function SettingsModal({open,onClose}){
               </div>
             </div>
             <button
-              onClick={()=>{setCatEnabled(v=>!v);playSound('pop')}}
+              onClick={()=>{setCatEnabled(v=>!v);try{playSound('pop');}catch(e){}}}
               className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${catEnabled?'bg-orange-500':'bg-slate-300 dark:bg-slate-600'}`}
             >
               <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${catEnabled?'translate-x-6':''}`}/>
@@ -1463,7 +1593,7 @@ function SettingsModal({open,onClose}){
               </div>
             </div>
             <button
-              onClick={()=>{setSoundEnabled(v=>!v);playSound('pop')}}
+              onClick={()=>{setSoundEnabled(v=>!v);try{playSound('pop');}catch(e){}}}
               className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${soundEnabled?'bg-orange-500':'bg-slate-300 dark:bg-slate-600'}`}
             >
               <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${soundEnabled?'translate-x-6':''}`}/>
@@ -1543,7 +1673,7 @@ function SettingsModal({open,onClose}){
               <button
                 onClick={()=>{
                   showWebPush('🎉 Test Thông Báo Web Push','Hệ thống thông báo đẩy NewVision HUP đang hoạt động hoàn hảo trên máy tính của bạn!');
-                  playSound('success');
+                  try{playSound('success');}catch(e){}
                   addNotification('🧪 Đã gửi thử thông báo đẩy Web Push lên màn hình!','success');
                 }}
                 className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 text-slate-700 hover:text-blue-600"
@@ -1636,7 +1766,7 @@ function BcnRoomPage(){
     if(!pinEdit.trim()||pinEdit.length<4){alert('Mã PIN mới phải có ít nhất 4 ký tự!');return}
     setBcnPin(pinEdit.trim());
     setPinSaved(true);
-    playSound('success');
+    try{playSound('success');}catch(e){}
     addNotification('🔒 Đã đổi mã PIN Ban Chủ Nhiệm thành công!','success');
     setTimeout(()=>{setPinSaved(false);setPinEdit('');},2000);
   };
@@ -1658,13 +1788,13 @@ function BcnRoomPage(){
 
   const checkPin=input=>{
     if(input===bcnPin){
-      playSound('success');
+      try{playSound('success');}catch(e){}
       setBcnUnlocked(true);
       addNotification('🔓 Mở khóa thành công Phòng Ban Chủ Nhiệm!','success');
       setPinInput('');
     }else{
       setShaking(true);
-      playSound('sos');
+      try{playSound('sos');}catch(e){}
       addNotification('Mã PIN không chính xác! Vui lòng thử lại.','error');
       setTimeout(()=>{
         setShaking(false);
@@ -1677,14 +1807,14 @@ function BcnRoomPage(){
     if(pinInput.length<4){
       const next=pinInput+num;
       setPinInput(next);
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       if(next.length===4)checkPin(next);
     }
   };
 
   const handleLockNow=()=>{
     setBcnUnlocked(false);
-    playSound('pop');
+    try{playSound('pop');}catch(e){}
     addNotification('🔒 Đã khóa Phòng Ban Chủ Nhiệm an toàn!','info');
   };
 
@@ -1694,7 +1824,7 @@ function BcnRoomPage(){
       await fbDb.collection('bcnNotes').doc('general').set({
         data:{...bcnNotes,[memberId]:noteText}
       },{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       addNotification('📝 Đã lưu ghi chú BCN cho thành viên!','success');
     }catch(err){
       console.error('Lỗi lưu ghi chú BCN:',err);
@@ -1706,7 +1836,7 @@ function BcnRoomPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(memberId).set({eval:newEval},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       addNotification(`Đã cập nhật đánh giá thành viên thành: ${newEval}`,'info');
     }catch(err){
       console.error('Lỗi lưu đánh giá thành viên:',err);
@@ -1718,7 +1848,7 @@ function BcnRoomPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('expenses').doc(exp.id).set({status:'Đã quyết toán'},{merge:true});
-      playSound('success');
+      try{playSound('success');}catch(e){}
       triggerCat('celebrate');
       addNotification(`✅ Đã duyệt quyết toán cho ${exp.person||'thành viên'}: ${fmtVND(exp.amount)}`,'success');
     }catch(err){
@@ -1734,7 +1864,7 @@ function BcnRoomPage(){
         status:'Cần giải trình',
         note:(exp.note||'')+' [BCN yêu cầu giải trình thêm]'
       },{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       addNotification(`⚠️ Đã yêu cầu giải trình khoản chi "${exp.name}"`,'warning');
     }catch(err){
       console.error('Lỗi từ chối quyết toán:',err);
@@ -1759,7 +1889,7 @@ function BcnRoomPage(){
         });
       }
       setPlanModal(false);
-      playSound('success');
+      try{playSound('success');}catch(e){}
       addNotification('🎯 Đã lưu kế hoạch tác chiến mật!','success');
     }catch(err){
       console.error('Lỗi lưu kế hoạch BCN:',err);
@@ -1773,7 +1903,7 @@ function BcnRoomPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const updatedMilestones=(pl.milestones||[]).map(m=>m.id===mId?{...m,done:!m.done}:m);
       await fbDb.collection('bcnPlans').doc(planId).set({milestones:updatedMilestones},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi cập nhật mốc tiến độ:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -1783,7 +1913,7 @@ function BcnRoomPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('bcnPlans').doc(id).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       addNotification('Đã xóa kế hoạch BCN','info');
     }catch(err){
       console.error('Lỗi xóa kế hoạch:',err);
@@ -1841,7 +1971,7 @@ function BcnRoomPage(){
               </button>
             ))}
             <button
-              onClick={()=>{setPinInput('');playSound('pop')}}
+              onClick={()=>{setPinInput('');try{playSound('pop');}catch(e){}}}
               className="h-12 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700/50 text-slate-500 hover:bg-slate-200 transition"
             >
               Xóa
@@ -2247,7 +2377,7 @@ function NotificationBell(){
 // DASHBOARD
 // ============================================================
 function Dashboard({setActiveTab}){
-  const{decisions,events,members,quickChecklist,setQuickChecklist,quickLinks,setQuickLinks,triggerCat}=useContext(AppCtx);
+  const{decisions,events,members,quickChecklist,setQuickChecklist,quickLinks,setQuickLinks,triggerCat,isInitialSnapshot}=useContext(AppCtx);
   const[showCLForm,setShowCLForm]=useState(false);
   const[newItem,setNewItem]=useState('');
   const[showLinkForm,setShowLinkForm]=useState(false);
@@ -2301,7 +2431,7 @@ function Dashboard({setActiveTab}){
       triggerCat('dash');
       setNewItem('');
       setShowCLForm(false);
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi thêm checklist:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2313,9 +2443,9 @@ function Dashboard({setActiveTab}){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const newDone=!item.done;
-      if(newDone)triggerCat('celebrate');
+      if(newDone && !isInitialSnapshot)triggerCat('celebrate');
       await fbDb.collection('quickChecklist').doc(id).set({done:newDone},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi cập nhật checklist:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2329,7 +2459,7 @@ function Dashboard({setActiveTab}){
         batch.set(fbDb.collection('quickChecklist').doc(i.id),{done:false},{merge:true});
       });
       await batch.commit();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi reset checklist:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2339,7 +2469,7 @@ function Dashboard({setActiveTab}){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('quickChecklist').doc(id).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa checklist:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2357,7 +2487,7 @@ function Dashboard({setActiveTab}){
       });
       setNewLink({title:'',url:''});
       setShowLinkForm(false);
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi thêm quick link:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2367,7 +2497,7 @@ function Dashboard({setActiveTab}){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('quickLinks').doc(id).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa quick link:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2569,7 +2699,7 @@ function DecisionsPage(){
       if(editing){
         const old=decisions.find(d=>d.id===editing);
         await fbDb.collection('decisions').doc(editing).set(form,{merge:true});
-        playSound('success');
+        try{playSound('success');}catch(e){}
         if(old&&old.status!=='Đã chốt chính thức'&&form.status==='Đã chốt chính thức'){
           addNotification(`✅ Vấn đề "${form.title}" đã chốt chính thức!`,'success');
           triggerMascot('gavel','⚖️ Đã chốt chính thức!');
@@ -2578,7 +2708,7 @@ function DecisionsPage(){
         const id=uid();
         const newD={...form,id,poll:{options:[],locked:false},createdAt:new Date().toISOString()};
         await fbDb.collection('decisions').doc(id).set(newD);
-        playSound('success');
+        try{playSound('success');}catch(e){}
         if(form.status==='Đã chốt chính thức'){
           addNotification(`✅ Vấn đề "${form.title}" đã chốt!`,'success');
           triggerMascot('gavel','⚖️ Đã chốt!');
@@ -2598,7 +2728,7 @@ function DecisionsPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('decisions').doc(d.id).set({status:ns},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       if(ns==='Đã chốt chính thức'){
         addNotification(`✅ "${d.title}" đã chốt!`,'success');
         triggerMascot('gavel','⚖️ Đã chốt chính thức!');
@@ -2620,7 +2750,7 @@ function DecisionsPage(){
       const updatedPoll={...poll,options:[...poll.options,{id:uid(),text:txt,votes:0}]};
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
       setPollInput(p=>({...p,[dId]:''}));
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi thêm phương án:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2634,7 +2764,7 @@ function DecisionsPage(){
       const poll=d.poll||{options:[],locked:false};
       const updatedPoll={...poll,options:poll.options.map(o=>o.id===optId?{...o,votes:(o.votes||0)+1}:o)};
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi bỏ phiếu:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2654,7 +2784,7 @@ function DecisionsPage(){
       const poll=d.poll||{options:[],locked:false};
       const updatedPoll={...poll,options:poll.options.filter(o=>o.id!==optId)};
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa phương án:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -2664,7 +2794,7 @@ function DecisionsPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('decisions').doc(id).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       addNotification('Đã xóa vấn đề','info');
     }catch(err){
       console.error('Lỗi xóa quyết định:',err);
@@ -2799,11 +2929,11 @@ function DecisionsPage(){
 // TASK ROW
 // ============================================================
 function TaskRow({task,onToggle,onEdit,onDelete}){
-  const{triggerCat}=useContext(AppCtx);
+  const{triggerCat,isInitialSnapshot}=useContext(AppCtx);
   const over=!task.done&&isOverdue(task.deadline);
   const soon=!task.done&&!over&&isSoon(task.deadline);
   const handleToggle=()=>{
-    if(!task.done)triggerCat('celebrate');
+    if(!task.done && !isInitialSnapshot)triggerCat('celebrate');
     onToggle(task.id);
   };
   return(
@@ -2971,7 +3101,7 @@ function LiveEventMode({event,onBack,onUpdate}){
 // EVENT DETAIL
 // ============================================================
 function EventDetail({event,onBack}){
-  const{events,setEvents,addNotification,triggerMascot}=useContext(AppCtx);
+  const{events,setEvents,addNotification,triggerMascot,isInitialSnapshot}=useContext(AppCtx);
   const[taskModal,setTaskModal]=useState(false);
   const[editingTask,setEditingTask]=useState(null);
   const[confirmDel,setConfirmDel]=useState(null);
@@ -2990,11 +3120,13 @@ function EventDetail({event,onBack}){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       let updatedTasks;
+      let savedTask;
       if(editingTask){
+        savedTask={...taskForm,id:editingTask};
         updatedTasks=(curEvent.tasks||[]).map(t=>t.id===editingTask?{...t,...taskForm}:t);
       }else{
-        const newT={...taskForm,id:uid(),createdAt:new Date().toISOString()};
-        updatedTasks=[...(curEvent.tasks||[]),newT];
+        savedTask={...taskForm,id:uid(),createdAt:new Date().toISOString()};
+        updatedTasks=[...(curEvent.tasks||[]),savedTask];
         if(taskForm.assignee.trim()){
           addNotification(`📋 Đã giao việc "${taskForm.title}" cho ${taskForm.assignee}`,'info');
           triggerMascot('write',`📋 Giao cho ${taskForm.assignee}!`);
@@ -3002,8 +3134,23 @@ function EventDetail({event,onBack}){
           triggerMascot('write','📝 Đầu việc mới!');
         }
       }
+      // Ghi cập nhật trực tiếp vào document của Sự kiện trên Firestore
       await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
-      playSound('success');
+      // Đồng thời cập nhật hoặc thêm vào collection tasks độc lập
+      try{
+        await fbDb.collection('tasks').doc(savedTask.id).set({
+          ...savedTask,
+          eventId:curEvent.id,
+          eventName:curEvent.name||''
+        },{merge:true});
+      }catch(e){
+        console.warn('Sync to tasks collection notice:',e);
+      }
+      try{
+        try{playSound('success');}catch(e){}
+      }catch(e){
+        console.warn('playSound error:',e);
+      }
       handleTaskClose();
     }catch(err){
       console.error('Lỗi lưu công việc sự kiện:',err);
@@ -3019,10 +3166,15 @@ function EventDetail({event,onBack}){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const updatedTasks=(curEvent.tasks||[]).map(t=>t.id===taskId?{...t,done:newDone}:t);
       await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
-      playSound('pop');
+      try{
+        await fbDb.collection('tasks').doc(taskId).set({done:newDone},{merge:true});
+      }catch(e){}
+      try{
+        try{playSound('pop');}catch(e){}
+      }catch(e){}
       if(newDone){
         addNotification(`✅ Hoàn thành: "${task.title}"`,'success');
-        triggerMascot('celebrate','🎉 Xuất sắc!');
+        if(!isInitialSnapshot)triggerMascot('celebrate','🎉 Xuất sắc!');
       }else{
         addNotification(`🔄 Mở lại: "${task.title}"`,'warning');
       }
@@ -3037,7 +3189,12 @@ function EventDetail({event,onBack}){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const updatedTasks=(curEvent.tasks||[]).filter(t=>t.id!==taskId);
       await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
-      playSound('pop');
+      try{
+        await fbDb.collection('tasks').doc(taskId).delete();
+      }catch(e){}
+      try{
+        try{playSound('pop');}catch(e){}
+      }catch(e){}
     }catch(err){
       console.error('Lỗi xóa công việc:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3193,13 +3350,13 @@ function EventsPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       if(editing){
         await fbDb.collection('events').doc(editing).set(form,{merge:true});
-        playSound('success');
+        try{playSound('success');}catch(e){}
         addNotification(`Đã cập nhật sự kiện: ${form.name}`,'success');
       }else{
         const id=uid();
         const newEv={...form,id,tasks:[],createdAt:new Date().toISOString()};
         await fbDb.collection('events').doc(id).set(newEv);
-        playSound('success');
+        try{playSound('success');}catch(e){}
         addNotification(`Đã tạo sự kiện mới: ${form.name}`,'success');
       }
       handleClose();
@@ -3212,7 +3369,7 @@ function EventsPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('events').doc(id).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       addNotification('Đã xóa sự kiện','info');
     }catch(err){
       console.error('Lỗi xóa sự kiện:',err);
@@ -3445,7 +3602,7 @@ function MembersPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       if(editing){
         await fbDb.collection('members').doc(editing).set(memberData,{merge:true});
-        playSound('success');
+        try{playSound('success');}catch(e){}
         addNotification(`Đã cập nhật thông tin: ${form.name}`,'success');
       }else{
         const id=uid();
@@ -3457,7 +3614,7 @@ function MembersPage(){
           createdAt:new Date().toISOString()
         };
         await fbDb.collection('members').doc(id).set(newDoc);
-        playSound('success');
+        try{playSound('success');}catch(e){}
         triggerCat('dash');
         addNotification(`Đã thêm thành viên mới: ${form.name}`,'success');
       }
@@ -3479,7 +3636,7 @@ function MembersPage(){
       const m=members.find(x=>x.id===mId);
       const curAtt=m?.attendance||{};
       await fbDb.collection('members').doc(mId).set({attendance:{...curAtt,[sId]:val}},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi lưu điểm danh:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3491,7 +3648,7 @@ function MembersPage(){
       const m=members.find(x=>x.id===mId);
       const curStat=m?.taskStatus||{};
       await fbDb.collection('members').doc(mId).set({taskStatus:{...curStat,[tId]:val}},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi lưu bài tập:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3510,7 +3667,7 @@ function MembersPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(mId).set({eval:val},{merge:true});
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi lưu đánh giá:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3523,7 +3680,7 @@ function MembersPage(){
       const id=uid();
       await fbDb.collection('sessions').doc(id).set({id,name:newSession.trim(),createdAt:new Date().toISOString()});
       setNewSession('');
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi thêm buổi sinh hoạt:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3533,7 +3690,7 @@ function MembersPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('sessions').doc(id).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa buổi sinh hoạt:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3546,7 +3703,7 @@ function MembersPage(){
       const id=uid();
       await fbDb.collection('assignTasks').doc(id).set({id,name:newATask.trim(),createdAt:new Date().toISOString()});
       setNewATask('');
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi thêm nhiệm vụ:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3556,7 +3713,7 @@ function MembersPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('assignTasks').doc(id).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
     }catch(err){
       console.error('Lỗi xóa nhiệm vụ:',err);
       alert('Lỗi lưu Firebase: '+err.message);
@@ -3566,7 +3723,7 @@ function MembersPage(){
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(id).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       addNotification('Đã xóa thành viên','info');
     }catch(err){
       console.error('Lỗi xóa thành viên:',err);
@@ -3864,36 +4021,36 @@ function ResourcesPage(){
         if(!linkForm.title.trim()||!linkForm.url.trim()){alert('Vui lòng nhập tên và URL!');return}
         if(editing){
           await fbDb.collection('resources').doc(editing).set(linkForm,{merge:true});
-          playSound('success');
+          try{playSound('success');}catch(e){}
           addNotification(`Đã cập nhật link: ${linkForm.title}`,'success');
         }else{
           const id=uid();
           await fbDb.collection('resources').doc(id).set({...linkForm,id,createdAt:new Date().toISOString()});
-          playSound('success');
+          try{playSound('success');}catch(e){}
           addNotification(`Đã thêm link mới: ${linkForm.title}`,'success');
         }
       }else if(tab==='inventory'){
         if(!invForm.name.trim()){alert('Vui lòng nhập tên đồ vật!');return}
         if(editing){
           await fbDb.collection('inventory').doc(editing).set(invForm,{merge:true});
-          playSound('success');
+          try{playSound('success');}catch(e){}
           addNotification(`Đã cập nhật vật dụng: ${invForm.name}`,'success');
         }else{
           const id=uid();
           await fbDb.collection('inventory').doc(id).set({...invForm,id,createdAt:new Date().toISOString()});
-          playSound('success');
+          try{playSound('success');}catch(e){}
           addNotification(`Đã thêm vật dụng mới: ${invForm.name}`,'success');
         }
       }else if(tab==='expenses'){
         if(!expForm.name.trim()){alert('Vui lòng nhập tên khoản chi!');return}
         if(editing){
           await fbDb.collection('expenses').doc(editing).set(expForm,{merge:true});
-          playSound('success');
+          try{playSound('success');}catch(e){}
           addNotification(`Đã cập nhật khoản chi: ${expForm.name}`,'success');
         }else{
           const id=uid();
           await fbDb.collection('expenses').doc(id).set({...expForm,id,createdAt:new Date().toISOString()});
-          playSound('success');
+          try{playSound('success');}catch(e){}
           addNotification(`Đã thêm khoản chi mới: ${expForm.name}`,'success');
           if(expForm.status==='Đã chi - Chờ hoàn tiền')addNotification(`💰 Khoản chi chờ hoàn tiền: ${expForm.name} – ${fmtVND(expForm.amount)}`,'warning');
         }
@@ -3910,7 +4067,7 @@ function ResourcesPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const colName=tab==='links'?'resources':tab==='inventory'?'inventory':'expenses';
       await fbDb.collection(colName).doc(confirmDel).delete();
-      playSound('pop');
+      try{playSound('pop');}catch(e){}
       addNotification('Đã xóa mục thành công','info');
     }catch(err){
       console.error('Lỗi xóa mục:',err);
