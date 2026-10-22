@@ -206,16 +206,37 @@
     .dark ::-webkit-scrollbar-thumb{background:#475569}
     .dark .mascot-bubble::after{border-top-color:#1e293b}
 
+    /* ===== CHIP BAR & UTILITIES ===== */
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .chip-bar {
+      display: flex;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      gap: 8px;
+      padding-bottom: 4px;
+    }
+    .chip-bar::-webkit-scrollbar {
+      display: none;
+    }
+
     /* ===== MOBILE OPTIMIZATIONS (@media max-width: 768px) ===== */
     @media (max-width: 768px) {
-      /* 1. Main content container padding-bottom to avoid being hidden by bottom nav */
+      /* 1. Khoảng đệm an toàn (Safe Padding): Toàn bộ khung nội dung chính có padding-bottom: 95px trên mobile */
       main {
-        padding-bottom: 80px !important;
+        padding-bottom: 95px !important;
       }
 
-      /* 2. Mascot Cú/Đại bàng: thu nhỏ max-width 50px, cách đáy 75px, lệch phải */
+      /* 2. Mascot Cú/Đại bàng: thu nhỏ max-width 50px, cách đáy 85px, lệch phải */
       .mascot-container {
-        bottom: 75px !important;
+        bottom: 85px !important;
         right: 12px !important;
         max-width: 50px !important;
       }
@@ -230,36 +251,38 @@
         padding: 4px 8px !important;
       }
 
-      /* Ẩn linh vật phụ (mèo chạy tự do) trên mobile để không đè nút (+) và che khuất nút chạm */
-      .screen-cat-companion {
-        display: none !important;
-      }
-
-      /* Nút tròn (+) FAB cách đáy 80px bên trái */
+      /* Nút tròn (+) FAB cách đáy 85px bên trái */
       .fab-container {
-        bottom: 80px !important;
+        bottom: 85px !important;
         left: 14px !important;
       }
 
-      /* 3. Thanh Bottom Navigation: 6 mục dàn đều vừa khít chiều ngang màn hình điện thoại */
+      /* 3. Thanh Bottom Navigation: Cố định 65px với backdrop-filter blur, 5 tab phân bố đều */
       .bottom-nav-bar {
-        height: 58px !important;
+        height: 65px !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+      }
+      .dark .bottom-nav-bar {
+        background: rgba(30, 41, 59, 0.92) !important;
       }
       .bottom-nav-bar > div {
-        height: 58px !important;
+        height: 65px !important;
       }
       .bottom-nav-item {
-        padding: 3px 1px !important;
+        padding: 4px 2px !important;
         min-width: 0 !important;
       }
       .bottom-nav-item .nav-icon svg {
-        width: 17px !important;
-        height: 17px !important;
+        width: 19px !important;
+        height: 19px !important;
       }
       .bottom-nav-item .nav-label {
-        font-size: 10px !important;
-        line-height: 1.15 !important;
-        letter-spacing: -0.3px !important;
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.2px !important;
         max-width: 100% !important;
         white-space: nowrap !important;
         overflow: hidden !important;
@@ -267,10 +290,34 @@
         padding: 0 1px !important;
       }
       .bottom-nav-item .nav-dot {
-        margin-top: 1px !important;
+        margin-top: 2px !important;
         width: 4px !important;
         height: 4px !important;
       }
+
+      /* 4. Modal Bottom Sheet trên điện thoại: trượt từ dưới lên, nút to dễ bấm */
+      .modal-backdrop {
+        align-items: flex-end !important;
+        padding: 0 !important;
+      }
+      .modal-box {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-top-left-radius: 24px !important;
+        border-top-right-radius: 24px !important;
+        max-height: 88vh !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        animation: slideUpMobile .28s cubic-bezier(.21,1.02,.73,1);
+      }
+      .modal-box .btn-primary, .modal-box .btn-secondary, .modal-box .btn-danger {
+        padding: 11px 18px !important;
+        font-size: 14.5px !important;
+      }
+    }
+    @keyframes slideUpMobile {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
   </style>
 </head>
@@ -509,8 +556,41 @@ function Icon({name,size=18,className=''}){
 }
 
 // ============================================================
-// CONTEXT
+// CONTEXT & SEED CONSTANTS
 // ============================================================
+const SAMPLE_STUDY_RESOURCES = [
+  {
+    title: 'Tổng hợp Bộ đề thi Dược lý 1 (K77 - K79) có đáp án chi tiết',
+    block: 'Cơ sở ngành',
+    category: 'Đề thi & Đáp án',
+    url: 'https://drive.google.com/drive/folders/newvision-duocly1',
+    contributor: 'BCN Học tập NVC',
+    note: 'Tài liệu trọng tâm ôn thi hết môn, bám sát cấu trúc đề trắc nghiệm và ca lâm sàng.',
+    pinned: true,
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
+  },
+  {
+    title: 'Tóm tắt Sơ đồ tư duy Hóa Dược 2 (Kháng sinh & Tim mạch)',
+    block: 'Chuyên ngành Dược',
+    category: 'Tóm tắt lý thuyết',
+    url: 'https://drive.google.com/drive/folders/newvision-hoaduoc2',
+    contributor: 'Trần Minh Quân - K77',
+    note: 'Sơ đồ cơ chế tác dụng, phân loại và liên quan cấu trúc - tác dụng (SAR).',
+    pinned: true,
+    createdAt: new Date(Date.now() - 86400000).toISOString()
+  },
+  {
+    title: 'Slide bài giảng & Câu hỏi lượng giá Giải phẫu - Sinh lý',
+    block: 'Đại cương',
+    category: 'Slide bài giảng',
+    url: 'https://drive.google.com/drive/folders/newvision-giaiphau',
+    contributor: 'Ban Chuyên môn NVC',
+    note: 'Trọn bộ slide giảng đường và ngân hàng câu hỏi ôn tập giữa kỳ.',
+    pinned: false,
+    createdAt: new Date().toISOString()
+  }
+];
+
 const AppCtx = createContext(null);
 
 function AppProvider({children}){
@@ -521,6 +601,7 @@ function AppProvider({children}){
   const[quickLinks,setQuickLinks]=useState([]);
   const[notifications,setNotifications]=useState([]);
   const[resources,setResources]=useState([]);
+  const[studyResources,setStudyResources]=useState([]);
   const[inventory,setInventory]=useState([]);
   const[expenses,setExpenses]=useState([]);
   const[sessions,setSessions]=useState([]);
@@ -704,6 +785,7 @@ function AppProvider({children}){
     listenCol('decisions',setDecisions,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     listenCol('expenses',setExpenses,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     listenCol('resources',setResources,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('study_resources',setStudyResources,list=>list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.createdAt||'').localeCompare(a.createdAt||'')));
     listenCol('inventory',setInventory,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     listenCol('sessions',setSessions,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
     listenCol('assignTasks',setAssignTasks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
@@ -728,7 +810,7 @@ function AppProvider({children}){
       console.error('Firestore bcnNotes subscribe exception:',err);
     }
 
-    // Auto-migration: if root collection 'members' is empty, check legacy 'newvision_hub/members'
+    // Auto-migration & seed: if root collection 'members' or 'study_resources' is empty
     (async()=>{
       try{
         const snap=await fbDb.collection('members').limit(1).get();
@@ -743,6 +825,17 @@ function AppProvider({children}){
             await batch.commit();
             console.log('Legacy members migrated to root collection members');
           }
+        }
+
+        const studySnap=await fbDb.collection('study_resources').limit(1).get();
+        if(studySnap.empty){
+          const sBatch=fbDb.batch();
+          SAMPLE_STUDY_RESOURCES.forEach(s=>{
+            const id=uid();
+            sBatch.set(fbDb.collection('study_resources').doc(id),{...s,id});
+          });
+          await sBatch.commit();
+          console.log('Sample study resources seeded to Firestore');
         }
       }catch(err){
         console.warn('Legacy migration check notice:',err);
@@ -771,6 +864,7 @@ function AppProvider({children}){
       decisions.forEach(d=>batch.set(fbDb.collection('decisions').doc(d.id||uid()),d,{merge:true}));
       expenses.forEach(x=>batch.set(fbDb.collection('expenses').doc(x.id||uid()),x,{merge:true}));
       resources.forEach(r=>batch.set(fbDb.collection('resources').doc(r.id||uid()),r,{merge:true}));
+      studyResources.forEach(s=>batch.set(fbDb.collection('study_resources').doc(s.id||uid()),s,{merge:true}));
       inventory.forEach(i=>batch.set(fbDb.collection('inventory').doc(i.id||uid()),i,{merge:true}));
       sessions.forEach(s=>batch.set(fbDb.collection('sessions').doc(s.id||uid()),s,{merge:true}));
       assignTasks.forEach(t=>batch.set(fbDb.collection('assignTasks').doc(t.id||uid()),t,{merge:true}));
@@ -788,18 +882,19 @@ function AppProvider({children}){
       setCloudStatus('offline');
       alert('Lỗi lưu Firebase: '+err.message);
     }
-  },[members,events,decisions,expenses,resources,inventory,sessions,assignTasks,quickChecklist,quickLinks,bcnPlans,bcnNotes,playSound,showToast]);
+  },[members,events,decisions,expenses,resources,studyResources,inventory,sessions,assignTasks,quickChecklist,quickLinks,bcnPlans,bcnNotes,playSound,showToast]);
 
   const pullAllFromCloud=useCallback(async()=>{
     if(!fbDb){alert('Firebase chưa được khởi tạo.');return}
     setCloudStatus('syncing');
     try{
-      const[mSnap,eSnap,dSnap,expSnap,rSnap,iSnap,sSnap,aSnap,cSnap,lSnap,pSnap,nDoc]=await Promise.all([
+      const[mSnap,eSnap,dSnap,expSnap,rSnap,sResSnap,iSnap,sSnap,aSnap,cSnap,lSnap,pSnap,nDoc]=await Promise.all([
         fbDb.collection('members').get(),
         fbDb.collection('events').get(),
         fbDb.collection('decisions').get(),
         fbDb.collection('expenses').get(),
         fbDb.collection('resources').get(),
+        fbDb.collection('study_resources').get(),
         fbDb.collection('inventory').get(),
         fbDb.collection('sessions').get(),
         fbDb.collection('assignTasks').get(),
@@ -813,6 +908,7 @@ function AppProvider({children}){
       setDecisions(dSnap.docs.map(d=>({id:d.id,...d.data()})));
       setExpenses(expSnap.docs.map(d=>({id:d.id,...d.data()})));
       setResources(rSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setStudyResources(sResSnap.docs.map(d=>({id:d.id,...d.data()})));
       setInventory(iSnap.docs.map(d=>({id:d.id,...d.data()})));
       setSessions(sSnap.docs.map(d=>({id:d.id,...d.data()})));
       setAssignTasks(aSnap.docs.map(d=>({id:d.id,...d.data()})));
@@ -844,7 +940,7 @@ function AppProvider({children}){
       decisions,setDecisions,events,setEvents,members,setMembers,
       quickChecklist,setQuickChecklist,quickLinks,setQuickLinks,
       notifications,addNotification,markRead,markAllRead,unreadCount,
-      resources,setResources,inventory,setInventory,expenses,setExpenses,
+      resources,setResources,studyResources,setStudyResources,inventory,setInventory,expenses,setExpenses,
       sessions,setSessions,assignTasks,setAssignTasks,
       darkMode,setDarkMode,soundEnabled,setSoundEnabled,
       theme,setTheme,mascotType,setMascotType,catEnabled,setCatEnabled,
@@ -1076,7 +1172,14 @@ function Mascot(){
 
   useEffect(()=>{
     if(mascotState==='celebrate'){
-      if(!isInitialSnapshot && window.confetti)window.confetti({particleCount:140,spread:78,origin:{x:.88,y:.9},colors:['#f97316','#ea580c','#6366f1','#ec4899','#f59e0b','#10b981']});
+      if(!isInitialSnapshot && window.confetti){
+        try{
+          window.confetti({particleCount:35,spread:60,origin:{x:.88,y:.9},colors:['#f97316','#ea580c','#6366f1','#ec4899','#f59e0b','#10b981'],ticks:120});
+          setTimeout(()=>{
+            try{if(window.confetti&&typeof window.confetti.reset==='function')window.confetti.reset();}catch(e){}
+          },2000);
+        }catch(e){}
+      }
       try{playSound('success');}catch(e){}
     }else if(mascotState==='sos'){try{playSound('sos');}catch(e){}}
     else if(mascotState==='gavel'){try{playSound('gavel');}catch(e){}}
@@ -1184,7 +1287,17 @@ function ScreenCatCompanion(){
       try{playSound('success');}catch(e){}
       showCatSpeech('Hoan hô! Xong việc rồi! 🎉🐱',2000);
       if(window.confetti){
-        window.confetti({particleCount:40,spread:55,origin:{x:Math.min(Math.max(pos.x/window.innerWidth,0.1),0.9),y:Math.min(pos.y/window.innerHeight,0.9)}});
+        try{
+          window.confetti({
+            particleCount:35,
+            spread:60,
+            origin:{x:Math.min(Math.max(pos.x/window.innerWidth,0.1),0.9),y:Math.min(pos.y/window.innerHeight,0.9)},
+            ticks:120
+          });
+          setTimeout(()=>{
+            try{if(window.confetti&&typeof window.confetti.reset==='function')window.confetti.reset();}catch(e){}
+          },2000);
+        }catch(e){}
       }
       setTimeout(()=>setState('idle'),1200);
     }
@@ -1209,8 +1322,8 @@ function ScreenCatCompanion(){
       if(clientX===undefined||clientY===undefined)return;
 
       const dist=Math.hypot(clientX-dragStartRef.current.x,clientY-dragStartRef.current.y);
-      // Nếu di chuyển quá 5px, xác định đây là hành động kéo (drag) chứ KHÔNG PHẢI click
-      if(dist>5){
+      // Nếu di chuyển quá 6px, xác định đây là hành động kéo (drag) chứ KHÔNG PHẢI click
+      if(dist>6){
         hasDraggedRef.current=true;
         setState('drag');
         const newX=Math.max(10,Math.min(window.innerWidth-60,clientX-dragOffsetRef.current.x));
@@ -1228,9 +1341,9 @@ function ScreenCatCompanion(){
       if(hasDraggedRef.current){
         // Đánh dấu vừa kéo thả để chặn sự kiện click chuột ăn theo
         justFinishedDragRef.current=true;
-        setTimeout(()=>{justFinishedDragRef.current=false},220);
+        setTimeout(()=>{justFinishedDragRef.current=false},250);
 
-        // Thả mèo ở đâu thì cho phép mèo đứng ở đó một lát (10 giây không tự động đi dạo)
+        // Thả mèo ở đâu thì cho phép mèo đứng ở đó một lát (15 giây không tự động đi dạo)
         lastInteractionTimeRef.current=now;
 
         const floorY=getFloorY();
@@ -1295,8 +1408,22 @@ function ScreenCatCompanion(){
         return;
       }
 
-      // Thả mèo ở đâu thì đứng yên 10 giây trước khi tự động đi dạo
-      if(now-lastInteractionTimeRef.current<10000)return;
+      // Sau 15 giây không tương tác: tự động đưa mèo về góc lề an toàn
+      if(now-lastInteractionTimeRef.current>=15000){
+        const isNearLeft=pos.x<100;
+        const isNearRight=pos.x>window.innerWidth-120;
+        if(!isNearLeft&&!isNearRight){
+          const safeX=pos.x>window.innerWidth/2?window.innerWidth-85:40;
+          targetXRef.current=safeX;
+          setFacing(safeX>pos.x?1:-1);
+          setState('walk');
+          lastInteractionTimeRef.current=now;
+          return;
+        }
+      }
+
+      // Thả mèo ở đâu thì đứng yên 15 giây trước khi tự động đi dạo
+      if(now-lastInteractionTimeRef.current<15000)return;
 
       // Nếu nằm sát viền quá (lề trái < 25px hoặc lề phải > width - 75px), quay lại lề an toàn
       if(pos.x<25||pos.x>window.innerWidth-75){
@@ -1357,7 +1484,7 @@ function ScreenCatCompanion(){
 
   // Xử lý CLICK CHỦ ĐỘNG vào chú mèo
   const handleClick=()=>{
-    // Nếu di chuyển quá 5px hoặc vừa kéo thả xong thì KHÔNG PHẢI click
+    // Nếu di chuyển quá 6px hoặc vừa kéo thả xong thì KHÔNG PHẢI click
     if(hasDraggedRef.current||justFinishedDragRef.current)return;
 
     const now=Date.now();
@@ -1388,18 +1515,30 @@ function ScreenCatCompanion(){
       try{playSound('pop');}catch(e){}
       setState('bounce');
       setTimeout(()=>setState('idle'),320);
-      showCatSpeech('Boing! 🐾',1500);
+      showCatSpeech('Boing! 🐾 Cố lên nhé!',1500);
     }else{
       // 3. Hiện bóng thoại ngắn 1.5s tự biến mất
       const msgs=[
-        'Cố lên bạn ơi! ✨',
-        'NewVision đỉnh nóc kịch trần! 🔥',
+        'Cố lên NVC! 🔥',
+        'Tập trung học tập nhé! 📚',
+        'NewVision đỉnh nóc kịch trần! ✨',
         'Nghỉ ngơi uống nước nhé! 🍵'
       ];
       const msg=msgs[Math.floor(Math.random()*msgs.length)];
       try{playSound('pop');}catch(e){}
       showCatSpeech(msg,1500);
     }
+  };
+
+  // Click đúp (double click) vào mèo để quay về vị trí ban đầu
+  const handleDoubleClick=e=>{
+    if(e&&e.stopPropagation)e.stopPropagation();
+    const floorY=getFloorY();
+    setPos({x:120,y:floorY});
+    setState('idle');
+    setFacing(1);
+    showCatSpeech('Meow~! 🐱 Về chỗ cũ rồi!',1500);
+    try{playSound('pop');}catch(e){}
   };
 
   if(!catEnabled)return null;
@@ -1425,7 +1564,8 @@ function ScreenCatCompanion(){
       onMouseDown={handlePointerStart}
       onTouchStart={handlePointerStart}
       onClick={handleClick}
-      title="Bé mèo NewVision – Kéo thả hoặc bấm để chơi đùa!"
+      onDoubleClick={handleDoubleClick}
+      title="Bé mèo NewVision – Kéo thả hoặc click để chơi đùa, click đúp để về chỗ cũ!"
     >
       {speech&&(
         <div
@@ -2341,7 +2481,7 @@ function BcnRoomPage(){
 // COMMAND PALETTE
 // ============================================================
 function CommandPalette({open,onClose,setActiveTab}){
-  const{decisions,events,members,resources,inventory}=useContext(AppCtx);
+  const{decisions,events,members,resources,studyResources,inventory}=useContext(AppCtx);
   const[query,setQuery]=useState('');
   const inputRef=useRef(null);
 
@@ -2355,13 +2495,14 @@ function CommandPalette({open,onClose,setActiveTab}){
     if(!query.trim())return[];
     const q=query.toLowerCase();
     const r=[];
-    decisions.filter(d=>d.title.toLowerCase().includes(q)).slice(0,3).forEach(d=>r.push({label:d.title,sub:d.status,icon:'file-check-2',tab:'decisions',type:'Quyết định',tcolor:'text-amber-600',tbg:'bg-amber-50'}));
-    events.filter(e=>e.name.toLowerCase().includes(q)).slice(0,3).forEach(e=>r.push({label:e.name,sub:fmtDate(e.date),icon:'calendar-days',tab:'events',type:'Sự kiện',tcolor:'text-blue-600',tbg:'bg-blue-50'}));
-    members.filter(m=>m.name.toLowerCase().includes(q)).slice(0,3).forEach(m=>r.push({label:m.name,sub:m.ban||m.role,icon:'user',tab:'members',type:'Thành viên',tcolor:'text-emerald-600',tbg:'bg-emerald-50'}));
-    resources.filter(r2=>r2.title.toLowerCase().includes(q)).slice(0,3).forEach(r2=>r.push({label:r2.title,sub:r2.type,icon:'link',tab:'resources',type:'Tài nguyên',tcolor:'text-purple-600',tbg:'bg-purple-50'}));
+    decisions.filter(d=>d.title.toLowerCase().includes(q)).slice(0,2).forEach(d=>r.push({label:d.title,sub:d.status,icon:'file-check-2',tab:'decisions',type:'Quyết định',tcolor:'text-amber-600',tbg:'bg-amber-50'}));
+    events.filter(e=>e.name.toLowerCase().includes(q)).slice(0,2).forEach(e=>r.push({label:e.name,sub:fmtDate(e.date),icon:'calendar-days',tab:'events',type:'Sự kiện',tcolor:'text-blue-600',tbg:'bg-blue-50'}));
+    (studyResources||[]).filter(s=>(s.title||'').toLowerCase().includes(q)||(s.note||'').toLowerCase().includes(q)).slice(0,3).forEach(s=>r.push({label:s.title,sub:`${s.category} • ${s.block}`,icon:'book-open',tab:'study',type:'Học tập',tcolor:'text-orange-600',tbg:'bg-orange-50'}));
+    members.filter(m=>m.name.toLowerCase().includes(q)).slice(0,2).forEach(m=>r.push({label:m.name,sub:m.ban||m.role,icon:'user',tab:'members',type:'Thành viên',tcolor:'text-emerald-600',tbg:'bg-emerald-50'}));
+    resources.filter(r2=>r2.title.toLowerCase().includes(q)).slice(0,2).forEach(r2=>r.push({label:r2.title,sub:r2.type,icon:'link',tab:'resources',type:'Tài nguyên',tcolor:'text-purple-600',tbg:'bg-purple-50'}));
     inventory.filter(i=>i.name.toLowerCase().includes(q)).slice(0,2).forEach(i=>r.push({label:i.name,sub:i.status,icon:'box',tab:'resources',type:'Vật dụng',tcolor:'text-teal-600',tbg:'bg-teal-50'}));
     return r.slice(0,9);
-  },[query,decisions,events,members,resources,inventory]);
+  },[query,decisions,events,members,resources,studyResources,inventory]);
 
   if(!open)return null;
   return(
@@ -4354,6 +4495,619 @@ function ResourcesPage(){
 }
 
 // ============================================================
+// GÓC HỌC TẬP NVC (STUDY HUB MODULE)
+// ============================================================
+const STUDY_BLOCKS = [
+  'Tất cả',
+  'Đại cương',
+  'Cơ sở ngành',
+  'Chuyên ngành Dược',
+  'K79',
+  'K80',
+  'K81'
+];
+
+const STUDY_CATEGORIES = [
+  'Tất cả',
+  'Đề thi & Đáp án',
+  'Slide bài giảng',
+  'Giáo trình/Sách',
+  'Tóm tắt lý thuyết'
+];
+
+function StudyHubPage(){
+  const{studyResources,setStudyResources,addNotification,playSound}=useContext(AppCtx);
+  const[selectedBlock,setSelectedBlock]=useState('Tất cả');
+  const[selectedCat,setSelectedCat]=useState('Tất cả');
+  const[searchQuery,setSearchQuery]=useState('');
+  const[modalOpen,setModalOpen]=useState(false);
+  const[editingId,setEditingId]=useState(null);
+  const[confirmDeleteId,setConfirmDeleteId]=useState(null);
+  const[copiedId,setCopiedId]=useState(null);
+
+  const emptyForm={
+    title:'',
+    block:'Cơ sở ngành',
+    category:'Đề thi & Đáp án',
+    url:'',
+    contributor:'',
+    note:'',
+    pinned:false
+  };
+  const[formData,setFormData]=useState(emptyForm);
+
+  const openAdd=()=>{
+    setEditingId(null);
+    setFormData(emptyForm);
+    setModalOpen(true);
+  };
+
+  const openEdit=(item)=>{
+    setEditingId(item.id);
+    setFormData({
+      title:item.title||'',
+      block:item.block||'Cơ sở ngành',
+      category:item.category||'Đề thi & Đáp án',
+      url:item.url||'',
+      contributor:item.contributor||'',
+      note:item.note||'',
+      pinned:!!item.pinned
+    });
+    setModalOpen(true);
+  };
+
+  const handleSave=async(e)=>{
+    if(e&&e.preventDefault)e.preventDefault();
+    if(!formData.title.trim()){
+      alert('Vui lòng nhập tên tài liệu / môn học!');
+      return;
+    }
+    if(!formData.url.trim()){
+      alert('Vui lòng nhập link tài liệu (Drive/Docs/Sheets)!');
+      return;
+    }
+
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      if(editingId){
+        await fbDb.collection('study_resources').doc(editingId).set({
+          ...formData,
+          updatedAt:new Date().toISOString()
+        },{merge:true});
+        try{playSound('success');}catch(e){}
+        try{addNotification(`Đã cập nhật tài liệu: ${formData.title}`,'success');}catch(e){}
+      }else{
+        const id=uid();
+        await fbDb.collection('study_resources').doc(id).set({
+          ...formData,
+          id,
+          createdAt:new Date().toISOString()
+        });
+        try{playSound('success');}catch(e){}
+        try{addNotification(`Đã đóng góp tài liệu mới: ${formData.title}`,'success');}catch(e){}
+      }
+      setModalOpen(false);
+      setEditingId(null);
+    }catch(err){
+      console.error('Lỗi lưu tài liệu học tập:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+
+  const handleDelete=async()=>{
+    if(!confirmDeleteId)return;
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('study_resources').doc(confirmDeleteId).delete();
+      try{playSound('pop');}catch(e){}
+      try{addNotification('Đã xóa tài liệu khỏi Góc Học Tập','info');}catch(e){}
+      setConfirmDeleteId(null);
+    }catch(err){
+      console.error('Lỗi xóa tài liệu:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+
+  const handleTogglePin=async(item)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const newPinned=!item.pinned;
+      await fbDb.collection('study_resources').doc(item.id).set({
+        pinned:newPinned
+      },{merge:true});
+      try{playSound('pop');}catch(e){}
+      try{addNotification(newPinned?`Đã ghim tài liệu trọng tâm: ${item.title}`:`Đã bỏ ghim: ${item.title}`,'info');}catch(e){}
+    }catch(err){
+      console.error('Lỗi ghim tài liệu:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+
+  const handleCopyLink=(item)=>{
+    if(!item.url)return;
+    try{
+      if(navigator&&navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(item.url);
+      }else{
+        const ta=document.createElement('textarea');
+        ta.value=item.url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopiedId(item.id);
+      try{playSound('pop');}catch(e){}
+      try{addNotification('Đã sao chép link tài liệu vào bộ nhớ tạm!','info');}catch(e){}
+      setTimeout(()=>setCopiedId(null),2000);
+    }catch(err){
+      console.warn('Lỗi copy clipboard:',err);
+    }
+  };
+
+  // Filtered resources
+  const filteredList=useMemo(()=>{
+    return(studyResources||[]).filter(item=>{
+      const matchBlock=selectedBlock==='Tất cả'||item.block===selectedBlock;
+      const matchCat=selectedCat==='Tất cả'||item.category===selectedCat;
+      const q=searchQuery.toLowerCase().trim();
+      const matchSearch=!q||
+        (item.title&&item.title.toLowerCase().includes(q))||
+        (item.contributor&&item.contributor.toLowerCase().includes(q))||
+        (item.note&&item.note.toLowerCase().includes(q))||
+        (item.block&&item.block.toLowerCase().includes(q))||
+        (item.category&&item.category.toLowerCase().includes(q));
+      return matchBlock&&matchCat&&matchSearch;
+    });
+  },[studyResources,selectedBlock,selectedCat,searchQuery]);
+
+  const pinnedList=useMemo(()=>filteredList.filter(item=>!!item.pinned),[filteredList]);
+  const regularList=useMemo(()=>filteredList.filter(item=>!item.pinned),[filteredList]);
+
+  const getCatBadge=(cat)=>{
+    switch(cat){
+      case 'Đề thi & Đáp án':return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800';
+      case 'Slide bài giảng':return 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800';
+      case 'Giáo trình/Sách':return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800';
+      case 'Tóm tắt lý thuyết':return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800';
+      default:return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+    }
+  };
+
+  const getBlockBadge=(block)=>{
+    switch(block){
+      case 'Đại cương':return 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300';
+      case 'Cơ sở ngành':return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300';
+      case 'Chuyên ngành Dược':return 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300';
+      default:return 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300';
+    }
+  };
+
+  const renderCard=(item)=>(
+    <div
+      key={item.id}
+      className={`card p-4 sm:p-5 flex flex-col justify-between transition-all hover:shadow-md relative group ${
+        item.pinned
+          ? 'border-orange-300/80 bg-gradient-to-br from-orange-50/40 via-white to-amber-50/30 dark:from-orange-950/20 dark:via-slate-800 dark:to-amber-950/10 dark:border-orange-700/60 shadow-sm'
+          : 'hover:border-slate-300'
+      }`}
+    >
+      <div>
+        <div className="flex items-start justify-between gap-2 mb-2.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {item.pinned&&(
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white shadow-xs">
+                <Icon name="flame" size={12}/> Hot ôn thi
+              </span>
+            )}
+            <span className={`inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-md border ${getCatBadge(item.category)}`}>
+              {item.category}
+            </span>
+            <span className={`inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-md border ${getBlockBadge(item.block)}`}>
+              {item.block}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={()=>handleTogglePin(item)}
+              title={item.pinned?'Bỏ ghim tài liệu':'Ghim tài liệu hot ôn thi'}
+              className={`p-1.5 rounded-lg transition ${
+                item.pinned
+                  ? 'text-orange-600 bg-orange-100 dark:bg-orange-950/50 hover:bg-orange-200'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+            >
+              <Icon name="pin" size={15}/>
+            </button>
+            <button
+              onClick={()=>openEdit(item)}
+              title="Chỉnh sửa tài liệu"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+            >
+              <Icon name="pencil" size={15}/>
+            </button>
+            <button
+              onClick={()=>setConfirmDeleteId(item.id)}
+              title="Xóa tài liệu"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+            >
+              <Icon name="trash-2" size={15}/>
+            </button>
+          </div>
+        </div>
+
+        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base leading-snug mb-2 group-hover:text-primary transition-colors">
+          {item.title}
+        </h3>
+
+        {item.note&&(
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-3 line-clamp-2 leading-relaxed">
+            {item.note}
+          </p>
+        )}
+
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-4 pt-1">
+          <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+            <Icon name="user" size={11} className="text-slate-600 dark:text-slate-300"/>
+          </div>
+          <span className="truncate font-medium">{item.contributor||'Thành viên NVC'}</span>
+          {item.createdAt&&(
+            <>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="text-[11px] text-slate-400 flex-shrink-0">
+                {new Date(item.createdAt).toLocaleDateString('vi-VN')}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/80">
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary flex items-center justify-center gap-1.5 py-2 px-3 text-xs sm:text-sm rounded-xl font-semibold shadow-xs"
+        >
+          <Icon name="external-link" size={14}/>
+          <span>Mở Drive</span>
+        </a>
+        <button
+          onClick={()=>handleCopyLink(item)}
+          className={`flex items-center justify-center gap-1.5 py-2 px-3 text-xs sm:text-sm rounded-xl font-semibold border transition ${
+            copiedId===item.id
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300'
+              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700'
+          }`}
+        >
+          <Icon name={copiedId===item.id?"check":"copy"} size={14}/>
+          <span>{copiedId===item.id?"Đã chép":"Sao chép link"}</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div className="space-y-6">
+      {/* Header Banner */}
+      <div className="card p-5 sm:p-6 bg-gradient-to-r from-orange-500 via-amber-500 to-amber-600 text-white rounded-2xl shadow-md relative overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-xs text-xs font-bold mb-2">
+              <Icon name="graduation-cap" size={14}/> Góc Học Tập & Tri Thức NVC
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight">Kho Đề Thi, Bài Giảng & Tài Liệu Dược</h1>
+            <p className="text-xs sm:text-sm text-orange-100 mt-1 max-w-xl leading-relaxed">
+              Ngân hàng tài liệu ôn thi môn học, đề thi có đáp án, tóm tắt lý thuyết và slide bài giảng dành riêng cho các thế hệ thành viên NewVision HUP.
+            </p>
+          </div>
+          <button
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 bg-white text-orange-600 hover:bg-orange-50 px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition active:scale-95 flex-shrink-0"
+          >
+            <Icon name="plus" size={17} className="text-orange-600"/>
+            <span>Đóng góp tài liệu</span>
+          </button>
+        </div>
+        <div className="absolute -right-6 -bottom-8 opacity-15 pointer-events-none text-white">
+          <Icon name="book-open" size={160}/>
+        </div>
+      </div>
+
+      {/* Filter Section */}
+      <div className="card p-4 sm:p-5 space-y-4">
+        {/* Search Bar */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e=>setSearchQuery(e.target.value)}
+            placeholder="Tìm theo tên môn học, người chia sẻ, ghi chú tài liệu (VD: Dược lý, Hóa Dược, Giải phẫu...)..."
+            className="form-input text-sm pl-9 pr-9"
+          />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <Icon name="search" size={16}/>
+          </span>
+          {searchQuery&&(
+            <button onClick={()=>setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600">
+              <Icon name="x" size={14}/>
+            </button>
+          )}
+        </div>
+
+        {/* Khối / Khóa Filter Chips */}
+        <div>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">
+            <Icon name="layers" size={13}/> Khối / Khóa:
+          </div>
+          <div className="chip-bar">
+            {STUDY_BLOCKS.map(b=>(
+              <button
+                key={b}
+                onClick={()=>setSelectedBlock(b)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex-shrink-0 ${
+                  selectedBlock===b
+                    ? 'bg-orange-600 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                }`}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Phân loại tài liệu Filter Chips */}
+        <div>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">
+            <Icon name="filter" size={13}/> Phân loại tài liệu:
+          </div>
+          <div className="chip-bar">
+            {STUDY_CATEGORIES.map(c=>(
+              <button
+                key={c}
+                onClick={()=>setSelectedCat(c)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex-shrink-0 ${
+                  selectedCat===c
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Pinned Section: Tài Liệu Ôn Thi Trọng Tâm */}
+      {pinnedList.length>0&&(
+        <section>
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-orange-500 text-white flex items-center justify-center shadow-xs">
+                <Icon name="flame" size={16}/>
+              </span>
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+                Tài Liệu Ôn Thi Trọng Tâm (Hot)
+              </h2>
+              <span className="text-xs bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 font-bold px-2 py-0.5 rounded-full">
+                {pinnedList.length}
+              </span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pinnedList.map(renderCard)}
+          </div>
+        </section>
+      )}
+
+      {/* Regular Section: Tất cả tài liệu */}
+      <section>
+        <div className="flex items-center justify-between mb-3.5">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-blue-500 text-white flex items-center justify-center shadow-xs">
+              <Icon name="folder-open" size={15}/>
+            </span>
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+              Tất cả tài liệu môn học ({regularList.length})
+            </h2>
+          </div>
+        </div>
+
+        {regularList.length===0?(
+          <div className="card p-10 text-center flex flex-col items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 text-slate-400">
+              <Icon name="book-open" size={28}/>
+            </div>
+            <h3 className="font-bold text-slate-700 dark:text-slate-200 text-base mb-1">
+              {searchQuery||selectedBlock!=='Tất cả'||selectedCat!=='Tất cả'?'Không có tài liệu nào phù hợp bộ lọc':'Chưa có tài liệu nào'}
+            </h3>
+            <p className="text-xs text-slate-400 max-w-sm mb-4">
+              Hãy trở thành người đầu tiên đóng góp đề thi, slide hoặc tài liệu học tập bổ ích cho các thế hệ thành viên NVC!
+            </p>
+            <button onClick={openAdd} className="btn-primary flex items-center gap-2 text-xs sm:text-sm py-2 px-4 rounded-xl">
+              <Icon name="plus" size={16}/> Đóng góp tài liệu mới
+            </button>
+          </div>
+        ):(
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {regularList.map(renderCard)}
+          </div>
+        )}
+      </section>
+
+      {/* Modal Form: Thêm mới / Chỉnh sửa */}
+      {modalOpen&&(
+        <div className="modal-backdrop" onClick={e=>{if(e.target===e.currentTarget)setModalOpen(false);}}>
+          <div className="modal-box p-5 sm:p-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-950/50 text-orange-600 flex items-center justify-center">
+                  <Icon name="book-open" size={18}/>
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-800 dark:text-slate-100">
+                    {editingId?'Chỉnh sửa tài liệu học tập':'Đóng góp tài liệu học tập mới'}
+                  </h3>
+                  <p className="text-[11px] text-slate-400">Chia sẻ tri thức Dược Hà Nội cho cộng đồng NewVision HUP</p>
+                </div>
+              </div>
+              <button onClick={()=>setModalOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600">
+                <Icon name="x" size={18}/>
+              </button>
+            </div>
+
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <label className="form-label">Tên tài liệu / Môn học <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  required
+                  placeholder="VD: Tổng hợp Đề thi Dược lý 1 K78-K79 có giải thích chi tiết"
+                  value={formData.title}
+                  onChange={e=>setFormData({...formData,title:e.target.value})}
+                  className="form-input text-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="form-label">Khối / Khóa đào tạo <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.block}
+                    onChange={e=>setFormData({...formData,block:e.target.value})}
+                    className="form-input text-sm"
+                  >
+                    <option value="Đại cương">Đại cương (Năm 1)</option>
+                    <option value="Cơ sở ngành">Cơ sở ngành (Năm 2 - 3)</option>
+                    <option value="Chuyên ngành Dược">Chuyên ngành Dược (Năm 4 - 5)</option>
+                    <option value="K79">Khóa K79</option>
+                    <option value="K80">Khóa K80</option>
+                    <option value="K81">Khóa K81</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label">Phân loại tài liệu <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.category}
+                    onChange={e=>setFormData({...formData,category:e.target.value})}
+                    className="form-input text-sm"
+                  >
+                    <option value="Đề thi & Đáp án">Đề thi & Đáp án</option>
+                    <option value="Slide bài giảng">Slide bài giảng</option>
+                    <option value="Giáo trình/Sách">Giáo trình / Sách tham khảo</option>
+                    <option value="Tóm tắt lý thuyết">Tóm tắt lý thuyết / Mindmap</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label">Link Drive / Docs / Sheets <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://drive.google.com/..."
+                    value={formData.url}
+                    onChange={e=>setFormData({...formData,url:e.target.value})}
+                    className="form-input text-sm pl-9"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <Icon name="link" size={15}/>
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Đảm bảo link Drive đã mở quyền "Bất kỳ ai có đường liên kết đều xem được".</p>
+              </div>
+
+              <div>
+                <label className="form-label">Người đóng góp (Tên / Lớp / Khóa)</label>
+                <input
+                  type="text"
+                  placeholder="VD: Nguyễn Văn A - Lớp A2K78"
+                  value={formData.contributor}
+                  onChange={e=>setFormData({...formData,contributor:e.target.value})}
+                  className="form-input text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Ghi chú ôn thi / Hướng dẫn sử dụng</label>
+                <textarea
+                  rows="2"
+                  placeholder="VD: Tài liệu gồm 5 đề thi các năm gần đây, trọng tâm phần kháng sinh..."
+                  value={formData.note}
+                  onChange={e=>setFormData({...formData,note:e.target.value})}
+                  className="form-input text-sm"
+                />
+              </div>
+
+              <div className="flex items-center gap-2.5 pt-1">
+                <input
+                  type="checkbox"
+                  id="pinnedStudyResource"
+                  checked={formData.pinned}
+                  onChange={e=>setFormData({...formData,pinned:e.target.checked})}
+                  className="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 cursor-pointer"
+                />
+                <label htmlFor="pinnedStudyResource" className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-1.5">
+                  <span className="text-orange-500"><Icon name="flame" size={15}/></span>
+                  Ghim nổi bật vào mục "Tài liệu ôn thi trọng tâm (Hot)"
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={()=>setModalOpen(false)}
+                  className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary text-xs sm:text-sm py-2.5 px-5 rounded-xl font-semibold flex items-center gap-2 shadow-md"
+                >
+                  <Icon name="check" size={16}/>
+                  <span>{editingId?'Lưu thay đổi':'Đăng tài liệu'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Delete Modal */}
+      {confirmDeleteId&&(
+        <div className="modal-backdrop" onClick={e=>{if(e.target===e.currentTarget)setConfirmDeleteId(null);}}>
+          <div className="modal-box p-5 max-w-sm">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50 text-red-600 flex items-center justify-center mx-auto mb-3">
+                <Icon name="trash-2" size={24}/>
+              </div>
+              <h3 className="font-bold text-base text-slate-800 dark:text-slate-100 mb-1">Xác nhận xóa tài liệu?</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
+                Tài liệu này sẽ bị xóa vĩnh viễn khỏi Cloud Firestore của toàn bộ câu lạc bộ.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <button onClick={()=>setConfirmDeleteId(null)} className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex-1">
+                  Không xóa
+                </button>
+                <button onClick={handleDelete} className="btn-danger text-xs sm:text-sm py-2 px-4 rounded-xl flex-1">
+                  Xác nhận xóa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // NOTIFICATIONS PAGE
 // ============================================================
 function NotificationsPage(){
@@ -4410,6 +5164,7 @@ function FAB({setActiveTab}){
   const actions=[
     {label:'Tạo sự kiện mới',icon:'calendar-plus',color:'bg-blue-500 text-white',tab:'events'},
     {label:'Ghi nhận vấn đề',icon:'file-plus',color:'bg-amber-500 text-white',tab:'decisions'},
+    {label:'Góc học tập NVC',icon:'book-open',color:'bg-emerald-500 text-white',tab:'study'},
     {label:'Thêm link tài liệu',icon:'link',color:'bg-purple-500 text-white',tab:'resources'},
   ];
   return(
@@ -4436,9 +5191,18 @@ function FAB({setActiveTab}){
 const NAV_ITEMS=[
   {id:'dashboard',label:'Tổng quan',icon:'layout-dashboard'},
   {id:'events',label:'Sự kiện',icon:'calendar-days'},
+  {id:'study',label:'Góc học tập',icon:'book-open'},
   {id:'members',label:'Thành viên',icon:'users'},
   {id:'decisions',label:'Quyết định',icon:'file-check-2'},
   {id:'resources',label:'Tài nguyên',icon:'folder-open'},
+  {id:'bcn',label:'Phòng BCN',icon:'shield',isBcn:true},
+];
+
+const MOBILE_NAV_ITEMS=[
+  {id:'dashboard',label:'Tổng quan',icon:'layout-dashboard'},
+  {id:'events',label:'Sự kiện',icon:'calendar-days'},
+  {id:'study',label:'Học tập',icon:'book-open'},
+  {id:'members',label:'Thành viên',icon:'users'},
   {id:'bcn',label:'Phòng BCN',icon:'shield',isBcn:true},
 ];
 
@@ -4458,6 +5222,7 @@ function App(){
     switch(activeTab){
       case'dashboard':return<Dashboard setActiveTab={setActiveTab}/>;
       case'events':return<EventsPage/>;
+      case'study':return<StudyHubPage/>;
       case'members':return<MembersPage/>;
       case'decisions':return<DecisionsPage/>;
       case'resources':return<ResourcesPage/>;
@@ -4586,12 +5351,12 @@ function App(){
         </main>
       </div>
 
-      <nav className="bottom-nav-bar md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 shadow-lg">
-        <div className="grid grid-cols-6 h-16">
-          {NAV_ITEMS.map(item=>(
-            <button key={item.id} onClick={()=>setActiveTab(item.id)} className={`bottom-nav-item flex flex-col items-center justify-center gap-0.5 ${activeTab===item.id?'active':''}`}>
-              <Icon name={item.icon} size={18} className={`nav-icon ${activeTab===item.id?'text-orange-600':item.isBcn?'text-amber-500':'text-slate-400'}`}/>
-              <span className={`nav-label text-[10px] font-medium truncate max-w-full ${activeTab===item.id?'text-orange-600':item.isBcn?'text-amber-600':'text-slate-400'}`}>{item.label}</span>
+      <nav className="bottom-nav-bar md:hidden fixed bottom-0 left-0 right-0 border-t border-slate-200 z-40 shadow-lg">
+        <div className="grid grid-cols-5 h-[65px]">
+          {MOBILE_NAV_ITEMS.map(item=>(
+            <button key={item.id} onClick={()=>setActiveTab(item.id)} className={`bottom-nav-item flex flex-col items-center justify-center gap-1 ${activeTab===item.id?'active':''}`}>
+              <Icon name={item.icon} size={19} className={`nav-icon ${activeTab===item.id?'text-orange-600':item.isBcn?'text-amber-500':'text-slate-400'}`}/>
+              <span className={`nav-label text-[10.5px] font-semibold truncate max-w-full ${activeTab===item.id?'text-orange-600':item.isBcn?'text-amber-600':'text-slate-400'}`}>{item.label}</span>
               <div className="nav-dot"/>
             </button>
           ))}
