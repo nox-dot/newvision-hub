@@ -141,8 +141,14 @@
     .tag-purple{background:#ede9fe;color:#7c3aed;border:1px solid #c4b5fd}
     .tag-orange{background:#ffedd5;color:#ea580c;border:1px solid #fdba74}
     .tag-teal{background:#ccfbf1;color:#0f766e;border:1px solid #99f6e4}
-    .overdue{border-left:3px solid #ef4444!important}
+    .overdue{border-left:3px solid #f59e0b!important;background-color:rgba(245,158,11,.04)!important}
     .deadline-soon{border-left:3px solid #f59e0b!important}
+    .perspective-1000{perspective:1000px;-webkit-perspective:1000px}
+    .transform-style-3d{transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
+    .backface-hidden{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+    .rotate-y-180{transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
+    .gacha-card-inner{transition:transform .8s cubic-bezier(.34,1.56,.64,1);transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
+    .gacha-glow{box-shadow:0 0 35px rgba(245,158,11,.45),0 0 15px rgba(147,51,234,.3)}
     .nav-dot{display:none;width:5px;height:5px;background:var(--primary);border-radius:50%;margin:2px auto 0}
     .bottom-nav-item.active .nav-icon{color:var(--primary)}
     .bottom-nav-item.active .nav-label{color:var(--primary)}
@@ -480,13 +486,56 @@ const LINK_TYPES = ['Kế hoạch & Kịch bản','Bảng tính & Data','Tư li�
 const INVENTORY_STATUSES = ['Tốt','Hỏng/Mất phụ kiện','Đang cho mượn'];
 const EXPENSE_STATUSES = ['Dự trù','Đã chi - Chờ hoàn tiền','Đã quyết toán'];
 const COLOR_THEMES = [
-  {id:'orange',name:'Cam NewVision',sub:'Nhận diện cốt lõi CLB (Mặc định)',c1:'#f97316',c2:'#1e3a5f',badge:'Cam & Navy'},
-  {id:'indigo',name:'Tím Indigo',sub:'Giao diện truyền thống',c1:'#4f46e5',c2:'#7c3aed',badge:'Indigo'},
-  {id:'green',name:'Xanh Dược Hà Nội',sub:'Sắc màu Y Dược HUP',c1:'#059669',c2:'#0f766e',badge:'Emerald'},
+  {id:'orange',name:'Cam NewVision',sub:'Cam & Navy',c1:'#f97316',c2:'#1e3a5f',badge:'Cam & Navy'},
+  {id:'indigo',name:'Tím Indigo',sub:'Indigo & Violet',c1:'#4f46e5',c2:'#7c3aed',badge:'Indigo'},
+  {id:'green',name:'Xanh Dược Hà Nội',sub:'Emerald & Teal',c1:'#059669',c2:'#0f766e',badge:'Emerald'},
 ];
 const MASCOT_TYPES = [
-  {id:'vivi',name:'Cú mèo Vi Vi',icon:'🦉',desc:'Đặc trưng tri thức & sự kiên định, chu đáo'},
-  {id:'eagle',name:'Đại bàng NewVision',icon:'🦅',desc:'Biểu tượng bứt phá, tầm nhìn xa & bản lĩnh'},
+  {id:'vivi',name:'Cú mèo Vi Vi',icon:'🦉',desc:'Tri thức & kiên định'},
+  {id:'eagle',name:'Đại bàng NewVision',icon:'🦅',desc:'Bứt phá & bản lĩnh'},
+];
+
+const GACHA_CARDS = [
+  { id: 1, name: "The Sun - Hào Quang Rực Rỡ", quote: "Vũ trụ bật đèn pha chiếu thẳng vào bạn. Hôm nay vào lab chuẩn độ ra màu hồng cánh sen nhạt huyền thoại ngay lần đầu, không bị thầy cô bắt đổ đi làm lại." },
+  { id: 2, name: "The Star - Ngôi Sao Hy Vọng", quote: "Một tín hiệu chữa lành từ các vì sao: Deadline khó nhằn tự động được lùi thêm 48 tiếng, hoặc bài tập nhóm bỗng có ai đó gánh hết phần việc hóc búa nhất." },
+  { id: 3, name: "The Wheel of Fortune - Bánh Xe Số Phận", quote: "Bánh xe phong thủy đảo chiều ngoạn mục. Đen đủi tuần trước dừng lại ở đây; hôm nay thi trắc nghiệm lụi bừa theo linh cảm câu nào, ăn chắc câu đó." },
+  { id: 4, name: "The Magician - Bậc Thầy Thao Túng", quote: "Hôm nay tài ăn nói đạt đỉnh cảnh giới. Thi vấn đáp chỉ cần mở miệng nói ba câu đúng từ khóa trọng tâm, thầy cô liền gật đầu mỉm cười cho qua môn êm đẹp." },
+  { id: 5, name: "The World - Đại Cát Toàn Vẹn", quote: "Một chu kỳ sóng gió chính thức khép lại. Điểm danh vừa đủ, bài tập nộp xong trước hạn 5 phút, tối nay kê cao gối ngủ không ai dám réo tên." },
+  { id: 6, name: "The Empress - Năng Lượng Trù Phú", quote: "Cung tài lộc mở rộng bất thường. Ví tiền có dấu hiệu hồi sinh nhờ được ai đó bao ăn, hoặc tài khoản nổ ting ting một khoản tiền từ trên trời rơi xuống." },
+  { id: 7, name: "The Chariot - Cỗ Xe Thần Tốc", quote: "Ý chí vượt chướng ngại vật cực mạnh. Giảng viên lướt slide nhanh như chớp nhưng tay bạn ghi chép vẫn đuổi kịp trọn vẹn bản chất bài giảng." },
+  { id: 8, name: "The High Priestess - Giác Quan Thứ Sáu", quote: "Trực giác mách bảo gì hãy nghe theo nấy. Tối nay linh tính bảo giở trang nào trong giáo trình thì lật đúng trang đó, xác suất trúng đề thi ngày mai lên tới 99%." },
+  { id: 9, name: "Strength - Thuần Hóa Căng Thẳng", quote: "Tâm bất biến giữa dòng đời vạn biến. Khối lượng bài vở dù chất thành đống cũng bị bạn giải quyết gọn ghẽ chỉ trong một buổi chiều nghe nhạc chill." },
+  { id: 10, name: "The Hermit - Thuật Tàng Hình Ẩn Sĩ", quote: "Hôm nay vận khí 'ở ẩn' che chở tuyệt đối. Giảng viên đảo mắt quanh giảng đường tìm người lên bảng nhưng ánh nhìn sẽ lướt qua bạn như thể bạn là người vô hình." },
+  { id: 11, name: "The Fool - Vô Ưu Vô Lo", quote: "Cứ thong dong bước ra đường. Đi học gặp toàn đèn xanh, trời râm mát, vừa dắt xe vào trường là bắt gặp ngay một chỗ đỗ xe có bóng râm mát rượi." },
+  { id: 12, name: "Temperance - Cân Bằng Âm Dương", quote: "Nguyên tố Đất và Nước hòa hợp tuyệt đối. Điểm chuyên cần và điểm thi giữa kỳ bù trừ cho nhau ra đúng con số vừa vặn qua môn không thiếu một phẩy." },
+  { id: 13, name: "Judgement - Nghiệp Quả Ngọt Ngào", quote: "Những đêm cày bài trong bóng tối hôm nay được hồi đáp xứng đáng. Bảng điểm trả về hiện chữ 'ĐẠT' to đùng khiến bạn thở phào nhẹ nhõm cả người." },
+  { id: 14, name: "The Hierophant - Quý Nhân Chỉ Lối", quote: "Bắt được sóng năng lượng của tiền bối khóa trên. Mượn được cuốn giáo trình có sẵn bút dạ quang highlight trúng tim đen đề thi năm nay." },
+  { id: 15, name: "The Lovers - Duyên Lành Nhóm Trưởng", quote: "Vũ trụ kết nối bạn với những người đồng đội làm việc nhóm có tâm: phân công là làm, không seen tin nhắn rồi biến mất bí ẩn." },
+  { id: 16, name: "Sao Thủy Thuận Hành", quote: "Tư duy logic thông suốt lạ kỳ. Mấy công thức hóa dược dài ngoằng hay sơ đồ chuyển hóa rắc rối nhìn lướt qua một lần là khắc sâu vào vỏ não." },
+  { id: 17, name: "Lửa Bạch Dương Rực Cháy", quote: "Năng lượng bùng nổ. Sự trì hoãn bị đánh bại, ngồi vào bàn đúng 2 tiếng là dọn sạch toàn bộ bài tập tồn đọng của cả tuần." },
+  { id: 18, name: "Đất Kim Ngưu Vững Chãi", quote: "Hôm nay ví tiền được bảo vệ an toàn. Xuống căng-tin giờ cao điểm vẫn chộp được suất cơm ngon lành, no căng bụng với giá sinh viên." },
+  { id: 19, name: "Nước Cự Giải Êm Đềm", quote: "Tâm trí bình yên như mặt hồ không một gợn sóng. Không drama, không tin nhắn giục việc, chỉ có sự thảnh thơi trọn vẹn cả ngày dài." },
+  { id: 20, name: "Sao Mộc Bảo Hộ", quote: "Vận may đến vào phút chót: Đi học sát giờ nhưng vừa đặt chân qua cửa lớp thì tiếng chuông điểm danh mới bắt đầu vang lên." },
+  { id: 21, name: "Sao Kim Duyên Dáng", quote: "Hôm nay bạn tỏa ra nguồn năng lượng dễ mến lạ thường. Đi thực tập hay lên lớp đều được mọi người xung quanh nhiệt tình giúp đỡ, nhường nhịn từng chút." },
+  { id: 22, name: "Quẻ Thuần Càn - Vận Khí Thăng Hoa", quote: "Mọi sự khởi đầu hôm nay đều trơn tru như bôi dầu. Nộp báo cáo qua web trường mạng chạy vèo vèo, không gặp cảnh xoay vòng tròn ức chế." },
+  { id: 23, name: "Quẻ Địa Thiên Thái - Hóa Nguy Thành An", quote: "Tưởng chừng quên mang theo tài liệu học tập, hóa ra bạn cùng bàn đã in dư một bản rồi đưa ngay cho bạn dùng." },
+  { id: 24, name: "Quẻ Thủy Hỏa Ký Tế - Tròn Vẹn Ý Nguyện", quote: "Tiến độ ôn thi đã vào guồng chuẩn chỉ. Chỉ cần giữ vững nhịp độ này, bạn cầm chắc chiếc vé qua môn với số điểm đẹp mắt." },
+  { id: 25, name: "Quẻ Phong Lôi Ích - Trí Não Bứt Phá", quote: "Não bộ hôm nay tiếp thu kiến thức với tốc độ cáp quang. Mấy câu hỏi hóc búa tưởng không giải nổi bỗng nhiên tìm ra chìa khóa đáp án." },
+  { id: 26, name: "Sao Thổ Lùi Bước", quote: "Áp lực lớn nhất của tuần đã chính thức tan biến. Hôm nay là ngày tự thưởng cho bản thân một buổi chiều đi dạo hoặc nằm dài lướt web." },
+  { id: 27, name: "Tín Hiệu Mặt Trăng", quote: "Mắt thần mở ra. Soi kính hiển vi bắt dính vi trường nét căng ngay vòng vặn ốc vi cấp đầu tiên, bạn bè xung quanh bu lại xin chụp ké lia lịa." },
+  { id: 28, name: "Thiên Thời Địa Lợi", quote: "Thời tiết chiều lòng người. Vừa tan học dắt xe ra cổng thì trời râm mát, về đến tận phòng trọ khóa cửa xong bên ngoài mới bắt đầu trút mưa rào." },
+  { id: 29, name: "Khiên Chắn Tâm Linh", quote: "Vận xui tự động bật ngược ra xa. Vào phòng thực tập làm việc êm ru: không vỡ ống nghiệm, không đổ hóa chất, an toàn lành lặn đi về." },
+  { id: 30, name: "Quẻ Hỏa Địa Tấn - Tỏa Sáng", quote: "Bài phát biểu hoặc câu trả lời ngẫu hứng trong lớp khiến giảng viên phải mỉm cười gật gù khen ngợi trước mặt bạn bè." },
+  { id: 31, name: "Thiên Thần 111 - Ý Niệm Thành Hiện Thực", quote: "Vũ trụ đang lắng nghe suy nghĩ của bạn. Lúc làm bài trắc nghiệm, hãy kiên định chọn đáp án đầu tiên lóe lên trong đầu, đừng xóa đi chọn lại." },
+  { id: 32, name: "Thiên Thần 222 - Bình Tâm Chờ Đợi", quote: "Mọi sự an bài đều diễn ra đúng lúc. Đừng quá sốt ruột chờ điểm số, kết quả trả về sẽ khiến bạn thở phào nở nụ cười." },
+  { id: 33, name: "Thiên Thần 333 - Quý Nhân Vây Quanh", quote: "Hôm nay xung quanh toàn người tốt bụng. Đang bí bài tập khó chỉ cần buông một câu than thở là có người giảng giải cặn kẽ từng bước." },
+  { id: 34, name: "Thiên Thần 444 - Hào Quang Bất Khả Xâm Phạm", quote: "Bạn được bao bọc bởi một lớp khiên năng lượng bình yên. Mọi lời phàn nàn xung quanh đều trôi tuột ra ngoài, tâm trạng không chút gợn sóng." },
+  { id: 35, name: "Thiên Thần 555 - Lối Rẽ Bất Ngờ", quote: "Sắp có một tin tức mang lại niềm vui nho nhỏ: Một tiết học được đổi sang hình thức nhẹ nhàng hơn hoặc bất ngờ được cho nghỉ sớm." },
+  { id: 36, name: "Thiên Thần 777 - Khai Thông Trí Tuệ", quote: "Túi khôn hôm nay mở rộng hết cỡ. Gặp bài toán hóc búa tự dưng đầu óc nảy số ra cách làm nhanh gọn bất ngờ." },
+  { id: 37, name: "Thiên Thần 888 - Tài Khí Dồi Dào", quote: "Dòng chảy tiền bạc hanh thông. Thò tay vào túi áo khoác cũ bỗng tìm lại được tờ tiền gấp gọn ngỡ đã đánh rơi từ tuần trước." },
+  { id: 38, name: "Thiên Thần 999 - Trọn Vẹn Chu Kỳ", quote: "Gác lại toàn bộ những lo âu của bài vở ngày cũ. Tối nay bạn xứng đáng được thưởng một ly trà sữa ngọt ngào và một giấc ngủ say không mộng mị." },
+  { id: 39, name: "Con Số 000 - Tiềm Năng Vô Cực", quote: "Ngày hôm nay là một trang giấy hoàn toàn mới. Mọi may mắn đều nằm trong tay bạn, tự tin bước đi là gặt hái kết quả tốt." },
+  { id: 40, name: "Lá Bài Định Mệnh - Vận Đỏ Toàn Diện", quote: "Lá quẻ may mắn nhất trong ngày. Mọi sự mong cầu từ việc tránh bị gọi tên, trúng đề thi đến thời tiết khô ráo đều diễn ra đúng như ý bạn mong muốn." }
 ];
 const MASCOT_MESSAGES = [
   'NewVision cố lên! 💪','Team mình làm tốt lắm! 🌟','Hôm nay năng suất siêu cao! 🚀',
@@ -602,10 +651,13 @@ function AppProvider({children}){
   const[notifications,setNotifications]=useState([]);
   const[resources,setResources]=useState([]);
   const[studyResources,setStudyResources]=useState([]);
+  const[penalties,setPenalties]=useState([]);
   const[inventory,setInventory]=useState([]);
   const[expenses,setExpenses]=useState([]);
   const[sessions,setSessions]=useState([]);
   const[assignTasks,setAssignTasks]=useState([]);
+  const[adminMode,setAdminMode]=useState(false);
+  const[userIdentity,setUserIdentity]=useLocalStorage('nv_user_identity','');
   const[darkMode,setDarkMode]=useLocalStorage('nv_dark',false);
   const[soundEnabled,setSoundEnabled]=useLocalStorage('nv_sound',true);
   const[toasts,setToasts]=useState([]);
@@ -786,6 +838,7 @@ function AppProvider({children}){
     listenCol('expenses',setExpenses,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     listenCol('resources',setResources,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     listenCol('study_resources',setStudyResources,list=>list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('penalties',setPenalties,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     listenCol('inventory',setInventory,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     listenCol('sessions',setSessions,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
     listenCol('assignTasks',setAssignTasks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
@@ -837,6 +890,19 @@ function AppProvider({children}){
           await sBatch.commit();
           console.log('Sample study resources seeded to Firestore');
         }
+
+        const penSnap=await fbDb.collection('penalties').limit(1).get();
+        if(penSnap.empty){
+          const pBatch=fbDb.batch();
+          const samplePenalties=[
+            {id:uid(),member:'Nguyễn Văn An',ban:'Ban Sự Kiện',reason:'Đi muộn họp CLB 15 phút không báo trước',amount:-20000,type:'penalty',status:'Chờ nộp',createdAt:new Date(Date.now()-86400000).toISOString()},
+            {id:uid(),member:'Trần Mai Linh',ban:'Ban Truyền Thông',reason:'Khen thưởng bài viết tiếp cận cao nhất tháng',amount:50000,type:'reward',status:'Đã nhận',createdAt:new Date(Date.now()-86400000*2).toISOString()},
+            {id:uid(),member:'Lê Hoàng Nam',ban:'Ban Đối Ngoại',reason:'Nộp muộn báo cáo nhà tài trợ',amount:-20000,type:'penalty',status:'Đã nộp',createdAt:new Date(Date.now()-86400000*3).toISOString()}
+          ];
+          samplePenalties.forEach(p=>pBatch.set(fbDb.collection('penalties').doc(p.id),p));
+          await pBatch.commit();
+          console.log('Sample penalties seeded to Firestore');
+        }
       }catch(err){
         console.warn('Legacy migration check notice:',err);
       }
@@ -865,6 +931,7 @@ function AppProvider({children}){
       expenses.forEach(x=>batch.set(fbDb.collection('expenses').doc(x.id||uid()),x,{merge:true}));
       resources.forEach(r=>batch.set(fbDb.collection('resources').doc(r.id||uid()),r,{merge:true}));
       studyResources.forEach(s=>batch.set(fbDb.collection('study_resources').doc(s.id||uid()),s,{merge:true}));
+      penalties.forEach(p=>batch.set(fbDb.collection('penalties').doc(p.id||uid()),p,{merge:true}));
       inventory.forEach(i=>batch.set(fbDb.collection('inventory').doc(i.id||uid()),i,{merge:true}));
       sessions.forEach(s=>batch.set(fbDb.collection('sessions').doc(s.id||uid()),s,{merge:true}));
       assignTasks.forEach(t=>batch.set(fbDb.collection('assignTasks').doc(t.id||uid()),t,{merge:true}));
@@ -882,19 +949,20 @@ function AppProvider({children}){
       setCloudStatus('offline');
       alert('Lỗi lưu Firebase: '+err.message);
     }
-  },[members,events,decisions,expenses,resources,studyResources,inventory,sessions,assignTasks,quickChecklist,quickLinks,bcnPlans,bcnNotes,playSound,showToast]);
+  },[members,events,decisions,expenses,resources,studyResources,penalties,inventory,sessions,assignTasks,quickChecklist,quickLinks,bcnPlans,bcnNotes,playSound,showToast]);
 
   const pullAllFromCloud=useCallback(async()=>{
     if(!fbDb){alert('Firebase chưa được khởi tạo.');return}
     setCloudStatus('syncing');
     try{
-      const[mSnap,eSnap,dSnap,expSnap,rSnap,sResSnap,iSnap,sSnap,aSnap,cSnap,lSnap,pSnap,nDoc]=await Promise.all([
+      const[mSnap,eSnap,dSnap,expSnap,rSnap,sResSnap,penSnap,iSnap,sSnap,aSnap,cSnap,lSnap,pSnap,nDoc]=await Promise.all([
         fbDb.collection('members').get(),
         fbDb.collection('events').get(),
         fbDb.collection('decisions').get(),
         fbDb.collection('expenses').get(),
         fbDb.collection('resources').get(),
         fbDb.collection('study_resources').get(),
+        fbDb.collection('penalties').get(),
         fbDb.collection('inventory').get(),
         fbDb.collection('sessions').get(),
         fbDb.collection('assignTasks').get(),
@@ -909,6 +977,7 @@ function AppProvider({children}){
       setExpenses(expSnap.docs.map(d=>({id:d.id,...d.data()})));
       setResources(rSnap.docs.map(d=>({id:d.id,...d.data()})));
       setStudyResources(sResSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setPenalties(penSnap.docs.map(d=>({id:d.id,...d.data()})));
       setInventory(iSnap.docs.map(d=>({id:d.id,...d.data()})));
       setSessions(sSnap.docs.map(d=>({id:d.id,...d.data()})));
       setAssignTasks(aSnap.docs.map(d=>({id:d.id,...d.data()})));
@@ -940,8 +1009,9 @@ function AppProvider({children}){
       decisions,setDecisions,events,setEvents,members,setMembers,
       quickChecklist,setQuickChecklist,quickLinks,setQuickLinks,
       notifications,addNotification,markRead,markAllRead,unreadCount,
-      resources,setResources,studyResources,setStudyResources,inventory,setInventory,expenses,setExpenses,
+      resources,setResources,studyResources,setStudyResources,penalties,setPenalties,inventory,setInventory,expenses,setExpenses,
       sessions,setSessions,assignTasks,setAssignTasks,
+      adminMode,setAdminMode,userIdentity,setUserIdentity,
       darkMode,setDarkMode,soundEnabled,setSoundEnabled,
       theme,setTheme,mascotType,setMascotType,catEnabled,setCatEnabled,
       bcnPin,setBcnPin,bcnUnlocked,setBcnUnlocked,bcnNotes,setBcnNotes,bcnPlans,setBcnPlans,
@@ -1174,10 +1244,10 @@ function Mascot(){
     if(mascotState==='celebrate'){
       if(!isInitialSnapshot && window.confetti){
         try{
-          window.confetti({particleCount:35,spread:60,origin:{x:.88,y:.9},colors:['#f97316','#ea580c','#6366f1','#ec4899','#f59e0b','#10b981'],ticks:120});
+          window.confetti({particleCount:30,spread:50,origin:{x:.88,y:.9},colors:['#f97316','#ea580c','#6366f1','#ec4899','#f59e0b','#10b981'],ticks:90});
           setTimeout(()=>{
             try{if(window.confetti&&typeof window.confetti.reset==='function')window.confetti.reset();}catch(e){}
-          },2000);
+          },1500);
         }catch(e){}
       }
       try{playSound('success');}catch(e){}
@@ -1285,18 +1355,18 @@ function ScreenCatCompanion(){
     }else if(catEvent.action==='celebrate'){
       setState('celebrate');
       try{playSound('success');}catch(e){}
-      showCatSpeech('Hoan hô! Xong việc rồi! 🎉🐱',2000);
+      showCatSpeech('Hoan hô! Xong việc rồi! 🎉🐱',1500);
       if(window.confetti){
         try{
           window.confetti({
-            particleCount:35,
+            particleCount:30,
             spread:60,
             origin:{x:Math.min(Math.max(pos.x/window.innerWidth,0.1),0.9),y:Math.min(pos.y/window.innerHeight,0.9)},
-            ticks:120
+            ticks:100
           });
           setTimeout(()=>{
             try{if(window.confetti&&typeof window.confetti.reset==='function')window.confetti.reset();}catch(e){}
-          },2000);
+          },1500);
         }catch(e){}
       }
       setTimeout(()=>setState('idle'),1200);
@@ -1812,63 +1882,13 @@ function SettingsModal({open,onClose}){
           </div>
         </div>
 
-        {/* FIREBASE REALTIME & WEB PUSH NOTIFICATION SECTION */}
-        <div className="card p-4 border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/60 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10">
+        {/* FIREBASE REALTIME COMPACT STATUS */}
+        <div className="card p-4 border border-blue-200 dark:border-blue-900/50 bg-slate-50/70 dark:bg-slate-800/40">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🔥</span>
-              <div>
-                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100">Đồng Bộ Cloud Firestore Realtime & Web Push</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Đồng bộ tức thời giữa các máy & thông báo đẩy Desktop</p>
-              </div>
-            </div>
-            <span className={`status-badge text-[11px] ${
-              cloudStatus==='connected' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400' :
-              cloudStatus==='syncing' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 animate-pulse' :
-              'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
-            }`}>
-              {cloudStatus==='connected' ? '🟢 Cloud Live' : cloudStatus==='syncing' ? '🟡 Đang đồng bộ...' : '⚪ Ngoại tuyến (Local)'}
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Trạng thái: <span className="font-bold text-emerald-600 dark:text-emerald-400">● Đã đồng bộ Cloud</span>
             </span>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-3 mb-3">
-            {/* Realtime Status */}
-            <div className="bg-white dark:bg-slate-800/80 rounded-xl p-3 border border-slate-200/80 dark:border-slate-700 text-xs space-y-1">
-              <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
-                <span className="font-semibold">Trạng thái kết nối:</span>
-                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                  {cloudStatus==='connected' ? 'Realtime Kết Nối' : cloudStatus==='syncing' ? 'Đang gửi nhận' : 'Offline'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Lần đồng bộ gần nhất:</span>
-                <span>{lastSynced ? lastSynced.toLocaleTimeString('vi-VN') : 'Vừa xong'}</span>
-              </div>
-              <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Firebase Project:</span>
-                <span className="font-mono text-[10px] text-blue-600 dark:text-blue-400">newvision-hub</span>
-              </div>
-            </div>
-
-            {/* Web Push Status */}
-            <div className="bg-white dark:bg-slate-800/80 rounded-xl p-3 border border-slate-200/80 dark:border-slate-700 text-xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-300 mb-1">
-                  <span className="font-semibold">Thông báo đẩy (Web Push):</span>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                    pushPermission==='granted' ? 'bg-emerald-100 text-emerald-700' :
-                    pushPermission==='denied' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    {pushPermission==='granted' ? 'ĐÃ BẬT' : pushPermission==='denied' ? 'BỊ CHẶN' : 'CHƯA BẬT'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
-                  {pushPermission==='granted'
-                    ? 'Nhận báo động SOS thực địa & quyết định đã chốt trực tiếp trên màn hình máy tính.'
-                    : 'Bật để nhận chuông cảnh báo SOS và thông báo quan trọng ngay cả khi chuyển tab.'}
-                </p>
-              </div>
-            </div>
+            <span className="font-mono text-[11px] text-slate-400">newvision-hub</span>
           </div>
 
           {/* Action buttons */}
@@ -3141,16 +3161,32 @@ function DecisionsPage(){
 // TASK ROW
 // ============================================================
 function TaskRow({task,onToggle,onEdit,onDelete}){
-  const{triggerCat,isInitialSnapshot}=useContext(AppCtx);
+  const{triggerCat,isInitialSnapshot,adminMode,userIdentity}=useContext(AppCtx);
   const over=!task.done&&isOverdue(task.deadline);
   const soon=!task.done&&!over&&isSoon(task.deadline);
+
+  const isAssignedToOther = !adminMode && task.assignee && userIdentity && task.assignee.trim().toLowerCase() !== userIdentity.trim().toLowerCase();
+  const canEdit = adminMode || (userIdentity && task.assignee && task.assignee.trim().toLowerCase() === userIdentity.trim().toLowerCase()) || (!task.assignee);
+  const canDelete = adminMode;
+
   const handleToggle=()=>{
+    if(isAssignedToOther){
+      alert(`Đầu việc này do ${task.assignee} đảm nhận!`);
+      return;
+    }
     if(!task.done && !isInitialSnapshot)triggerCat('celebrate');
     onToggle(task.id);
   };
+
   return(
     <div className={`flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-white group transition ${over?'overdue':soon?'deadline-soon':''} ${task.done?'opacity-60':''}`}>
-      <input type="checkbox" checked={task.done} onChange={handleToggle} className="w-4 h-4 accent-orange-600 cursor-pointer flex-shrink-0"/>
+      <input
+        type="checkbox"
+        checked={task.done}
+        onChange={handleToggle}
+        className="w-4 h-4 accent-orange-600 cursor-pointer flex-shrink-0"
+        title={isAssignedToOther ? `Đầu việc này do ${task.assignee} đảm nhận` : ''}
+      />
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium ${task.done?'line-through text-slate-400':'text-slate-800'}`}>{task.title}</p>
         <div className="flex flex-wrap gap-1.5 mt-1">
@@ -3161,8 +3197,8 @@ function TaskRow({task,onToggle,onEdit,onDelete}){
         </div>
       </div>
       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
-        <button onClick={()=>onEdit(task)} className="p-1.5 rounded-lg hover:bg-slate-100"><Icon name="pencil" size={13} className="text-slate-400"/></button>
-        <button onClick={()=>onDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-50"><Icon name="trash-2" size={13} className="text-red-400"/></button>
+        {canEdit && <button onClick={()=>onEdit(task)} className="p-1.5 rounded-lg hover:bg-slate-100" title="Chỉnh sửa"><Icon name="pencil" size={13} className="text-slate-400"/></button>}
+        {canDelete && <button onClick={()=>onDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-50" title="Xóa"><Icon name="trash-2" size={13} className="text-red-400"/></button>}
       </div>
     </div>
   );
@@ -3313,12 +3349,13 @@ function LiveEventMode({event,onBack,onUpdate}){
 // EVENT DETAIL
 // ============================================================
 function EventDetail({event,onBack}){
-  const{events,setEvents,addNotification,triggerMascot,isInitialSnapshot}=useContext(AppCtx);
+  const{events,setEvents,addNotification,triggerMascot,isInitialSnapshot,members,userIdentity,adminMode}=useContext(AppCtx);
   const[taskModal,setTaskModal]=useState(false);
   const[editingTask,setEditingTask]=useState(null);
   const[confirmDel,setConfirmDel]=useState(null);
   const[liveMode,setLiveMode]=useState(false);
   const[taskBanFilter,setTaskBanFilter]=useState('');
+  const[myTasksOnly,setMyTasksOnly]=useState(false);
   const emptyTask={title:'',assignee:'',ban:'',deadline:'',link:'',phase:TASK_PHASES[0],done:false};
   const[taskForm,setTaskForm]=useState(emptyTask);
 
@@ -3424,11 +3461,14 @@ function EventDetail({event,onBack}){
 
   const tasksByPhase=phase=>(curEvent.tasks||[]).filter(t=>{
     if(t.phase!==phase)return false;
+    if(myTasksOnly){
+      if(!t.assignee||!userIdentity||!t.assignee.toLowerCase().includes(userIdentity.toLowerCase()))return false;
+    }
     if(!taskBanFilter)return true;
     const b=(t.ban||'').toLowerCase();
     if(taskBanFilter==='Nội vụ')return b.includes('nội vụ');
     if(taskBanFilter==='Truyền thông')return b.includes('truyền thông');
-    if(taskBanFilter==='Chuyên môn')return b.includes('sự kiện')||b.includes('chuyên môn');
+    if(taskBanFilter==='Sự kiện')return b.includes('sự kiện');
     if(taskBanFilter==='Đối ngoại')return b.includes('đối ngoại');
     if(taskBanFilter==='Toàn CLB')return b.includes('toàn clb');
     return t.ban===taskBanFilter;
@@ -3470,13 +3510,24 @@ function EventDetail({event,onBack}){
 
       {curEvent.note&&<div className="card p-3 bg-amber-50 border-amber-200 text-sm text-amber-800"><Icon name="sticky-note" size={14} className="inline mr-1.5"/>Ghi chú: {curEvent.note}</div>}
 
-      {/* BỘ LỌC BAN CHO CÔNG VIỆC */}
+      {/* BỘ LỌC BAN & VIỆC CỦA TÔI */}
       <div className="card p-3 flex items-center justify-between gap-2 overflow-x-auto">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mr-1">
-            <Icon name="filter" size={13}/> Lọc theo ban:
+          <button
+            onClick={() => setMyTasksOnly(v => !v)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition whitespace-nowrap flex items-center gap-1 ${
+              myTasksOnly
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+            }`}
+          >
+            <span>⚡</span> Việc của tôi {userIdentity ? `(${userIdentity})` : ''}
+          </button>
+
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 ml-1 mr-1">
+            <Icon name="filter" size={12}/> Ban:
           </span>
-          {['', 'Nội vụ', 'Truyền thông', 'Chuyên môn', 'Đối ngoại', 'Toàn CLB'].map(b => (
+          {['', 'Nội vụ', 'Truyền thông', 'Sự kiện', 'Đối ngoại', 'Toàn CLB'].map(b => (
             <button
               key={b}
               onClick={() => setTaskBanFilter(b)}
@@ -3490,9 +3541,9 @@ function EventDetail({event,onBack}){
             </button>
           ))}
         </div>
-        {taskBanFilter && (
+        {(taskBanFilter || myTasksOnly) && (
           <button
-            onClick={() => setTaskBanFilter('')}
+            onClick={() => { setTaskBanFilter(''); setMyTasksOnly(false); }}
             className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 flex-shrink-0"
           >
             <Icon name="x-circle" size={12}/>Xóa lọc
@@ -3500,29 +3551,57 @@ function EventDetail({event,onBack}){
         )}
       </div>
 
-      {TASK_PHASES.map(phase=>(
-        <div key={phase} className="card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${phase===TASK_PHASES[0]?'bg-blue-500':'bg-emerald-500'}`}/>
-              {phase}
-              <span className="text-xs font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">{tasksByPhase(phase).length}</span>
-            </h2>
-            <button onClick={()=>openAddTask(phase)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>Thêm việc</button>
+      {TASK_PHASES.map(phase=>{
+        const phaseTasks = tasksByPhase(phase);
+        const pendingTasks = phaseTasks.filter(t => !t.done);
+        const completedTasks = phaseTasks.filter(t => t.done);
+        return (
+          <div key={phase} className="card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${phase===TASK_PHASES[0]?'bg-blue-500':'bg-emerald-500'}`}/>
+                {phase}
+                <span className="text-xs font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">{phaseTasks.length}</span>
+              </h2>
+              <button onClick={()=>openAddTask(phase)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>Thêm việc</button>
+            </div>
+            <div className="space-y-2">
+              {phaseTasks.length===0&&<p className="text-xs text-slate-400 py-3 text-center">Chưa có đầu việc nào trong giai đoạn này</p>}
+              {pendingTasks.map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask} onEdit={openEditTask} onDelete={id=>setConfirmDel(id)}/>)}
+
+              {completedTasks.length > 0 && (
+                <details className="mt-3 pt-2 border-t border-slate-100">
+                  <summary className="text-xs font-semibold text-slate-500 cursor-pointer py-1 select-none hover:text-slate-700 flex items-center gap-1">
+                    <span>✅ Đã xong ({completedTasks.length})</span>
+                  </summary>
+                  <div className="space-y-2 mt-2">
+                    {completedTasks.map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask} onEdit={openEditTask} onDelete={id=>setConfirmDel(id)}/>)}
+                  </div>
+                </details>
+              )}
+            </div>
           </div>
-          <div className="space-y-2">
-            {tasksByPhase(phase).length===0&&<p className="text-xs text-slate-400 py-3 text-center">Chưa có đầu việc nào trong giai đoạn này</p>}
-            {tasksByPhase(phase).map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask} onEdit={openEditTask} onDelete={id=>setConfirmDel(id)}/>)}
-          </div>
-        </div>
-      ))}
+        );
+      })}
 
       <Modal open={taskModal} onClose={handleTaskClose} title={editingTask?'Chỉnh sửa công việc':'Thêm đầu việc mới'}>
         <div className="space-y-4">
           <div><label className="form-label">Tên công việc <span className="text-red-500">*</span></label><input value={taskForm.title} onChange={e=>setTaskForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="Tên công việc cần làm..."/></div>
           <div><label className="form-label">Giai đoạn</label><select value={taskForm.phase} onChange={e=>setTaskForm(p=>({...p,phase:e.target.value}))} className="form-input">{TASK_PHASES.map(ph=><option key={ph}>{ph}</option>)}</select></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="form-label">Người phụ trách</label><input value={taskForm.assignee} onChange={e=>setTaskForm(p=>({...p,assignee:e.target.value}))} className="form-input" placeholder="Tên người phụ trách"/></div>
+            <div>
+              <label className="form-label">Người phụ trách</label>
+              <select
+                value={taskForm.assignee}
+                onChange={e=>setTaskForm(p=>({...p,assignee:e.target.value}))}
+                className="form-input"
+              >
+                <option value="">-- Chọn thành viên --</option>
+                {members.map(m=>(
+                  <option key={m.id} value={m.name}>{m.name} ({m.ban || m.role || 'Thành viên'})</option>
+                ))}
+              </select>
+            </div>
             <div><label className="form-label">Ban phối hợp</label><select value={taskForm.ban} onChange={e=>setTaskForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
           </div>
           <div><label className="form-label">Deadline</label><input type="datetime-local" value={taskForm.deadline} onChange={e=>setTaskForm(p=>({...p,deadline:e.target.value}))} className="form-input"/></div>
@@ -3539,7 +3618,7 @@ function EventDetail({event,onBack}){
 // EVENTS PAGE
 // ============================================================
 function EventsPage(){
-  const{events,setEvents,addNotification,playSound}=useContext(AppCtx);
+  const{events,setEvents,addNotification,playSound,adminMode}=useContext(AppCtx);
   const[selectedEvent,setSelectedEvent]=useState(null);
   const[modal,setModal]=useState(false);
   const[editing,setEditing]=useState(null);
@@ -3613,8 +3692,8 @@ function EventsPage(){
             </div>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0" onClick={ev2=>ev2.stopPropagation()}>
-            <button onClick={ev2=>openEdit(ev2,e)} className="p-2 rounded-lg hover:bg-slate-100"><Icon name="pencil" size={14} className="text-slate-400"/></button>
-            <button onClick={()=>setConfirmDel(e.id)} className="p-2 rounded-lg hover:bg-red-50"><Icon name="trash-2" size={14} className="text-red-400"/></button>
+            <button onClick={ev2=>openEdit(ev2,e)} className="p-2 rounded-lg hover:bg-slate-100" title="Sửa sự kiện"><Icon name="pencil" size={14} className="text-slate-400"/></button>
+            {adminMode && <button onClick={()=>setConfirmDel(e.id)} className="p-2 rounded-lg hover:bg-red-50" title="Xóa sự kiện"><Icon name="trash-2" size={14} className="text-red-400"/></button>}
           </div>
         </div>
       </div>
@@ -3787,7 +3866,7 @@ body{font-family:'Segoe UI',sans-serif;padding:32px;color:#1e293b;background:#f8
 // MEMBERS PAGE
 // ============================================================
 function MembersPage(){
-  const{members,setMembers,sessions,setSessions,assignTasks,setAssignTasks,events,triggerCat,addNotification,playSound}=useContext(AppCtx);
+  const{members,setMembers,sessions,setSessions,assignTasks,setAssignTasks,events,triggerCat,addNotification,playSound,adminMode,userIdentity}=useContext(AppCtx);
   const[modal,setModal]=useState(false);
   const[editing,setEditing]=useState(null);
   const[confirmDel,setConfirmDel]=useState(null);
@@ -4045,9 +4124,13 @@ function MembersPage(){
                       </div>
                     </div>
                     <div className="flex gap-1 flex-shrink-0" onClick={e=>e.stopPropagation()}>
-                      <select value={m.eval||'Đạt'} onChange={e=>setEval(m.id,e.target.value)} className="form-input text-xs py-1 px-1.5 w-auto">{EVAL_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>
-                      <button onClick={()=>openEdit(m)} className="p-2 rounded-lg hover:bg-slate-100"><Icon name="pencil" size={14} className="text-slate-400"/></button>
-                      <button onClick={()=>setConfirmDel(m.id)} className="p-2 rounded-lg hover:bg-red-50"><Icon name="trash-2" size={14} className="text-red-400"/></button>
+                      <select value={m.eval||'Đạt'} onChange={e=>setEval(m.id,e.target.value)} disabled={!adminMode} className="form-input text-xs py-1 px-1.5 w-auto">{EVAL_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>
+                      {(adminMode || (userIdentity && m.name && m.name.trim().toLowerCase() === userIdentity.trim().toLowerCase())) && (
+                        <button onClick={()=>openEdit(m)} className="p-2 rounded-lg hover:bg-slate-100" title="Chỉnh sửa hồ sơ"><Icon name="pencil" size={14} className="text-slate-400"/></button>
+                      )}
+                      {adminMode && (
+                        <button onClick={()=>setConfirmDel(m.id)} className="p-2 rounded-lg hover:bg-red-50" title="Xóa thành viên"><Icon name="trash-2" size={14} className="text-red-400"/></button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -4207,6 +4290,592 @@ function MembersPage(){
       </Modal>
 
       <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteMember(confirmDel)} message="Xóa thành viên và toàn bộ dữ liệu liên quan?"/>
+    </div>
+  );
+}
+
+// ============================================================
+// ADMIN LOCK (MẬT KHẨ QUẢN TRỊ 1072)
+// ============================================================
+function AdminLock({onUnlock}){
+  const[pin,setPin]=useState('');
+  const[err,setErr]=useState(false);
+  const{playSound,addNotification}=useContext(AppCtx);
+
+  const handleSubmit=e=>{
+    if(e&&e.preventDefault)e.preventDefault();
+    if(pin.trim()==='1072'){
+      try{playSound('success');}catch(e){}
+      try{addNotification('👑 Đã xác thực quyền Quản trị BCN thành công!','success');}catch(e){}
+      onUnlock();
+    }else{
+      try{playSound('pop');}catch(e){}
+      setErr(true);
+      setTimeout(()=>setErr(false),2500);
+    }
+  };
+
+  return(
+    <div className="card max-w-md mx-auto my-12 p-6 sm:p-8 text-center space-y-4 shadow-xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-b from-white to-amber-50/30 dark:from-slate-800 dark:to-slate-900">
+      <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-3xl shadow-inner">
+        <Icon name="lock" size={32}/>
+      </div>
+      <div>
+        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">Khu Vực Quản Trị BCN</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Nội dung này được bảo mật nội bộ. Vui lòng nhập mật khẩu quản trị (Mã: <strong>1072</strong>) để mở khóa.
+        </p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-3.5 pt-2">
+        <div>
+          <input
+            type="password"
+            maxLength={6}
+            value={pin}
+            onChange={e=>setPin(e.target.value)}
+            placeholder="Mã quản trị (1072)..."
+            className={`form-input text-center text-xl tracking-widest font-mono font-bold ${err?'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700':''}`}
+            autoFocus
+          />
+          {err&&<p className="text-xs text-red-500 font-semibold mt-1.5 animate-shake">Mã quản trị không đúng. Vui lòng thử lại!</p>}
+        </div>
+        <button type="submit" className="btn-primary w-full py-2.5 font-bold text-sm shadow-md flex items-center justify-center gap-2">
+          <Icon name="key" size={16}/> Mở Khóa Truy Cập
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// ============================================================
+// ADMIN LOGIN MODAL
+// ============================================================
+function AdminLoginModal({isOpen,onClose,onUnlock}){
+  const[pin,setPin]=useState('');
+  const[err,setErr]=useState(false);
+  const{playSound,addNotification}=useContext(AppCtx);
+
+  const handleCheck=e=>{
+    if(e&&e.preventDefault)e.preventDefault();
+    if(pin.trim()==='1072'){
+      try{playSound('success');}catch(e){}
+      try{addNotification('👑 Đã kích hoạt Chế độ Quản trị BCN (1072)','success');}catch(e){}
+      onUnlock();
+      onClose();
+      setPin('');
+    }else{
+      try{playSound('pop');}catch(e){}
+      setErr(true);
+      setTimeout(()=>setErr(false),2500);
+    }
+  };
+
+  return(
+    <Modal open={isOpen} onClose={onClose} title="Đăng Nhập Quản Trị BCN">
+      <form onSubmit={handleCheck} className="space-y-4">
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Nhập mã quản trị (Mã: <strong>1072</strong>) để toàn quyền Thêm, Sửa, Xóa và mở khóa các tab bảo mật.
+        </p>
+        <div>
+          <input
+            type="password"
+            maxLength={6}
+            value={pin}
+            onChange={e=>setPin(e.target.value)}
+            placeholder="Mã quản trị (1072)..."
+            className={`form-input text-center text-xl tracking-widest font-mono font-bold ${err?'border-red-500 bg-red-50 text-red-700':''}`}
+            autoFocus
+          />
+          {err&&<p className="text-xs text-red-500 font-semibold mt-1.5 text-center">Mã quản trị không chính xác!</p>}
+        </div>
+        <div className="flex gap-2 pt-2">
+          <button type="button" onClick={onClose} className="btn-secondary flex-1">Hủy</button>
+          <button type="submit" className="btn-primary flex-1 font-bold">Xác Nhận</button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+// ============================================================
+// GACHA CARD MODAL (3D FLIP ORACLE)
+// ============================================================
+function GachaModal({isOpen,onClose}){
+  const{playSound,triggerMascot}=useContext(AppCtx);
+  const todayStr=useMemo(()=>new Date().toISOString().slice(0,10),[]);
+  const[flipped,setFlipped]=useState(false);
+  const[cardIndex,setCardIndex]=useState(null);
+
+  useEffect(()=>{
+    if(!isOpen)return;
+    const savedDate=localStorage.getItem('nv_last_gacha_date');
+    const savedIdx=localStorage.getItem('nv_last_gacha_card');
+    if(savedDate===todayStr&&savedIdx!==null){
+      setCardIndex(parseInt(savedIdx,10));
+      setFlipped(true);
+    }else{
+      setFlipped(false);
+      setCardIndex(null);
+    }
+  },[isOpen,todayStr]);
+
+  const drawCard=()=>{
+    if(flipped)return;
+    const randIdx=Math.floor(Math.random()*GACHA_CARDS.length);
+    setCardIndex(randIdx);
+    setFlipped(true);
+    localStorage.setItem('nv_last_gacha_date',todayStr);
+    localStorage.setItem('nv_last_gacha_card',randIdx.toString());
+    try{playSound('success');}catch(e){}
+    try{triggerMascot('celebrate','✨ Quẻ lành hôm nay!');}catch(e){}
+  };
+
+  const card=cardIndex!==null?GACHA_CARDS[cardIndex]:null;
+
+  return(
+    <Modal open={isOpen} onClose={onClose} title="🎴 Gieo Quẻ Hôm Nay - NewVision Oracle">
+      <div className="flex flex-col items-center justify-center py-4 space-y-4">
+        <p className="text-xs text-slate-500 text-center max-w-sm">
+          Mỗi ngày một thông điệp vũ trụ dành riêng cho bạn. Chạm vào lá bài để lật quẻ!
+        </p>
+
+        <div className="perspective-1000 w-64 h-96 cursor-pointer" onClick={drawCard}>
+          <div className={`gacha-card-inner relative w-full h-full rounded-2xl shadow-2xl transform-style-3d ${flipped?'rotate-y-180 gacha-glow':''}`}>
+            {/* Card Back */}
+            <div className="absolute inset-0 backface-hidden rounded-2xl bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-950 border-2 border-amber-400/60 p-5 flex flex-col items-center justify-between text-white select-none">
+              <div className="w-full flex justify-between text-amber-300 text-xs font-mono"><span>✦</span><span>NEWVISION HUP</span><span>✦</span></div>
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-20 h-20 rounded-full border-2 border-amber-300/40 flex items-center justify-center bg-indigo-950/60 shadow-[0_0_20px_rgba(251,191,36,0.35)]">
+                  <span className="text-4xl animate-pulse">🔮</span>
+                </div>
+                <p className="text-sm font-bold text-amber-200 tracking-wider">CHẠM ĐỂ RÚT QUẺ</p>
+                <p className="text-[10px] text-slate-400">1 quẻ duy nhất mỗi ngày</p>
+              </div>
+              <div className="w-full flex justify-between text-amber-300 text-xs font-mono"><span>✦</span><span>HUYỀN HỌC & TAROT</span><span>✦</span></div>
+            </div>
+
+            {/* Card Front */}
+            <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl bg-gradient-to-br from-amber-50 via-white to-orange-50 border-2 border-amber-500 p-5 flex flex-col justify-between text-slate-800 select-none shadow-xl">
+              {card?(
+                <>
+                  <div className="flex items-center justify-between border-b border-amber-200/80 pb-2">
+                    <span className="text-2xl">{card.icon}</span>
+                    <span className="text-xs font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">{card.code}</span>
+                  </div>
+                  <div className="my-auto text-center space-y-2 py-2">
+                    <h3 className="font-black text-lg text-amber-900">{card.title}</h3>
+                    <div className="h-0.5 w-12 bg-amber-400 mx-auto rounded-full"/>
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed italic font-medium px-1">
+                      "{card.quote}"
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-amber-200/80 text-center">
+                    <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                      ★ Quẻ ngày {todayStr}
+                    </span>
+                  </div>
+                </>
+              ):null}
+            </div>
+          </div>
+        </div>
+
+        {flipped&&(
+          <p className="text-xs text-emerald-600 font-bold flex items-center gap-1">
+            <Icon name="check-circle" size={13}/> Đã ghi nhận quẻ hôm nay của bạn!
+          </p>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+// ============================================================
+// VIETQR MODAL
+// ============================================================
+function VietQRModal({isOpen,onClose,penalty}){
+  const{playSound,addNotification}=useContext(AppCtx);
+  const[copied,setCopied]=useState(false);
+  if(!penalty)return null;
+
+  const amount=Math.abs(penalty.amount||20000);
+  const qrUrl=`https://img.vietqr.io/image/MB-0829102468-compact.png?amount=${amount}&addInfo=NVPHAT%20${encodeURIComponent(penalty.name||'')}`;
+
+  const copyInfo=()=>{
+    const text=`MB Bank - STK: 0829102468 - So tien: ${amount.toLocaleString('vi-VN')}d - ND: NVPHAT ${penalty.name}`;
+    try{
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+      try{playSound('pop');}catch(e){}
+      try{addNotification('Đã sao chép thông tin chuyển khoản!','success');}catch(e){}
+      setTimeout(()=>setCopied(false),2000);
+    }catch(e){}
+  };
+
+  return(
+    <Modal open={isOpen} onClose={onClose} title="Quét Mã VietQR Nộp Quỹ">
+      <div className="flex flex-col items-center space-y-4 py-2">
+        <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
+          <img
+            src={qrUrl}
+            alt="VietQR Chuyển Khoản"
+            className="w-64 h-auto rounded-xl mx-auto"
+            onError={e=>{
+              e.target.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20'+encodeURIComponent(penalty.name||'');
+            }}
+          />
+        </div>
+
+        <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Ngân hàng:</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">MB Bank (Quân Đội)</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Số tài khoản:</span>
+            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">0829102468</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Số tiền nộp:</span>
+            <span className="font-bold text-amber-600">{amount.toLocaleString('vi-VN')} đ</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Nội dung CK:</span>
+            <span className="font-mono font-bold text-emerald-600">NVPHAT {penalty.name}</span>
+          </div>
+        </div>
+
+        <div className="flex gap-2 w-full pt-1">
+          <button onClick={copyInfo} className="btn-secondary flex-1 py-2 text-xs flex items-center justify-center gap-1.5">
+            <Icon name={copied?'check':'copy'} size={14}/>
+            <span>{copied?'Đã sao chép':'Sao chép thông tin'}</span>
+          </button>
+          <button onClick={onClose} className="btn-primary flex-1 py-2 text-xs font-bold">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ============================================================
+// NỘI QUY & THƯỞNG PHẠT (PENALTIES & REWARDS MODULE)
+// ============================================================
+function PenaltiesPage(){
+  const{penalties,setPenalties,adminMode,addNotification,playSound,members}=useContext(AppCtx);
+  const[modal,setModal]=useState(false);
+  const[qrPenalty,setQrPenalty]=useState(null);
+  const[filterType,setFilterType]=useState('all');
+  const[filterBan,setFilterBan]=useState('');
+  const[confirmDel,setConfirmDel]=useState(null);
+
+  const emptyForm={name:'',ban:'Nội vụ',reason:'',amount:20000,type:'phat',status:'Chờ nộp'};
+  const[form,setForm]=useState(emptyForm);
+
+  const handleSave=async e=>{
+    if(e&&e.preventDefault)e.preventDefault();
+    if(!form.name.trim()){alert('Vui lòng chọn hoặc nhập tên thành viên!');return;}
+    if(!form.reason.trim()){alert('Vui lòng nhập lý do!');return;}
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const id=uid();
+      const amountVal=form.type==='thuong'?Math.abs(form.amount):-Math.abs(form.amount);
+      const newRec={
+        id,
+        name:form.name.trim(),
+        ban:form.ban,
+        reason:form.reason.trim(),
+        amount:amountVal,
+        type:form.type,
+        status:form.type==='thuong'?'Đã trao':form.status,
+        date:new Date().toISOString().slice(0,10),
+        createdAt:new Date().toISOString()
+      };
+      await fbDb.collection('penalties').doc(id).set(newRec);
+      try{playSound('success');}catch(e){}
+      try{addNotification(`Đã ghi nhận ${form.type==='thuong'?'khen thưởng':'vi phạm'}: ${form.name}`,'info');}catch(e){}
+      setModal(false);
+      setForm(emptyForm);
+    }catch(err){
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+
+  const toggleStatus=async item=>{
+    if(!adminMode){
+      alert('Chỉ Ban Chủ Nhiệm (mã 1072) mới có quyền duyệt trạng thái nộp phạt!');
+      return;
+    }
+    const newStatus=item.status==='Đã nộp'?'Chờ nộp':'Đã nộp';
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('penalties').doc(item.id).set({status:newStatus},{merge:true});
+      try{playSound('pop');}catch(e){}
+      try{addNotification(`Đã chuyển trạng thái sang "${newStatus}": ${item.name}`,'success');}catch(e){}
+    }catch(err){
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+
+  const handleDelete=async id=>{
+    if(!adminMode){
+      alert('Chỉ Ban Chủ Nhiệm (mã 1072) mới có quyền xóa bản ghi!');
+      return;
+    }
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('penalties').doc(id).delete();
+      try{playSound('pop');}catch(e){}
+      try{addNotification('Đã xóa bản ghi thưởng/phạt','info');}catch(e){}
+      setConfirmDel(null);
+    }catch(err){
+      alert('Lỗi lưu Firebase: '+err.message);
+    }
+  };
+
+  const filtered=(penalties||[]).filter(item=>{
+    if(filterType==='pending'&&item.status!=='Chờ nộp')return false;
+    if(filterType==='done'&&item.status==='Chờ nộp')return false;
+    if(filterBan&&item.ban!==filterBan)return false;
+    return true;
+  });
+
+  const totalPending=(penalties||[]).filter(p=>p.status==='Chờ nộp').reduce((acc,cur)=>acc+Math.abs(cur.amount||0),0);
+  const totalCollected=(penalties||[]).filter(p=>p.status==='Đã nộp'&&p.amount<0).reduce((acc,cur)=>acc+Math.abs(cur.amount||0),0);
+
+  return(
+    <div className="space-y-4 fade-in">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Icon name="scale" size={20} className="text-orange-600"/>
+            Nội Quy & Thưởng Phạt CLB
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">Theo dõi vi phạm, nộp phạt qua VietQR tự động và vinh danh khen thưởng</p>
+        </div>
+        <button onClick={()=>setModal(true)} className="btn-primary flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
+          <Icon name="plus" size={15}/> Ghi nhận mới
+        </button>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="card p-3 border-l-4 border-amber-500">
+          <span className="text-[11px] font-semibold text-slate-500 uppercase">Tiền phạt chờ nộp</span>
+          <p className="text-lg font-black text-amber-600 mt-1">{totalPending.toLocaleString('vi-VN')} đ</p>
+        </div>
+        <div className="card p-3 border-l-4 border-emerald-500">
+          <span className="text-[11px] font-semibold text-slate-500 uppercase">Đã thu vào quỹ</span>
+          <p className="text-lg font-black text-emerald-600 mt-1">{totalCollected.toLocaleString('vi-VN')} đ</p>
+        </div>
+        <div className="card p-3 border-l-4 border-indigo-500 col-span-2 sm:col-span-1">
+          <span className="text-[11px] font-semibold text-slate-500 uppercase">Tổng số lượt ghi nhận</span>
+          <p className="text-lg font-black text-indigo-600 mt-1">{(penalties||[]).length} lượt</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="card p-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={()=>setFilterType('all')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType==='all'?'bg-orange-500 text-white':'bg-slate-100 text-slate-600'}`}
+          >
+            Tất cả ({(penalties||[]).length})
+          </button>
+          <button
+            onClick={()=>setFilterType('pending')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType==='pending'?'bg-amber-500 text-white':'bg-slate-100 text-slate-600'}`}
+          >
+            Chờ nộp ({(penalties||[]).filter(p=>p.status==='Chờ nộp').length})
+          </button>
+          <button
+            onClick={()=>setFilterType('done')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType==='done'?'bg-emerald-500 text-white':'bg-slate-100 text-slate-600'}`}
+          >
+            Đã nộp / Trao ({(penalties||[]).filter(p=>p.status!=='Chờ nộp').length})
+          </button>
+        </div>
+
+        <select
+          value={filterBan}
+          onChange={e=>setFilterBan(e.target.value)}
+          className="form-input text-xs py-1 px-2.5 max-w-[140px]"
+        >
+          <option value="">Tất cả ban</option>
+          {['Nội vụ','Truyền thông','Sự kiện','Đối ngoại'].map(b=>(
+            <option key={b} value={b}>{b}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Records Table / Cards */}
+      <div className="space-y-2.5">
+        {filtered.length===0&&(
+          <div className="card py-12 text-center text-slate-400">
+            <Icon name="check-circle-2" size={36} className="mx-auto mb-2 text-slate-300"/>
+            <p className="font-semibold text-sm">Không có dữ liệu thưởng phạt phù hợp</p>
+          </div>
+        )}
+        {filtered.map(item=>{
+          const isPenalty=(item.amount||0)<0||item.type==='phat';
+          const isPending=item.status==='Chờ nộp';
+          return(
+            <div key={item.id} className="card p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-sm transition">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="font-bold text-slate-800 dark:text-slate-100 text-sm">{item.name}</span>
+                  {item.ban&&<span className="status-badge tag-gray text-[10px]">{item.ban}</span>}
+                  <span className={`status-badge text-[10px] ${isPending?'tag-yellow':'tag-green'}`}>
+                    {item.status||'Chờ nộp'}
+                  </span>
+                  <span className="text-[11px] text-slate-400">{item.date}</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">{item.reason}</p>
+              </div>
+
+              <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                <div className="text-right">
+                  <p className={`font-mono font-bold text-sm ${isPenalty?'text-red-500':'text-emerald-600'}`}>
+                    {isPenalty?`-${Math.abs(item.amount||0).toLocaleString('vi-VN')} đ`:`+${Math.abs(item.amount||0).toLocaleString('vi-VN')} đ`}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  {isPenalty&&isPending&&(
+                    <button
+                      onClick={()=>setQrPenalty(item)}
+                      className="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 font-bold text-xs flex items-center gap-1 border border-orange-200 transition"
+                      title="Mở mã QR nộp phạt"
+                    >
+                      <Icon name="qr-code" size={13}/> Nộp phạt
+                    </button>
+                  )}
+
+                  {adminMode&&(
+                    <button
+                      onClick={()=>toggleStatus(item)}
+                      className={`px-2 py-1 rounded-lg text-xs font-semibold transition border ${
+                        item.status==='Đã nộp'
+                          ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-300'
+                          : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-300'
+                      }`}
+                      title="Chuyển trạng thái nộp"
+                    >
+                      {item.status==='Đã nộp'?'Chưa nộp':'Đã nộp ✓'}
+                    </button>
+                  )}
+
+                  {adminMode&&(
+                    <button
+                      onClick={()=>setConfirmDel(item.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+                      title="Xóa bản ghi"
+                    >
+                      <Icon name="trash-2" size={14}/>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add Modal */}
+      <Modal open={modal} onClose={()=>setModal(false)} title="Ghi Nhận Thưởng / Phạt Mới">
+        <form onSubmit={handleSave} className="space-y-3.5">
+          <div>
+            <label className="form-label">Loại ghi nhận</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={()=>setForm(p=>({...p,type:'phat',status:'Chờ nộp'}))}
+                className={`py-2 rounded-xl text-xs font-bold border transition ${form.type==='phat'?'bg-red-50 border-red-500 text-red-600':'bg-slate-50 border-slate-200 text-slate-600'}`}
+              >
+                ⚠️ Vi phạm nội quy (Phạt)
+              </button>
+              <button
+                type="button"
+                onClick={()=>setForm(p=>({...p,type:'thuong',status:'Đã trao'}))}
+                className={`py-2 rounded-xl text-xs font-bold border transition ${form.type==='thuong'?'bg-emerald-50 border-emerald-500 text-emerald-600':'bg-slate-50 border-slate-200 text-slate-600'}`}
+              >
+                🏆 Tuyên dương (Thưởng)
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="form-label">Thành viên <span className="text-red-500">*</span></label>
+              <select
+                value={form.name}
+                onChange={e=>{
+                  const val=e.target.value;
+                  const m=members.find(mem=>mem.name===val);
+                  setForm(p=>({...p,name:val,ban:m&&m.ban?m.ban:p.ban}));
+                }}
+                className="form-input"
+              >
+                <option value="">-- Chọn thành viên --</option>
+                {members.map(m=>(
+                  <option key={m.id} value={m.name}>{m.name} ({m.ban||'Thành viên'})</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Ban</label>
+              <select value={form.ban} onChange={e=>setForm(p=>({...p,ban:e.target.value}))} className="form-input">
+                {['Nội vụ','Truyền thông','Sự kiện','Đối ngoại','Toàn CLB'].map(b=>(
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="form-label">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+              <input
+                type="number"
+                step="5000"
+                value={form.amount}
+                onChange={e=>setForm(p=>({...p,amount:Number(e.target.value)}))}
+                className="form-input"
+                placeholder="20000"
+              />
+            </div>
+            <div>
+              <label className="form-label">Trạng thái</label>
+              <select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} className="form-input">
+                <option value="Chờ nộp">Chờ nộp</option>
+                <option value="Đã nộp">Đã nộp</option>
+                <option value="Đã trao">Đã trao</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="form-label">Lý do vi phạm / Khen thưởng <span className="text-red-500">*</span></label>
+            <textarea
+              value={form.reason}
+              onChange={e=>setForm(p=>({...p,reason:e.target.value}))}
+              className="form-input resize-none min-h-[70px]"
+              placeholder="VD: Đi muộn họp định kỳ 15 phút, Hoàn thành xuất sắc nhiệm vụ..."
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button type="button" onClick={()=>setModal(false)} className="btn-secondary flex-1">Hủy</button>
+            <button type="submit" className="btn-primary flex-1 font-bold">Lưu ghi nhận</button>
+          </div>
+        </form>
+      </Modal>
+
+      <VietQRModal isOpen={!!qrPenalty} onClose={()=>setQrPenalty(null)} penalty={qrPenalty}/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDelete(confirmDel)} message="Xóa bản ghi thưởng/phạt này?"/>
     </div>
   );
 }
@@ -4501,10 +5170,7 @@ const STUDY_BLOCKS = [
   'Tất cả',
   'Đại cương',
   'Cơ sở ngành',
-  'Chuyên ngành Dược',
-  'K79',
-  'K80',
-  'K81'
+  'Chuyên ngành Dược'
 ];
 
 const STUDY_CATEGORIES = [
@@ -4516,7 +5182,7 @@ const STUDY_CATEGORIES = [
 ];
 
 function StudyHubPage(){
-  const{studyResources,setStudyResources,addNotification,playSound}=useContext(AppCtx);
+  const{studyResources,setStudyResources,addNotification,playSound,adminMode,userIdentity}=useContext(AppCtx);
   const[selectedBlock,setSelectedBlock]=useState('Tất cả');
   const[selectedCat,setSelectedCat]=useState('Tất cả');
   const[searchQuery,setSearchQuery]=useState('');
@@ -4709,31 +5375,37 @@ function StudyHubPage(){
           </div>
 
           <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={()=>handleTogglePin(item)}
-              title={item.pinned?'Bỏ ghim tài liệu':'Ghim tài liệu hot ôn thi'}
-              className={`p-1.5 rounded-lg transition ${
-                item.pinned
-                  ? 'text-orange-600 bg-orange-100 dark:bg-orange-950/50 hover:bg-orange-200'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'
-              }`}
-            >
-              <Icon name="pin" size={15}/>
-            </button>
-            <button
-              onClick={()=>openEdit(item)}
-              title="Chỉnh sửa tài liệu"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
-            >
-              <Icon name="pencil" size={15}/>
-            </button>
-            <button
-              onClick={()=>setConfirmDeleteId(item.id)}
-              title="Xóa tài liệu"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
-            >
-              <Icon name="trash-2" size={15}/>
-            </button>
+            {adminMode && (
+              <button
+                onClick={()=>handleTogglePin(item)}
+                title={item.pinned?'Bỏ ghim tài liệu':'Ghim tài liệu hot ôn thi'}
+                className={`p-1.5 rounded-lg transition ${
+                  item.pinned
+                    ? 'text-orange-600 bg-orange-100 dark:bg-orange-950/50 hover:bg-orange-200'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`}
+              >
+                <Icon name="pin" size={15}/>
+              </button>
+            )}
+            {(adminMode || (userIdentity && item.contributor && item.contributor.toLowerCase().includes(userIdentity.toLowerCase())) || (!item.contributor)) && (
+              <button
+                onClick={()=>openEdit(item)}
+                title="Chỉnh sửa tài liệu"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+              >
+                <Icon name="pencil" size={15}/>
+              </button>
+            )}
+            {adminMode && (
+              <button
+                onClick={()=>setConfirmDeleteId(item.id)}
+                title="Xóa tài liệu"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+              >
+                <Icon name="trash-2" size={15}/>
+              </button>
+            )}
           </div>
         </div>
 
@@ -5193,9 +5865,10 @@ const NAV_ITEMS=[
   {id:'events',label:'Sự kiện',icon:'calendar-days'},
   {id:'study',label:'Góc học tập',icon:'book-open'},
   {id:'members',label:'Thành viên',icon:'users'},
+  {id:'penalties',label:'Thưởng & Phạt',icon:'scale'},
   {id:'decisions',label:'Quyết định',icon:'file-check-2'},
-  {id:'resources',label:'Tài nguyên',icon:'folder-open'},
-  {id:'bcn',label:'Phòng BCN',icon:'shield',isBcn:true},
+  {id:'resources',label:'Tài nguyên',icon:'folder-open',isLocked:true},
+  {id:'bcn',label:'Phòng BCN',icon:'shield',isBcn:true,isLocked:true},
 ];
 
 const MOBILE_NAV_ITEMS=[
@@ -5203,7 +5876,7 @@ const MOBILE_NAV_ITEMS=[
   {id:'events',label:'Sự kiện',icon:'calendar-days'},
   {id:'study',label:'Học tập',icon:'book-open'},
   {id:'members',label:'Thành viên',icon:'users'},
-  {id:'bcn',label:'Phòng BCN',icon:'shield',isBcn:true},
+  {id:'penalties',label:'Thưởng phạt',icon:'scale'},
 ];
 
 function App(){
@@ -5211,7 +5884,13 @@ function App(){
   const[sidebarOpen,setSidebarOpen]=useState(false);
   const[cmdOpen,setCmdOpen]=useState(false);
   const[settingsOpen,setSettingsOpen]=useState(false);
-  const{darkMode,setDarkMode,soundEnabled,setSoundEnabled,unreadCount,bcnUnlocked,cloudStatus,lastSynced}=useContext(AppCtx);
+  const[adminLoginOpen,setAdminLoginOpen]=useState(false);
+  const[gachaOpen,setGachaOpen]=useState(false);
+  const{
+    darkMode,setDarkMode,soundEnabled,setSoundEnabled,unreadCount,
+    bcnUnlocked,cloudStatus,lastSynced,adminMode,setAdminMode,
+    userIdentity,setUserIdentity,members,addNotification
+  }=useContext(AppCtx);
 
   useEffect(()=>{
     function h(e){if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setCmdOpen(o=>!o)}}
@@ -5224,9 +5903,10 @@ function App(){
       case'events':return<EventsPage/>;
       case'study':return<StudyHubPage/>;
       case'members':return<MembersPage/>;
+      case'penalties':return<PenaltiesPage/>;
       case'decisions':return<DecisionsPage/>;
-      case'resources':return<ResourcesPage/>;
-      case'bcn':return<BcnRoomPage/>;
+      case'resources':return adminMode ? <ResourcesPage/> : <AdminLock onUnlock={()=>setAdminMode(true)}/>;
+      case'bcn':return adminMode ? <BcnRoomPage/> : <AdminLock onUnlock={()=>setAdminMode(true)}/>;
       case'notifications':return<NotificationsPage/>;
       default:return<Dashboard setActiveTab={setActiveTab}/>;
     }
@@ -5247,6 +5927,62 @@ function App(){
             </div>
           </div>
           <div className="flex items-center gap-1.5">
+            {/* User Identity Selector */}
+            <div className="hidden lg:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl px-2.5 py-1 text-xs border border-slate-200 dark:border-slate-700">
+              <span className="text-slate-400 font-medium flex items-center gap-1 flex-shrink-0">
+                <Icon name="user" size={13}/> Tôi là:
+              </span>
+              <select
+                value={userIdentity}
+                onChange={e=>{
+                  const val=e.target.value;
+                  setUserIdentity(val);
+                  localStorage.setItem('nv_user_identity',val);
+                  if(val)try{addNotification(`👤 Đã nhận diện danh tính: ${val}`,'info');}catch(err){}
+                }}
+                className="bg-transparent font-semibold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer max-w-[130px] truncate"
+              >
+                <option value="">-- Chọn tên bạn --</option>
+                {members.map(m=>(
+                  <option key={m.id} value={m.name}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Gacha Daily Button */}
+            <button
+              onClick={()=>setGachaOpen(true)}
+              title="Gieo quẻ / Bốc quẻ huyền học hôm nay"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-xs shadow-xs hover:brightness-105 transition active:scale-95 flex-shrink-0"
+            >
+              <span>🎴</span>
+              <span className="hidden sm:inline">Quẻ Hôm Nay</span>
+            </button>
+
+            {/* Admin 1072 Mode Pill */}
+            {adminMode ? (
+              <button
+                onClick={()=>{
+                  setAdminMode(false);
+                  try{addNotification('Đã đăng xuất chế độ Quản trị BCN','info');}catch(err){}
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition"
+                title="Bấm để đăng xuất chế độ Quản trị BCN"
+              >
+                <span>👑</span>
+                <span className="hidden sm:inline">Quản trị (1072) [Đăng xuất]</span>
+              </button>
+            ) : (
+              <button
+                onClick={()=>setAdminLoginOpen(true)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition"
+                title="Đăng nhập Quản trị BCN (Mật khẩu 1072)"
+              >
+                <Icon name="key" size={13}/>
+                <span className="hidden sm:inline">BCN</span>
+              </button>
+            )}
+
             {/* Realtime Status Pill */}
             <button
               onClick={()=>setSettingsOpen(true)}
@@ -5306,6 +6042,11 @@ function App(){
                   {bcnUnlocked?'MỞ':'PIN'}
                 </span>
               )}
+              {item.isLocked && !adminMode && (
+                <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-400 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                  <Icon name="lock" size={10}/>Khóa
+                </span>
+              )}
             </button>
           ))}
           <button onClick={()=>setActiveTab('notifications')} className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 w-full text-left ${activeTab==='notifications'?'active':''}`}>
@@ -5332,6 +6073,26 @@ function App(){
                 </div>
                 <button onClick={()=>setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100"><Icon name="x" size={18} className="text-slate-500"/></button>
               </div>
+
+              {/* Mobile Identity Selector */}
+              <div className="mb-2 px-2 py-1.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                <span className="text-slate-400 font-semibold block mb-1">👤 Bạn là:</span>
+                <select
+                  value={userIdentity}
+                  onChange={e=>{
+                    const val=e.target.value;
+                    setUserIdentity(val);
+                    localStorage.setItem('nv_user_identity',val);
+                  }}
+                  className="w-full bg-white border border-slate-200 rounded-lg p-1 font-semibold text-slate-700"
+                >
+                  <option value="">-- Chọn tên bạn --</option>
+                  {members.map(m=>(
+                    <option key={m.id} value={m.name}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+
               {[...NAV_ITEMS,{id:'notifications',label:'Thông báo',icon:'bell'}].map(item=>(
                 <button key={item.id} onClick={()=>{setActiveTab(item.id);setSidebarOpen(false)}} className={`sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left ${activeTab===item.id?'active':'text-slate-600'}`}>
                   <div className="flex items-center gap-3">
@@ -5339,6 +6100,7 @@ function App(){
                     <span className={item.isBcn?'font-bold text-amber-700':''}>{item.label}</span>
                   </div>
                   {item.isBcn&&<span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-full">{bcnUnlocked?'MỞ':'PIN'}</span>}
+                  {item.isLocked&&!adminMode&&<span className="text-[10px] text-slate-400 font-bold">Khóa</span>}
                   {item.id==='notifications'&&unreadCount>0&&<span className="ml-auto bg-red-500 text-white text-[11px] font-bold rounded-full px-1.5 py-0.5">{unreadCount}</span>}
                 </button>
               ))}
@@ -5367,6 +6129,8 @@ function App(){
       <Mascot/>
       <ScreenCatCompanion/>
       <SettingsModal open={settingsOpen} onClose={()=>setSettingsOpen(false)}/>
+      <AdminLoginModal isOpen={adminLoginOpen} onClose={()=>setAdminLoginOpen(false)} onUnlock={()=>setAdminMode(true)}/>
+      <GachaModal isOpen={gachaOpen} onClose={()=>setGachaOpen(false)}/>
       <CommandPalette open={cmdOpen} onClose={()=>setCmdOpen(false)} setActiveTab={setActiveTab}/>
       <ToastContainer/>
     </div>
