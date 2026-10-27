@@ -342,7 +342,7 @@
 
 <script type="text/babel">
 // ============================================================
-// GLOBAL SAFE SOUND PLAYER
+// GLOBAL SAFE SOUND PLAYER (LAZY REUSED AUDIOCONTEXT)
 // ============================================================
 function playSound(type) {
   try {
@@ -350,18 +350,24 @@ function playSound(type) {
     if (isSoundOn === 'false') return;
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
-    const audioContext = new AudioCtx();
+    if (!window._globalAudioCtx) {
+      window._globalAudioCtx = new AudioCtx();
+    }
+    if (window._globalAudioCtx.state === 'suspended') {
+      window._globalAudioCtx.resume();
+    }
+    const audioContext = window._globalAudioCtx;
     const osc = audioContext.createOscillator();
     const gain = audioContext.createGain();
     osc.connect(gain);
     gain.connect(audioContext.destination);
     osc.frequency.value = type === 'success' ? 587.33 : type === 'pop' ? 700 : type === 'sos' ? 220 : type === 'gavel' ? 160 : 440;
-    gain.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    gain.gain.setValueAtTime(0.08, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.18);
     osc.start();
-    osc.stop(audioContext.currentTime + 0.2);
+    osc.stop(audioContext.currentTime + 0.18);
   } catch (e) {
-    console.warn("Không thể phát âm thanh:", e);
+    // Không bao giờ chặn luồng xử lý chính khi âm thanh bị trình duyệt hạn chế
   }
 }
 window.playSound = playSound;
@@ -658,6 +664,18 @@ function AppProvider({children}){
   const[assignTasks,setAssignTasks]=useState([]);
   const[adminMode,setAdminMode]=useState(false);
   const[userIdentity,setUserIdentity]=useLocalStorage('nv_user_identity','');
+  const[clubRules,setClubRules]=useState('');
+  const[loadedTabs,setLoadedTabs]=useState(()=>new Set(['dashboard']));
+  const activeUnsubsRef=useRef({});
+  const loadTab=useCallback(tab=>{
+    if(!tab)return;
+    setLoadedTabs(prev=>{
+      if(prev.has(tab))return prev;
+      const next=new Set(prev);
+      next.add(tab);
+      return next;
+    });
+  },[]);
   const[darkMode,setDarkMode]=useLocalStorage('nv_dark',false);
   const[soundEnabled,setSoundEnabled]=useLocalStorage('nv_sound',true);
   const[toasts,setToasts]=useState([]);
@@ -777,21 +795,20 @@ function AppProvider({children}){
     }
   },[playSound,showToast]);
 
-  // Realtime Firestore onSnapshot Subscriptions for All Core Collections
+  // Realtime Firestore LAZY LOAD: Khi vừa mở trang CHỈ lắng nghe tab Tổng quan (dashboard)
+  // Dữ liệu các tab khác chỉ bắt đầu tải khi người dùng click vào tab đó
   useEffect(()=>{
     if(!fbDb){
       setCloudStatus('offline');
       return;
     }
     setCloudStatus('syncing');
-    const unsubs=[];
-    let isInitialSnapshot = true;
 
     const listenCol=(colName,setter,sortFn)=>{
+      if(activeUnsubsRef.current[colName]) return;
       try{
         let isFirstSnap = true;
         const unsub=fbDb.collection(colName).onSnapshot(snap=>{
-          // Khởi tạo mảng trống mới hoàn toàn cho mỗi snapshot, không cộng dồn danh sách cũ
           const seenIds = new Set();
           const seenNames = new Set();
           let list = [];
@@ -802,7 +819,7 @@ function AppProvider({children}){
             if (seenIds.has(id)) return;
             seenIds.add(id);
 
-            // Khử trùng lặp tuyệt đối cho thành viên nếu có bản ghi trùng lặp
+            // Khử trùng lặp cho thành viên nếu có bản ghi trùng
             if (colName === 'members') {
               const nameKey = (data.name || '').trim().toLowerCase() + '|' + (data.ban || '').trim() + '|' + (data.khoa || data.gen || '').trim();
               if (nameKey && seenNames.has(nameKey)) return;
@@ -819,52 +836,90 @@ function AppProvider({children}){
 
           if(isFirstSnap){
             isFirstSnap = false;
-            // Trong lần quét nạp dữ liệu đầu tiên khi mở trang, TUYỆT ĐỐI KHÔNG kích hoạt âm thanh, pháo hoa hoặc bong bóng chúc mừng của mèo cho bất kỳ task nào đã có trạng thái done
           }
         },err=>{
           console.error(`Firestore realtime sync error (${colName}):`,err);
           setCloudStatus('offline');
         });
-        unsubs.push(unsub);
+        activeUnsubsRef.current[colName] = unsub;
       }catch(err){
         console.error(`Firestore subscription exception (${colName}):`,err);
         setCloudStatus('offline');
       }
     };
 
-    listenCol('members',setMembers,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-    listenCol('events',setEvents,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-    listenCol('decisions',setDecisions,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-    listenCol('expenses',setExpenses,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-    listenCol('resources',setResources,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-    listenCol('study_resources',setStudyResources,list=>list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.createdAt||'').localeCompare(a.createdAt||'')));
-    listenCol('penalties',setPenalties,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-    listenCol('inventory',setInventory,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-    listenCol('sessions',setSessions,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
-    listenCol('assignTasks',setAssignTasks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
+    // 1. CHỈ TẢI TAB TỔNG QUAN KHI VỪA MỞ TRANG (Checklist & Quick links):
     listenCol('quickChecklist',setQuickChecklist,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
     listenCol('quickLinks',setQuickLinks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
-    listenCol('bcnPlans',setBcnPlans,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
 
-    try{
-      const unsubNotes=fbDb.collection('bcnNotes').doc('general').onSnapshot(d=>{
-        if(d.exists&&d.data()?.data){
-          setBcnNotes(d.data().data);
-        }else{
-          setBcnNotes({});
-        }
-        setCloudStatus('connected');
-        setLastSynced(new Date());
-      },err=>{
-        console.error('Firestore bcnNotes sync error:',err);
-      });
-      unsubs.push(unsubNotes);
-    }catch(err){
-      console.error('Firestore bcnNotes subscribe exception:',err);
+    // 2. LAZY LOAD - CHỈ TẢI CÁC TAB KHÁC KHI ĐƯỢC KÍCH HOẠT:
+    if(loadedTabs.has('events')){
+      listenCol('events',setEvents,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     }
+    if(loadedTabs.has('study')){
+      listenCol('study_resources',setStudyResources,list=>list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.createdAt||'').localeCompare(a.createdAt||'')));
+    }
+    if(loadedTabs.has('members')){
+      listenCol('members',setMembers,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+      listenCol('sessions',setSessions,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
+      listenCol('assignTasks',setAssignTasks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
+    }
+    if(loadedTabs.has('decisions')){
+      listenCol('decisions',setDecisions,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    }
+    if(loadedTabs.has('penalties')){
+      listenCol('penalties',setPenalties,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+      if(!activeUnsubsRef.current['club_rules']){
+        try{
+          const unsubRules=fbDb.collection('club_settings').doc('rules').onSnapshot(d=>{
+            if(d.exists&&d.data()?.content!==undefined){
+              setClubRules(d.data().content||'');
+            }
+            setCloudStatus('connected');
+            setLastSynced(new Date());
+          },err=>console.warn('club_rules sync error:',err));
+          activeUnsubsRef.current['club_rules']=unsubRules;
+        }catch(e){}
+      }
+    }
+    if(loadedTabs.has('resources')){
+      listenCol('resources',setResources,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+      listenCol('inventory',setInventory,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+      listenCol('expenses',setExpenses,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    }
+    if(loadedTabs.has('bcn')){
+      listenCol('bcnPlans',setBcnPlans,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+      if(!activeUnsubsRef.current['bcnNotes']){
+        try{
+          const unsubNotes=fbDb.collection('bcnNotes').doc('general').onSnapshot(d=>{
+            if(d.exists&&d.data()?.data){
+              setBcnNotes(d.data().data);
+            }else{
+              setBcnNotes({});
+            }
+            setCloudStatus('connected');
+            setLastSynced(new Date());
+          },err=>console.error('bcnNotes sync error:',err));
+          activeUnsubsRef.current['bcnNotes']=unsubNotes;
+        }catch(e){}
+      }
+    }
+  },[loadedTabs]);
 
-    // Auto-migration & seed: if root collection 'members' or 'study_resources' is empty
-    (async()=>{
+  // Tải trước nhẹ nhàng số liệu tổng quan (events, members, decisions) sau 2.5s khi máy rảnh
+  useEffect(()=>{
+    const idleTimer=setTimeout(()=>{
+      loadTab('events');
+      loadTab('members');
+      loadTab('decisions');
+    },2500);
+    return()=>clearTimeout(idleTimer);
+  },[loadTab]);
+
+  // Hoãn di chuyển dữ liệu cũ sau 6s để trang mở tức thì dưới 1s
+  useEffect(()=>{
+    const migTimer=setTimeout(async()=>{
+      if(!fbDb)return;
       try{
         const snap=await fbDb.collection('members').limit(1).get();
         if(snap.empty){
@@ -876,48 +931,20 @@ function AppProvider({children}){
               batch.set(fbDb.collection('members').doc(id),{...m,id});
             });
             await batch.commit();
-            console.log('Legacy members migrated to root collection members');
           }
         }
+      }catch(err){}
+    },6000);
+    return()=>clearTimeout(migTimer);
+  },[]);
 
-        const studySnap=await fbDb.collection('study_resources').limit(1).get();
-        if(studySnap.empty){
-          const sBatch=fbDb.batch();
-          SAMPLE_STUDY_RESOURCES.forEach(s=>{
-            const id=uid();
-            sBatch.set(fbDb.collection('study_resources').doc(id),{...s,id});
-          });
-          await sBatch.commit();
-          console.log('Sample study resources seeded to Firestore');
-        }
-
-        const penSnap=await fbDb.collection('penalties').limit(1).get();
-        if(penSnap.empty){
-          const pBatch=fbDb.batch();
-          const samplePenalties=[
-            {id:uid(),member:'Nguyễn Văn An',ban:'Ban Sự Kiện',reason:'Đi muộn họp CLB 15 phút không báo trước',amount:-20000,type:'penalty',status:'Chờ nộp',createdAt:new Date(Date.now()-86400000).toISOString()},
-            {id:uid(),member:'Trần Mai Linh',ban:'Ban Truyền Thông',reason:'Khen thưởng bài viết tiếp cận cao nhất tháng',amount:50000,type:'reward',status:'Đã nhận',createdAt:new Date(Date.now()-86400000*2).toISOString()},
-            {id:uid(),member:'Lê Hoàng Nam',ban:'Ban Đối Ngoại',reason:'Nộp muộn báo cáo nhà tài trợ',amount:-20000,type:'penalty',status:'Đã nộp',createdAt:new Date(Date.now()-86400000*3).toISOString()}
-          ];
-          samplePenalties.forEach(p=>pBatch.set(fbDb.collection('penalties').doc(p.id),p));
-          await pBatch.commit();
-          console.log('Sample penalties seeded to Firestore');
-        }
-      }catch(err){
-        console.warn('Legacy migration check notice:',err);
-      }
-    })();
-
+  useEffect(()=>{
     const initTimer = setTimeout(()=>{
       isInitialSnapshot = false;
       isInitialSnapshotRef.current = false;
       setIsInitialSnapshot(false);
-    }, 1500);
-
-    return()=>{
-      clearTimeout(initTimer);
-      unsubs.forEach(u=>{try{if(typeof u==='function')u()}catch(e){}});
-    };
+    }, 1200);
+    return()=>clearTimeout(initTimer);
   },[]);
 
   const pushAllToCloud=useCallback(async()=>{
@@ -1011,14 +1038,14 @@ function AppProvider({children}){
       notifications,addNotification,markRead,markAllRead,unreadCount,
       resources,setResources,studyResources,setStudyResources,penalties,setPenalties,inventory,setInventory,expenses,setExpenses,
       sessions,setSessions,assignTasks,setAssignTasks,
-      adminMode,setAdminMode,userIdentity,setUserIdentity,
+      adminMode,setAdminMode,userIdentity,setUserIdentity,clubRules,setClubRules,
       darkMode,setDarkMode,soundEnabled,setSoundEnabled,
       theme,setTheme,mascotType,setMascotType,catEnabled,setCatEnabled,
       bcnPin,setBcnPin,bcnUnlocked,setBcnUnlocked,bcnNotes,setBcnNotes,bcnPlans,setBcnPlans,
       catEvent,triggerCat,
       toasts,dismissToast,mascotState,mascotMsg,triggerMascot,playSound,
       cloudStatus,setCloudStatus,lastSynced,pushPermission,requestWebPush,showWebPush,pushAllToCloud,pullAllFromCloud,
-      isInitialSnapshot,
+      isInitialSnapshot,loadTab,
     }}>
       {children}
     </AppCtx.Provider>
@@ -1233,6 +1260,11 @@ function ViViSVG({state}){
 }
 
 function Mascot(){
+  const[mounted,setMounted]=useState(false);
+  useEffect(()=>{
+    const t=setTimeout(()=>setMounted(true),1000);
+    return()=>clearTimeout(t);
+  },[]);
   const{mascotState,mascotMsg,triggerMascot,playSound,events,mascotType,isInitialSnapshot}=useContext(AppCtx);
   const[showBubble,setShowBubble]=useState(false);
   const[bubText,setBubText]=useState('');
@@ -1264,6 +1296,7 @@ function Mascot(){
     triggerMascot('wave',msg);
   };
 
+  if(!mounted) return null;
   const stateClass={idle:'mascot-idle',wave:'mascot-wave',celebrate:'mascot-celebrate',sos:'mascot-sos',gavel:'mascot-gavel',write:'mascot-write'}[mascotState]||'mascot-idle';
   const mascotTitle=mascotType==='eagle'?'Đại bàng NewVision – Bấm để nhận lời cổ vũ!':'Vi Vi – Bấm để nhận lời cổ vũ!';
 
@@ -1289,6 +1322,11 @@ function Mascot(){
 // SCREEN CAT COMPANION (Desktop Pet / Game Companion)
 // ============================================================
 function ScreenCatCompanion(){
+  const[mounted,setMounted]=useState(false);
+  useEffect(()=>{
+    const t=setTimeout(()=>setMounted(true),1200);
+    return()=>clearTimeout(t);
+  },[]);
   const{catEnabled,catEvent,playSound}=useContext(AppCtx);
   const[pos,setPos]=useState({x:120,y:window.innerHeight-52});
   const[state,setState]=useState('idle');
@@ -1611,7 +1649,7 @@ function ScreenCatCompanion(){
     try{playSound('pop');}catch(e){}
   };
 
-  if(!catEnabled)return null;
+  if(!mounted||!catEnabled)return null;
 
   const isSleep=state==='sleep';
   const isLick=state==='lick';
@@ -4323,7 +4361,7 @@ function AdminLock({onUnlock}){
       <div>
         <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">Khu Vực Quản Trị BCN</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Nội dung này được bảo mật nội bộ. Vui lòng nhập mật khẩu quản trị (Mã: <strong>1072</strong>) để mở khóa.
+          Nội dung này được bảo mật nội bộ. Vui lòng nhập mã quản trị để mở khóa.
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-3.5 pt-2">
@@ -4333,7 +4371,7 @@ function AdminLock({onUnlock}){
             maxLength={6}
             value={pin}
             onChange={e=>setPin(e.target.value)}
-            placeholder="Mã quản trị (1072)..."
+            placeholder="Nhập mã quản trị..."
             className={`form-input text-center text-xl tracking-widest font-mono font-bold ${err?'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700':''}`}
             autoFocus
           />
@@ -4359,7 +4397,7 @@ function AdminLoginModal({isOpen,onClose,onUnlock}){
     if(e&&e.preventDefault)e.preventDefault();
     if(pin.trim()==='1072'){
       try{playSound('success');}catch(e){}
-      try{addNotification('👑 Đã kích hoạt Chế độ Quản trị BCN (1072)','success');}catch(e){}
+      try{addNotification('👑 Đã kích hoạt Chế độ Quản trị BCN','success');}catch(e){}
       onUnlock();
       onClose();
       setPin('');
@@ -4374,7 +4412,7 @@ function AdminLoginModal({isOpen,onClose,onUnlock}){
     <Modal open={isOpen} onClose={onClose} title="Đăng Nhập Quản Trị BCN">
       <form onSubmit={handleCheck} className="space-y-4">
         <p className="text-xs text-slate-500 leading-relaxed">
-          Nhập mã quản trị (Mã: <strong>1072</strong>) để toàn quyền Thêm, Sửa, Xóa và mở khóa các tab bảo mật.
+          Nội dung này được bảo mật nội bộ. Vui lòng nhập mã quản trị để mở khóa.
         </p>
         <div>
           <input
@@ -4382,7 +4420,7 @@ function AdminLoginModal({isOpen,onClose,onUnlock}){
             maxLength={6}
             value={pin}
             onChange={e=>setPin(e.target.value)}
-            placeholder="Mã quản trị (1072)..."
+            placeholder="Nhập mã quản trị..."
             className={`form-input text-center text-xl tracking-widest font-mono font-bold ${err?'border-red-500 bg-red-50 text-red-700':''}`}
             autoFocus
           />
@@ -4563,12 +4601,41 @@ function VietQRModal({isOpen,onClose,penalty}){
 // NỘI QUY & THƯỞNG PHẠT (PENALTIES & REWARDS MODULE)
 // ============================================================
 function PenaltiesPage(){
-  const{penalties,setPenalties,adminMode,addNotification,playSound,members}=useContext(AppCtx);
+  const{penalties,setPenalties,adminMode,addNotification,playSound,members,clubRules,setClubRules}=useContext(AppCtx);
+  const[subTab,setSubTab]=useState('penalties'); // 'penalties' | 'rules'
   const[modal,setModal]=useState(false);
   const[qrPenalty,setQrPenalty]=useState(null);
   const[filterType,setFilterType]=useState('all');
   const[filterBan,setFilterBan]=useState('');
   const[confirmDel,setConfirmDel]=useState(null);
+
+  // Club rules editing state
+  const[editingRules,setEditingRules]=useState(false);
+  const[rulesDraft,setRulesDraft]=useState('');
+  const[rulesSaving,setRulesSaving]=useState(false);
+
+  const openEditRules=()=>{
+    setRulesDraft(clubRules||'');
+    setEditingRules(true);
+  };
+  const handleSaveRules=async()=>{
+    setRulesSaving(true);
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('club_settings').doc('rules').set({
+        content:rulesDraft,
+        updatedAt:new Date().toISOString(),
+        updatedBy:'Admin BCN'
+      },{merge:true});
+      try{playSound('success');}catch(e){}
+      try{addNotification('✅ Đã cập nhật Nội Quy CLB lên Cloud Firestore!','success');}catch(e){}
+      setEditingRules(false);
+    }catch(err){
+      alert('Lỗi lưu Firebase: '+err.message);
+    }finally{
+      setRulesSaving(false);
+    }
+  };
 
   const emptyForm={name:'',ban:'Nội vụ',reason:'',amount:20000,type:'phat',status:'Chờ nộp'};
   const[form,setForm]=useState(emptyForm);
@@ -4604,7 +4671,7 @@ function PenaltiesPage(){
 
   const toggleStatus=async item=>{
     if(!adminMode){
-      alert('Chỉ Ban Chủ Nhiệm (mã 1072) mới có quyền duyệt trạng thái nộp phạt!');
+      alert('Chỉ Ban Chủ Nhiệm mới có quyền duyệt trạng thái nộp phạt!');
       return;
     }
     const newStatus=item.status==='Đã nộp'?'Chờ nộp':'Đã nộp';
@@ -4620,17 +4687,18 @@ function PenaltiesPage(){
 
   const handleDelete=async id=>{
     if(!adminMode){
-      alert('Chỉ Ban Chủ Nhiệm (mã 1072) mới có quyền xóa bản ghi!');
+      alert('Chỉ Ban Chủ Nhiệm mới có quyền xóa bản ghi!');
       return;
     }
     try{
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('penalties').doc(id).delete();
+      setPenalties(prev=>prev.filter(p=>p.id!==id));
       try{playSound('pop');}catch(e){}
-      try{addNotification('Đã xóa bản ghi thưởng/phạt','info');}catch(e){}
+      try{addNotification('Đã xóa vĩnh viễn bản ghi khỏi Cloud Firestore','info');}catch(e){}
       setConfirmDel(null);
     }catch(err){
-      alert('Lỗi lưu Firebase: '+err.message);
+      alert('Lỗi xóa Firebase: '+err.message);
     }
   };
 
@@ -4655,10 +4723,105 @@ function PenaltiesPage(){
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">Theo dõi vi phạm, nộp phạt qua VietQR tự động và vinh danh khen thưởng</p>
         </div>
-        <button onClick={()=>setModal(true)} className="btn-primary flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
-          <Icon name="plus" size={15}/> Ghi nhận mới
+        {subTab==='penalties' && (
+          <button onClick={()=>setModal(true)} className="btn-primary flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
+            <Icon name="plus" size={15}/> Ghi nhận mới
+          </button>
+        )}
+        {subTab==='rules' && adminMode && !editingRules && (
+          <button onClick={openEditRules} className="btn-primary flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
+            <Icon name="pencil" size={15}/> Chỉnh sửa nội quy
+          </button>
+        )}
+      </div>
+
+      {/* Sub-Tab Switcher */}
+      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
+        <button
+          onClick={()=>setSubTab('penalties')}
+          className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${subTab==='penalties'?'bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-slate-100':'text-slate-500 hover:text-slate-700'}`}
+        >
+          ⚖️ Thưởng & Phạt
+        </button>
+        <button
+          onClick={()=>setSubTab('rules')}
+          className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${subTab==='rules'?'bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-slate-100':'text-slate-500 hover:text-slate-700'}`}
+        >
+          📋 Nội Quy CLB
         </button>
       </div>
+
+      {/* RULES SUB-TAB */}
+      {subTab==='rules'&&(
+        <div className="card p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-base">
+              <Icon name="book-open" size={18} className="text-indigo-500"/>
+              Quy Chế & Nội Quy CLB NewVision HUP
+            </h2>
+            {adminMode && editingRules && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={()=>setEditingRules(false)}
+                  className="btn-secondary text-xs py-1.5 px-3"
+                  disabled={rulesSaving}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSaveRules}
+                  className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
+                  disabled={rulesSaving}
+                >
+                  {rulesSaving?'Đang lưu...':'💾 Lưu nội quy'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {adminMode && editingRules ? (
+            <div>
+              <p className="text-xs text-slate-500 mb-2 leading-relaxed">
+                Nhập nội quy theo từng dòng. Dùng "•" hoặc "-" đầu dòng cho gạch đầu dòng. Nội dung sẽ được lưu lên Cloud và hiển thị cho toàn CLB.
+              </p>
+              <textarea
+                value={rulesDraft}
+                onChange={e=>setRulesDraft(e.target.value)}
+                className="form-input w-full resize-y min-h-[320px] font-mono text-sm leading-relaxed"
+                placeholder={"• Điều 1: Tất cả thành viên phải tham dự họp CLB đúng giờ.\n• Điều 2: Hoàn thành nhiệm vụ được giao trước deadline.\n• Điều 3: Đi muộn dưới 15 phút phạt 10.000đ...\n\n(Nhập nội quy của CLB bạn tại đây)"}
+              />
+            </div>
+          ) : (
+            <div className="prose prose-sm max-w-none">
+              {clubRules ? (
+                <pre className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 min-h-[120px]">
+                  {clubRules}
+                </pre>
+              ) : (
+                <div className="text-center py-12 text-slate-400">
+                  <Icon name="book-open" size={36} className="mx-auto mb-3 text-slate-300"/>
+                  <p className="font-semibold text-sm">Chưa có nội quy CLB</p>
+                  {adminMode ? (
+                    <p className="text-xs mt-1">Bấm "Chỉnh sửa nội quy" ở trên để soạn thảo và lưu lên Cloud.</p>
+                  ) : (
+                    <p className="text-xs mt-1">Nội quy CLB chưa được thiết lập bởi Ban Chủ Nhiệm.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!adminMode && clubRules && (
+            <p className="text-[11px] text-slate-400 flex items-center gap-1">
+              <Icon name="info" size={11}/> Chỉ Ban Chủ Nhiệm có thể chỉnh sửa nội quy. Nội quy luôn đồng bộ realtime từ Cloud Firestore.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* PENALTIES SUB-TAB */}
+      {subTab==='penalties'&&(
+        <>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -4873,6 +5036,8 @@ function PenaltiesPage(){
           </div>
         </form>
       </Modal>
+        </>
+      )}
 
       <VietQRModal isOpen={!!qrPenalty} onClose={()=>setQrPenalty(null)} penalty={qrPenalty}/>
       <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDelete(confirmDel)} message="Xóa bản ghi thưởng/phạt này?"/>
@@ -5889,8 +6054,12 @@ function App(){
   const{
     darkMode,setDarkMode,soundEnabled,setSoundEnabled,unreadCount,
     bcnUnlocked,cloudStatus,lastSynced,adminMode,setAdminMode,
-    userIdentity,setUserIdentity,members,addNotification
+    userIdentity,setUserIdentity,members,addNotification,loadTab
   }=useContext(AppCtx);
+
+  useEffect(()=>{
+    if(loadTab) loadTab(activeTab);
+  },[activeTab,loadTab]);
 
   useEffect(()=>{
     function h(e){if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setCmdOpen(o=>!o)}}
@@ -5959,7 +6128,7 @@ function App(){
               <span className="hidden sm:inline">Quẻ Hôm Nay</span>
             </button>
 
-            {/* Admin 1072 Mode Pill */}
+            {/* Admin Mode Pill */}
             {adminMode ? (
               <button
                 onClick={()=>{
@@ -5970,13 +6139,13 @@ function App(){
                 title="Bấm để đăng xuất chế độ Quản trị BCN"
               >
                 <span>👑</span>
-                <span className="hidden sm:inline">Quản trị (1072) [Đăng xuất]</span>
+                <span className="hidden sm:inline">Quản trị [Đăng xuất]</span>
               </button>
             ) : (
               <button
                 onClick={()=>setAdminLoginOpen(true)}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition"
-                title="Đăng nhập Quản trị BCN (Mật khẩu 1072)"
+                title="Đăng nhập Quản trị BCN"
               >
                 <Icon name="key" size={13}/>
                 <span className="hidden sm:inline">BCN</span>
