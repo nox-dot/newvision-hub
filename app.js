@@ -1942,7 +1942,7 @@ function BcnRoomPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('📝 Đã lưu ghi chú BCN cho thành viên!','success');}catch(e){}
     }catch(err){
-      console.error('Lỗi lưu ghi chú BCN:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -1954,7 +1954,7 @@ function BcnRoomPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification(`Đã cập nhật đánh giá thành viên thành: ${newEval}`,'info');}catch(e){}
     }catch(err){
-      console.error('Lỗi lưu đánh giá thành viên:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -1967,7 +1967,7 @@ function BcnRoomPage(){
       triggerCat('celebrate');
       try{addNotification(`✅ Đã duyệt quyết toán cho ${exp.person||'thành viên'}: ${fmtVND(exp.amount)}`,'success');}catch(e){}
     }catch(err){
-      console.error('Lỗi duyệt quyết toán:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -1982,7 +1982,7 @@ function BcnRoomPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification(`⚠️ Đã yêu cầu giải trình khoản chi "${exp.name}"`,'warning');}catch(e){}
     }catch(err){
-      console.error('Lỗi từ chối quyết toán:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2007,7 +2007,7 @@ function BcnRoomPage(){
       try{playSound('success');}catch(e){}
       try{addNotification('🎯 Đã lưu kế hoạch tác chiến mật!','success');}catch(e){}
     }catch(err){
-      console.error('Lỗi lưu kế hoạch BCN:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2020,7 +2020,7 @@ function BcnRoomPage(){
       await fbDb.collection('bcnPlans').doc(planId).set({milestones:updatedMilestones},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi cập nhật mốc tiến độ:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2031,7 +2031,7 @@ function BcnRoomPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('Đã xóa kế hoạch BCN','info');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa kế hoạch:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2549,7 +2549,7 @@ function Dashboard({setActiveTab}){
       setShowCLForm(false);
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi thêm checklist:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2563,7 +2563,7 @@ function Dashboard({setActiveTab}){
       await fbDb.collection('quickChecklist').doc(id).set({done:newDone},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi cập nhật checklist:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2577,7 +2577,7 @@ function Dashboard({setActiveTab}){
       await batch.commit();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi reset checklist:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2587,7 +2587,7 @@ function Dashboard({setActiveTab}){
       await fbDb.collection('quickChecklist').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa checklist:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2605,7 +2605,7 @@ function Dashboard({setActiveTab}){
       setShowLinkForm(false);
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi thêm quick link:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2615,7 +2615,7 @@ function Dashboard({setActiveTab}){
       await fbDb.collection('quickLinks').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa quick link:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2834,7 +2834,7 @@ function DecisionsPage(){
       }
       handleClose();
     }catch(err){
-      console.error('Lỗi lưu quyết định:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2850,7 +2850,7 @@ function DecisionsPage(){
         triggerMascot('gavel','⚖️ Đã chốt chính thức!');
       }
     }catch(err){
-      console.error('Lỗi đổi trạng thái:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2868,7 +2868,7 @@ function DecisionsPage(){
       setPollInput(p=>({...p,[dId]:''}));
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi thêm phương án:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2882,7 +2882,7 @@ function DecisionsPage(){
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi bỏ phiếu:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2902,7 +2902,7 @@ function DecisionsPage(){
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa phương án:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2913,7 +2913,7 @@ function DecisionsPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('Đã xóa vấn đề','info');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa quyết định:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3300,7 +3300,7 @@ function EventDetail({event,onBack}){
       }
       handleTaskClose();
     }catch(err){
-      console.error('Lỗi lưu công việc sự kiện:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3326,7 +3326,7 @@ function EventDetail({event,onBack}){
         try{addNotification(`🔄 Mở lại: "${task.title}"`,'warning');}catch(e){}
       }
     }catch(err){
-      console.error('Lỗi đổi trạng thái công việc:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3343,7 +3343,7 @@ function EventDetail({event,onBack}){
         try{playSound('pop');}catch(e){}
       }catch(e){}
     }catch(err){
-      console.error('Lỗi xóa công việc:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3352,7 +3352,7 @@ function EventDetail({event,onBack}){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('events').doc(updEv.id).set(updEv,{merge:true});
     }catch(err){
-      console.error('Lỗi lưu Live Event:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3551,7 +3551,7 @@ function EventsPage(){
       }
       handleClose();
     }catch(err){
-      console.error('Lỗi lưu sự kiện:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3562,7 +3562,7 @@ function EventsPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('Đã xóa sự kiện','info');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa sự kiện:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3812,7 +3812,7 @@ function MembersPage(){
       }
       handleClose();
     }catch(err){
-      console.error('Lỗi lưu thành viên:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3830,7 +3830,7 @@ function MembersPage(){
       await fbDb.collection('members').doc(mId).set({attendance:{...curAtt,[sId]:val}},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi lưu điểm danh:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3842,7 +3842,7 @@ function MembersPage(){
       await fbDb.collection('members').doc(mId).set({taskStatus:{...curStat,[tId]:val}},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi lưu bài tập:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3851,7 +3851,7 @@ function MembersPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(mId).set({note},{merge:true});
     }catch(err){
-      console.error('Lỗi lưu ghi chú:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3861,7 +3861,7 @@ function MembersPage(){
       await fbDb.collection('members').doc(mId).set({eval:val},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi lưu đánh giá:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3874,7 +3874,7 @@ function MembersPage(){
       setNewSession('');
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi thêm buổi sinh hoạt:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3884,7 +3884,7 @@ function MembersPage(){
       await fbDb.collection('sessions').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa buổi sinh hoạt:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3897,7 +3897,7 @@ function MembersPage(){
       setNewATask('');
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi thêm nhiệm vụ:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3907,7 +3907,7 @@ function MembersPage(){
       await fbDb.collection('assignTasks').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa nhiệm vụ:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3918,7 +3918,7 @@ function MembersPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('Đã xóa thành viên','info');}catch(e){}
     }catch(err){
-      console.error('Lỗi xóa thành viên:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -5561,7 +5561,7 @@ function ResourcesPage() {
       setLinkModal(false);
       setEditingLink(null);
     } catch (err) {
-      console.error('Lỗi lưu link:', err);
+      console.error('[NewVision HUP] Init Error', err);
       alert('Lỗi lưu Firebase: ' + err.message);
     }
   };
@@ -5647,7 +5647,7 @@ function ResourcesPage() {
       setFundModal(false);
       setEditingFund(null);
     } catch (err) {
-      console.error('Lỗi lưu sổ quỹ:', err);
+      console.error('[NewVision HUP] Init Error', err);
       alert('Lỗi lưu sổ quỹ: ' + err.message);
     } finally {
       setFundSaving(false);
@@ -6442,7 +6442,7 @@ function StudyHubPage(){
       setModalOpen(false);
       setEditingId(null);
     }catch(err){
-      console.error('Lỗi lưu tài liệu học tập:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -6456,7 +6456,7 @@ function StudyHubPage(){
       try{addNotification('Đã xóa tài liệu khỏi Góc Học Tập','info');}catch(e){}
       setConfirmDeleteId(null);
     }catch(err){
-      console.error('Lỗi xóa tài liệu:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -6471,7 +6471,7 @@ function StudyHubPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification(newPinned?`Đã ghim tài liệu trọng tâm: ${item.title}`:`Đã bỏ ghim: ${item.title}`,'info');}catch(e){}
     }catch(err){
-      console.error('Lỗi ghim tài liệu:',err);
+      console.error('[NewVision HUP] Init Error',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -7329,5 +7329,24 @@ function App(){
   );
 }
 
-const root=ReactDOM.createRoot(document.getElementById('root'));
-root.render(<AppProvider><App/></AppProvider>);
+// ============================================================
+// SAFE APPLICATION MOUNTING & INITIALIZATION
+// ============================================================
+function initNewVisionApp() {
+  try {
+    const rootEl = document.getElementById('root');
+    if (rootEl && !rootEl.dataset.mounted) {
+      rootEl.dataset.mounted = 'true';
+      const root = ReactDOM.createRoot(rootEl);
+      root.render(<AppProvider><App/></AppProvider>);
+    }
+  } catch (err) {
+    console.error('[NewVision HUP] Init Error', err);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initNewVisionApp);
+} else {
+  initNewVisionApp();
+}

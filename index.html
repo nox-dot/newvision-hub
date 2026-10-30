@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NewVision HUP</title>
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Canvas Confetti for task completion celebration -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -25,34 +25,105 @@
 </head>
 <body class="bg-slate-50 text-slate-800">
 
+<!-- React 18, Babel Standalone & Libraries -->
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<!-- Firebase Compat SDK v10.12.2 for Realtime Firestore & Web Push -->
+<!-- Firebase Compat SDK v10.12.2 -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 
-<div id="root"></div>
+<!-- Cấu trúc khung giao diện cơ bản (Sidebar, Main Content, Header, Navigation) -->
+<div id="root">
+  <div class="min-h-screen bg-slate-50 flex flex-col">
+    <!-- Top Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800 flex items-center justify-center text-white font-black text-sm shadow-sm">NV</div>
+          <div>
+            <div class="font-extrabold text-slate-800 text-sm tracking-tight leading-tight">NewVision HUP</div>
+            <div class="text-[10px] text-indigo-600 font-semibold uppercase tracking-wider">Hệ thống điều hành CLB</div>
+          </div>
+        </div>
+        <div id="app-status-badge" class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Đang khởi tạo ứng dụng...
+        </div>
+      </div>
+    </header>
 
-<!-- Main Application Script -->
+    <!-- Main Workspace Container -->
+    <div class="flex-1 max-w-7xl w-full mx-auto flex">
+      <!-- Desktop Sidebar -->
+      <aside class="hidden md:flex flex-col w-60 border-r border-slate-200 bg-white p-3 space-y-1">
+        <div class="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Menu Điều Hành</div>
+        <div class="px-3 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-semibold text-xs flex items-center gap-2.5">
+          <span>📊</span> Bảng Điều Khiển
+        </div>
+        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+          <span>📅</span> Sự Kiện & Lịch
+        </div>
+        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+          <span>👥</span> Nhân Sự CLB
+        </div>
+        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+          <span>📜</span> Nội Quy & Thưởng Phạt
+        </div>
+        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+          <span>💼</span> Tài Nguyên & Quỹ CLB
+        </div>
+        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+          <span>🔔</span> Thông Báo
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 p-4 md:p-6 min-w-0">
+        <div class="max-w-4xl mx-auto py-12 text-center" id="initial-loading-view">
+          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-4 animate-bounce">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-slate-800 mb-2">Đang nạp NewVision HUP...</h2>
+          <p class="text-xs text-slate-500 max-w-md mx-auto mb-6">Hệ thống đang đồng bộ dữ liệu Realtime từ Cloud Firestore và khởi tạo các phân hệ quản lý.</p>
+          <div class="w-48 h-1.5 bg-slate-200 rounded-full mx-auto overflow-hidden">
+            <div class="w-full h-full bg-indigo-600 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- Main Application Script (Babel Standalone JSX compilation) -->
 <script type="text/babel" src="app.js" defer></script>
 
+<!-- Hỗ trợ thông báo nếu mở trực tiếp bằng file:// (CORS Security) -->
 <script>
-  // Fallback helper for local file:// protocol testing
-  window.addEventListener('DOMContentLoaded', function() {
+  window.addEventListener('load', function() {
     if (window.location.protocol === 'file:') {
       setTimeout(function() {
         var root = document.getElementById('root');
-        if (root && (!root.children || root.children.length === 0)) {
-          root.innerHTML = '<div style="font-family:system-ui,sans-serif;max-width:540px;margin:80px auto;padding:28px;background:#fff;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,0.08);border:1px solid #fed7aa;text-align:center;">'
-            + '<div style="font-size:42px;margin-bottom:12px;">\uD83D\uDCA1</div>'
-            + '<h2 style="font-size:19px;font-weight:700;color:#1e293b;margin-bottom:8px;">H\u01B0\u1EDBng d\u1EABn ch\u1EA1y NewVision HUP c\u1EE5c b\u1ED9</h2>'
-            + '<p style="font-size:13.5px;color:#475569;line-height:1.6;margin-bottom:14px;">Tr\u00ECnh duy\u1EC7t Chrome/Edge ch\u1EB7n n\u1EA1p file ngo\u00E0i qua <code>file://</code> do ch\u00EDnh s\u00E1ch b\u1EA3o m\u1EADt CORS.</p>'
-            + '<div style="background:#fff7ed;padding:12px;border-radius:10px;font-family:monospace;font-size:13px;color:#ea580c;margin-bottom:14px;border:1px dashed #fdba74;">M\u1EDF b\u1EB1ng <b>VS Code Live Server</b> ho\u1EB7c ch\u1EA1y l\u1EC7nh:<br/><b>npx serve</b> (ho\u1EB7c <b>python -m http.server 3000</b>)</div>'
-            + '<p style="font-size:12.5px;color:#94a3b8;">Khi \u0111\u01B0a l\u00EAn GitHub Pages, Vercel ho\u1EB7c Firebase Hosting, \u1EE9ng d\u1EE5ng s\u1EBD ch\u1EA1y t\u1EF1 \u0111\u1ED9ng 100% ho\u00E0n h\u1EA3o!</p>'
-            + '</div>';
+        if (root && (!root.dataset.mounted || root.dataset.mounted !== 'true')) {
+          var loadView = document.getElementById('initial-loading-view');
+          if (loadView) {
+            loadView.innerHTML = '<div style="background:#ffffff;border:1px solid #e0e7ff;box-shadow:0 12px 30px rgba(99,102,241,0.12);border-radius:18px;padding:28px;max-width:540px;margin:0 auto;text-align:left;">'
+              + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">'
+              + '<span style="font-size:32px;">💡</span>'
+              + '<div><h3 style="font-size:17px;font-weight:700;color:#1e1b4b;margin:0;">Hướng dẫn mở NewVision HUP</h3><p style="font-size:12px;color:#6366f1;margin:0;font-weight:600;">Chạy qua Web Server cục bộ</p></div>'
+              + '</div>'
+              + '<p style="font-size:13px;color:#475569;line-height:1.6;margin-bottom:14px;">Trình duyệt Chrome/Edge chặn nạp script qua giao thức <code>file://</code> vì chính sách bảo mật CORS.</p>'
+              + '<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:14px;margin-bottom:14px;font-size:12.5px;color:#334155;line-height:1.6;">'
+              + '<b>Cách 1:</b> Mở thư mục dự án trong <b>VS Code</b>, chuột phải vào <code>index.html</code> chọn <b>Open with Live Server</b>.<br/>'
+              + '<b>Cách 2:</b> Mở Terminal tại thư mục dự án và chạy: <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;color:#4f46e5;font-weight:600;">npx serve</code>'
+              + '</div>'
+              + '<p style="font-size:12px;color:#64748b;margin:0;">Khi deploy lên Vercel, Netlify, GitHub Pages hoặc Firebase Hosting, ứng dụng sẽ chạy tự động 100%!</p>'
+              + '</div>';
+          }
         }
       }, 2500);
     }
