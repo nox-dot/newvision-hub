@@ -336,7 +336,7 @@ function AppProvider({children}){
       return next;
     });
   },[]);
-  const[darkMode,setDarkMode]=useLocalStorage('nv_dark',false);
+  const[darkMode,setDarkMode]=useLocalStorage('nv_dark',true);
   const[soundEnabled,setSoundEnabled]=useLocalStorage('nv_sound',true);
   const[toasts,setToasts]=useState([]);
   const[mascotState,setMascotState]=useState('idle');
@@ -2621,10 +2621,10 @@ function Dashboard({setActiveTab}){
   };
 
   const stats=[
-    {label:'Việc đang chạy',value:activeTasks.length,icon:'list-todo',gradient:'from-blue-600 to-blue-800',onClick:()=>setActiveTab('events')},
-    {label:'Việc quá hạn',value:overdueTasks.length,icon:'alarm-clock',gradient:'from-red-500 to-red-700',onClick:()=>setActiveTab('events')},
-    {label:'Quyết định chờ chốt',value:pendingDecisions.length,icon:'file-question',gradient:'from-amber-500 to-orange-600',onClick:()=>setActiveTab('decisions')},
-    {label:'Tổng thành viên/CTV',value:members.length,icon:'users',gradient:'from-emerald-500 to-teal-700',onClick:()=>setActiveTab('members')},
+    {label:'Việc đang chạy',value:activeTasks.length,icon:'list-todo',gradient:'from-orange-500 to-amber-600',customClass:'stat-card-orange',onClick:()=>setActiveTab('events')},
+    {label:'Việc quá hạn',value:overdueTasks.length,icon:'alarm-clock',gradient:'from-red-500 to-red-700',customClass:'stat-card-red',onClick:()=>setActiveTab('events')},
+    {label:'Quyết định chờ chốt',value:pendingDecisions.length,icon:'file-question',gradient:'from-yellow-400 to-amber-500',customClass:'stat-card-yellow',onClick:()=>setActiveTab('decisions')},
+    {label:'Tổng thành viên/CTV',value:members.length,icon:'users',gradient:'from-emerald-500 to-teal-700',customClass:'stat-card-green',onClick:()=>setActiveTab('members')},
   ];
 
   return(
@@ -2635,7 +2635,7 @@ function Dashboard({setActiveTab}){
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((s,i)=>(
-          <button key={i} onClick={s.onClick} className={`bg-gradient-to-br ${s.gradient} text-white rounded-2xl p-4 text-left hover:opacity-90 transition-opacity shadow-md`}>
+          <button key={i} onClick={s.onClick} className={`bg-gradient-to-br ${s.gradient} ${s.customClass||""} text-white rounded-2xl p-4 text-left hover:opacity-90 transition-all shadow-md`}>
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3"><Icon name={s.icon} size={20} className="text-white"/></div>
             <div className="text-3xl font-bold leading-none">{s.value}</div>
             <div className="text-xs font-medium opacity-80 mt-1">{s.label}</div>
@@ -7089,6 +7089,19 @@ function App(){
     document.addEventListener('keydown',h);return()=>document.removeEventListener('keydown',h);
   },[]);
 
+  // Tự động gỡ bỏ overlay loading sau 1.5 giây để hiện bảng điều khiển ngay khi CSS nạp xong
+  useEffect(()=>{
+    const timer = setTimeout(() => {
+      const loader = document.getElementById('app-loading-overlay') || document.getElementById('initial-loading-view');
+      if (loader) {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 300);
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  },[]);
+
   const renderPage=()=>{
     switch(activeTab){
       case'dashboard':return<Dashboard setActiveTab={setActiveTab}/>;
@@ -7342,6 +7355,15 @@ function initNewVisionApp() {
     }
   } catch (err) {
     console.error('[NewVision HUP] Init Error', err);
+  } finally {
+    setTimeout(function() {
+      var loader = document.getElementById('app-loading-overlay') || document.getElementById('initial-loading-view');
+      if (loader) {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s ease';
+        setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 300);
+      }
+    }, 1500);
   }
 }
 

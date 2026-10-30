@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="vi" class="h-full">
+<html lang="vi" class="dark h-full">
 <head>
+  <link rel="stylesheet" href="./style.css?v=2.5">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NewVision HUP</title>
@@ -20,10 +21,8 @@
       }
     }
   </script>
-  <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="dark bg-slate-900 text-slate-100 min-h-screen">
 
 <!-- React 18, Babel Standalone & Libraries -->
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -35,63 +34,81 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 
-<!-- Cấu trúc khung giao diện cơ bản (Sidebar, Main Content, Header, Navigation) -->
+<!-- Cấu trúc khung giao diện cơ bản (Dark Mode Framework) -->
 <div id="root">
-  <div class="min-h-screen bg-slate-50 flex flex-col">
+  <div class="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col">
     <!-- Top Header Navigation -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <header class="bg-[#0f172a] border-b border-slate-800 sticky top-0 z-40 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800 flex items-center justify-center text-white font-black text-sm shadow-sm">NV</div>
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-sm shadow-sm">NV</div>
           <div>
-            <div class="font-extrabold text-slate-800 text-sm tracking-tight leading-tight">NewVision HUP</div>
-            <div class="text-[10px] text-indigo-600 font-semibold uppercase tracking-wider">Hệ thống điều hành CLB</div>
+            <div class="font-extrabold text-slate-100 text-sm tracking-tight leading-tight">NewVision HUP</div>
+            <div class="text-[10px] text-indigo-400 font-semibold uppercase tracking-wider">Hệ thống điều hành CLB</div>
           </div>
         </div>
-        <div id="app-status-badge" class="flex items-center gap-2 text-xs text-slate-500 font-medium">
-          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Đang khởi tạo ứng dụng...
+        <div id="app-status-badge" class="flex items-center gap-2 text-xs text-slate-400 font-medium">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Đang khởi tạo hệ thống...
         </div>
       </div>
     </header>
 
     <!-- Main Workspace Container -->
-    <div class="flex-1 max-w-7xl w-full mx-auto flex">
+    <div class="flex-1 max-w-7xl w-full mx-auto flex p-3 md:p-4 gap-4">
       <!-- Desktop Sidebar -->
-      <aside class="hidden md:flex flex-col w-60 border-r border-slate-200 bg-white p-3 space-y-1">
+      <aside class="hidden md:flex flex-col w-60 border border-slate-800 bg-[#0f172a] rounded-2xl p-3 space-y-1">
         <div class="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Menu Điều Hành</div>
-        <div class="px-3 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-semibold text-xs flex items-center gap-2.5">
+        <div class="sidebar-link active px-3 py-2.5 rounded-xl bg-[#1e3a5f] text-blue-300 font-semibold text-xs flex items-center gap-2.5">
           <span>📊</span> Bảng Điều Khiển
         </div>
-        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+        <div class="sidebar-link px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 text-xs flex items-center gap-2.5">
           <span>📅</span> Sự Kiện & Lịch
         </div>
-        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+        <div class="sidebar-link px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 text-xs flex items-center gap-2.5">
           <span>👥</span> Nhân Sự CLB
         </div>
-        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+        <div class="sidebar-link px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 text-xs flex items-center gap-2.5">
           <span>📜</span> Nội Quy & Thưởng Phạt
         </div>
-        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+        <div class="sidebar-link px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 text-xs flex items-center gap-2.5">
           <span>💼</span> Tài Nguyên & Quỹ CLB
         </div>
-        <div class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-xs flex items-center gap-2.5">
+        <div class="sidebar-link px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 text-xs flex items-center gap-2.5">
           <span>🔔</span> Thông Báo
         </div>
       </aside>
 
-      <!-- Main Content Area -->
-      <main class="flex-1 p-4 md:p-6 min-w-0">
-        <div class="max-w-4xl mx-auto py-12 text-center" id="initial-loading-view">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-4 animate-bounce">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+      <!-- Main Content Area with Dashboard Stat Cards Placeholder (Cam, Đỏ, Vàng, Xanh lá) -->
+      <main class="flex-1 min-w-0">
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="stat-card-orange rounded-2xl p-4 text-left shadow-md">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">📋</div>
+              <div class="text-3xl font-bold leading-none">--</div>
+              <div class="text-xs font-medium opacity-80 mt-1">Việc đang chạy</div>
+            </div>
+            <div class="stat-card-red rounded-2xl p-4 text-left shadow-md">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">⏰</div>
+              <div class="text-3xl font-bold leading-none">--</div>
+              <div class="text-xs font-medium opacity-80 mt-1">Việc quá hạn</div>
+            </div>
+            <div class="stat-card-yellow rounded-2xl p-4 text-left shadow-md">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">❓</div>
+              <div class="text-3xl font-bold leading-none">--</div>
+              <div class="text-xs font-medium opacity-80 mt-1">Quyết định chờ chốt</div>
+            </div>
+            <div class="stat-card-green rounded-2xl p-4 text-left shadow-md">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">👥</div>
+              <div class="text-3xl font-bold leading-none">--</div>
+              <div class="text-xs font-medium opacity-80 mt-1">Tổng thành viên/CTV</div>
+            </div>
           </div>
-          <h2 class="text-xl font-bold text-slate-800 mb-2">Đang nạp NewVision HUP...</h2>
-          <p class="text-xs text-slate-500 max-w-md mx-auto mb-6">Hệ thống đang đồng bộ dữ liệu Realtime từ Cloud Firestore và khởi tạo các phân hệ quản lý.</p>
-          <div class="w-48 h-1.5 bg-slate-200 rounded-full mx-auto overflow-hidden">
-            <div class="w-full h-full bg-indigo-600 rounded-full animate-pulse"></div>
+          <div class="card bg-[#1e293b] border border-slate-800 rounded-2xl p-6 h-64 flex items-center justify-center" id="initial-loading-view">
+            <div class="text-center">
+              <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p class="text-sm font-semibold text-slate-300">Đang đồng bộ giao diện NewVision HUP...</p>
+            </div>
           </div>
         </div>
       </main>
@@ -102,28 +119,34 @@
 <!-- Main Application Script (Babel Standalone JSX compilation) -->
 <script type="text/babel" src="app.js" defer></script>
 
-<!-- Hỗ trợ thông báo nếu mở trực tiếp bằng file:// (CORS Security) -->
+<!-- Tự động giải phóng loading sau 1.5 giây & Hỗ trợ thông báo nếu mở qua file:// -->
 <script>
   window.addEventListener('load', function() {
+    setTimeout(function() {
+      var loader = document.getElementById('initial-loading-view') || document.getElementById('app-loading-overlay');
+      if (loader) {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s ease';
+        setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 300);
+      }
+    }, 1500);
+
     if (window.location.protocol === 'file:') {
       setTimeout(function() {
         var root = document.getElementById('root');
         if (root && (!root.dataset.mounted || root.dataset.mounted !== 'true')) {
-          var loadView = document.getElementById('initial-loading-view');
-          if (loadView) {
-            loadView.innerHTML = '<div style="background:#ffffff;border:1px solid #e0e7ff;box-shadow:0 12px 30px rgba(99,102,241,0.12);border-radius:18px;padding:28px;max-width:540px;margin:0 auto;text-align:left;">'
-              + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">'
-              + '<span style="font-size:32px;">💡</span>'
-              + '<div><h3 style="font-size:17px;font-weight:700;color:#1e1b4b;margin:0;">Hướng dẫn mở NewVision HUP</h3><p style="font-size:12px;color:#6366f1;margin:0;font-weight:600;">Chạy qua Web Server cục bộ</p></div>'
-              + '</div>'
-              + '<p style="font-size:13px;color:#475569;line-height:1.6;margin-bottom:14px;">Trình duyệt Chrome/Edge chặn nạp script qua giao thức <code>file://</code> vì chính sách bảo mật CORS.</p>'
-              + '<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:14px;margin-bottom:14px;font-size:12.5px;color:#334155;line-height:1.6;">'
-              + '<b>Cách 1:</b> Mở thư mục dự án trong <b>VS Code</b>, chuột phải vào <code>index.html</code> chọn <b>Open with Live Server</b>.<br/>'
-              + '<b>Cách 2:</b> Mở Terminal tại thư mục dự án và chạy: <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;color:#4f46e5;font-weight:600;">npx serve</code>'
-              + '</div>'
-              + '<p style="font-size:12px;color:#64748b;margin:0;">Khi deploy lên Vercel, Netlify, GitHub Pages hoặc Firebase Hosting, ứng dụng sẽ chạy tự động 100%!</p>'
-              + '</div>';
-          }
+          var notice = document.createElement('div');
+          notice.style.cssText = 'position:fixed;bottom:20px;right:20px;max-width:420px;background:#1e293b;border:2px solid #6366f1;border-radius:16px;padding:20px;box-shadow:0 20px 40px rgba(0,0,0,0.5);z-index:99999;font-family:system-ui,sans-serif;color:#f1f5f9;';
+          notice.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+            + '<span style="font-size:24px;">💡</span>'
+            + '<strong style="color:#e0e7ff;font-size:15px;">Hướng dẫn mở NewVision HUP</strong>'
+            + '</div>'
+            + '<p style="font-size:13px;color:#94a3b8;margin-bottom:12px;line-height:1.5;">Trình duyệt Chrome/Edge chặn nạp script React qua giao thức <code>file://</code> do bảo mật CORS.</p>'
+            + '<div style="background:#0f172a;border-left:4px solid #6366f1;padding:10px 12px;border-radius:6px;font-size:12.5px;color:#cbd5e1;margin-bottom:12px;">'
+            + '👉 Mở bằng <b>VS Code Live Server</b> hoặc chạy lệnh: <code>npx serve</code>'
+            + '</div>'
+            + '<button onclick="this.parentElement.remove()" style="background:#6366f1;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">Đã hiểu</button>';
+          document.body.appendChild(notice);
         }
       }, 2500);
     }
