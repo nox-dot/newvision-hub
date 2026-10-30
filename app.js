@@ -4369,40 +4369,111 @@ function GachaModal({isOpen,onClose}){
 
 // ============================================================
 // ============================================================
-// VIETNAMESE POPULAR BANKS FOR VIETQR
+// ============================================================
+// VIETNAMESE POPULAR BANKS & E-WALLETS (VIETQR / NAPAS STANDARDS)
 // ============================================================
 const POPULAR_BANKS = [
-  { code: 'MB', name: 'MB Bank (Quân Đội)' },
-  { code: 'VCB', name: 'Vietcombank (Ngoại Thương)' },
-  { code: 'TCB', name: 'Techcombank (Kỹ Thương)' },
-  { code: 'VPB', name: 'VPBank (Việt Nam Thịnh Vượng)' },
-  { code: 'TPB', name: 'TPBank (Tiên Phong)' },
-  { code: 'ICB', name: 'VietinBank (Công Thương)' },
-  { code: 'BIDV', name: 'BIDV (Đầu Tư & Phát Triển)' },
-  { code: 'ACB', name: 'ACB (Á Châu)' },
-  { code: 'STB', name: 'Sacombank (Sài Gòn Thương Tín)' },
-  { code: 'HDB', name: 'HDBank (Phát Triển TP.HCM)' },
-  { code: 'VIB', name: 'VIB (Quốc Tế)' },
-  { code: 'SHB', name: 'SHB (Sài Gòn - Hà Nội)' },
-  { code: 'MSB', name: 'MSB (Hàng Hải)' },
-  { code: 'OCB', name: 'OCB (Phương Đông)' },
-  { code: 'LPB', name: 'LPBank (Lộc Phát)' },
-  { code: 'SEAB', name: 'SeABank (Đông Nam Á)' }
+  // --- Ngân hàng thương mại phổ biến ---
+  { code: 'MB', name: 'MB Bank (Quân Đội)', bin: '970422', type: 'bank' },
+  { code: 'VCB', name: 'Vietcombank (Ngoại Thương)', bin: '970436', type: 'bank' },
+  { code: 'TCB', name: 'Techcombank (Kỹ Thương)', bin: '970407', type: 'bank' },
+  { code: 'VPB', name: 'VPBank (Việt Nam Thịnh Vượng)', bin: '970432', type: 'bank' },
+  { code: 'TPB', name: 'TPBank (Tiên Phong)', bin: '970423', type: 'bank' },
+  { code: 'ICB', name: 'VietinBank (Công Thương)', bin: '970415', type: 'bank' },
+  { code: 'BIDV', name: 'BIDV (Đầu Tư & Phát Triển)', bin: '970418', type: 'bank' },
+  { code: 'ACB', name: 'ACB (Á Châu)', bin: '970416', type: 'bank' },
+  { code: 'STB', name: 'Sacombank (Sài Gòn Thương Tín)', bin: '970403', type: 'bank' },
+  { code: 'HDB', name: 'HDBank (Phát Triển TP.HCM)', bin: '970437', type: 'bank' },
+  { code: 'VIB', name: 'VIB (Quốc Tế)', bin: '970441', type: 'bank' },
+  { code: 'SHB', name: 'SHB (Sài Gòn - Hà Nội)', bin: '970443', type: 'bank' },
+  { code: 'MSB', name: 'MSB (Hàng Hải)', bin: '970426', type: 'bank' },
+  { code: 'OCB', name: 'OCB (Phương Đông)', bin: '970448', type: 'bank' },
+  { code: 'LPB', name: 'LPBank (Lộc Phát)', bin: '970449', type: 'bank' },
+  { code: 'SEAB', name: 'SeABank (Đông Nam Á)', bin: '970440', type: 'bank' },
+  // --- Ví điện tử (MoMo, Viettel Money, ZaloPay, ShopeePay, VNPT Money) ---
+  { code: 'MOMO', name: 'Ví điện tử MoMo', bin: '971025', type: 'wallet' },
+  { code: 'VIETTELMONEY', name: 'Viettel Money (ViettelPay / Dịch vụ Số Viettel)', bin: '971005', type: 'wallet' },
+  { code: 'ZALOPAY', name: 'Ví điện tử ZaloPay', bin: '971101', type: 'wallet' },
+  { code: 'SHOPEEPAY', name: 'Ví điện tử ShopeePay', bin: '970440', type: 'wallet' },
+  { code: 'VNPTMONEY', name: 'VNPT Money', bin: '971011', type: 'wallet' }
 ];
 
+const getVietQrBankCode = (bankCode) => {
+  if (!bankCode) return 'MB';
+  const upper = String(bankCode).trim().toUpperCase();
+  const found = POPULAR_BANKS.find(b => b.code.toUpperCase() === upper || (b.bin && b.bin === upper));
+  if (found) {
+    if (found.type === 'wallet') {
+      return found.bin || found.code;
+    }
+    return found.code;
+  }
+  return upper;
+};
+
+// Hàm nén ảnh mã QR sang Base64 nhỏ gọn (max 600px, quality 0.85, an toàn Firestore < 1MB)
+const compressQrImageFile = (file) => {
+  return new Promise((resolve, reject) => {
+    if (!file) return reject(new Error('Chưa chọn file!'));
+    if (!file.type || !file.type.startsWith('image/')) {
+      return reject(new Error('Vui lòng chọn file hình ảnh (PNG, JPG, JPEG, WEBP)!'));
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxDim = 600;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(dataUrl);
+        } catch (err) {
+          const rawUrl = e.target.result;
+          if (rawUrl && rawUrl.length < 900000) {
+            resolve(rawUrl);
+          } else {
+            reject(new Error('Kích thước ảnh quá lớn, vui lòng chọn ảnh dung lượng dưới 1MB!'));
+          }
+        }
+      };
+      img.onerror = () => reject(new Error('Không thể đọc file ảnh đã chọn!'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Lỗi khi đọc file từ thiết bị!'));
+    reader.readAsDataURL(file);
+  });
+};
+
 // ============================================================
-// VIETQR MODAL
+// VIETQR & PAYMENT QR MODAL
 // ============================================================
 function VietQRModal({ isOpen, onClose, penalty }) {
   const { playSound, addNotification, penaltyAccount } = useContext(AppCtx);
   const [copied, setCopied] = useState(false);
   if (!isOpen || !penalty) return null;
 
-  const isConfigured = !!(penaltyAccount && penaltyAccount.accountNo && penaltyAccount.accountNo.trim() && penaltyAccount.bank && penaltyAccount.bank.trim());
+  const hasCustomQr = !!(penaltyAccount && penaltyAccount.customQrUrl && penaltyAccount.customQrUrl.trim());
+  const hasBankAcc = !!(penaltyAccount && penaltyAccount.accountNo && penaltyAccount.accountNo.trim());
+  const isConfigured = hasCustomQr || hasBankAcc;
 
   if (!isConfigured) {
     return (
-      <Modal open={isOpen} onClose={onClose} title="Quét Mã VietQR Nộp Quỹ">
+      <Modal open={isOpen} onClose={onClose} title="Quét Mã QR Nộp Quỹ">
         <div className="flex flex-col items-center py-6 px-4 text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
             <Icon name="alert-triangle" size={32} />
@@ -4412,7 +4483,7 @@ function VietQRModal({ isOpen, onClose, penalty }) {
               BCN chưa cấu hình thông tin chuyển khoản
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-              Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng để nhận tiền nộp phạt vào quỹ CLB. Vui lòng liên hệ BCN hoặc Quản trị viên mở phần cài đặt tài khoản để cấu hình.
+              Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng hoặc tải ảnh mã QR để nhận tiền nộp phạt vào quỹ CLB. Vui lòng liên hệ BCN hoặc Quản trị viên mở phần cài đặt tài khoản để cấu hình.
             </p>
           </div>
           <button onClick={onClose} className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl">
@@ -4424,18 +4495,20 @@ function VietQRModal({ isOpen, onClose, penalty }) {
   }
 
   const amount = Math.abs(penalty.amount || 20000);
-  const bankCode = penaltyAccount.bank.trim().toUpperCase();
-  const accNo = penaltyAccount.accountNo.trim();
-  const bankDisplay = penaltyAccount.bankName || bankCode;
-  const hasCustomQr = !!(penaltyAccount.customQrUrl && penaltyAccount.customQrUrl.trim());
+  const rawBank = penaltyAccount.bank ? penaltyAccount.bank.trim().toUpperCase() : 'MB';
+  const bankDisplay = penaltyAccount.bankName || rawBank;
+  const accNo = penaltyAccount.accountNo ? penaltyAccount.accountNo.trim() : '';
+  const qrIdentifier = getVietQrBankCode(rawBank);
 
+  // Ưu tiên ảnh QR tải lên nếu có, ngược lại tự động tạo mã VietQR chuẩn
   const qrUrl = hasCustomQr
     ? penaltyAccount.customQrUrl.trim()
-    : `https://img.vietqr.io/image/${bankCode}-${accNo}-compact.png?amount=${amount}&addInfo=NVPHAT%20${encodeURIComponent(penalty.name || '')}`;
+    : `https://img.vietqr.io/image/${qrIdentifier}-${accNo}-compact.png?amount=${amount}&addInfo=NVPHAT%20${encodeURIComponent(penalty.name || '')}`;
 
   const copyInfo = () => {
     const namePart = penaltyAccount.accountName ? ` - Chu TK: ${penaltyAccount.accountName}` : '';
-    const text = `${bankDisplay} - STK: ${accNo}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: NVPHAT ${penalty.name}`;
+    const accPart = accNo ? ` - STK: ${accNo}` : '';
+    const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: NVPHAT ${penalty.name}`;
     try {
       navigator.clipboard.writeText(text);
       setCopied(true);
@@ -4446,31 +4519,40 @@ function VietQRModal({ isOpen, onClose, penalty }) {
   };
 
   return (
-    <Modal open={isOpen} onClose={onClose} title="Quét Mã VietQR Nộp Quỹ">
+    <Modal open={isOpen} onClose={onClose} title={hasCustomQr ? "Quét Mã QR Nộp Quỹ" : "Quét Mã VietQR Nộp Quỹ"}>
       <div className="flex flex-col items-center space-y-4 py-2">
         <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
           <img
             src={qrUrl}
-            alt="VietQR Chuyển Khoản"
+            alt="Mã QR Chuyển Khoản"
             className="w-64 h-auto rounded-xl mx-auto max-h-72 object-contain"
             onError={e => {
               e.target.src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20' + encodeURIComponent(penalty.name || '');
             }}
           />
+          {hasCustomQr && (
+            <div className="mt-2 text-center">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                <Icon name="check-circle" size={12} /> Ảnh QR chính thức do BCN tải lên
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
           <div className="flex justify-between">
-            <span className="text-slate-500">Ngân hàng:</span>
+            <span className="text-slate-500">Ngân hàng / Ví:</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-slate-500">Số tài khoản:</span>
-            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{accNo}</span>
-          </div>
+          {accNo && (
+            <div className="flex justify-between">
+              <span className="text-slate-500">Số tài khoản / SĐT:</span>
+              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{accNo}</span>
+            </div>
+          )}
           {penaltyAccount.accountName && (
             <div className="flex justify-between">
-              <span className="text-slate-500">Chủ tài khoản:</span>
+              <span className="text-slate-500">Chủ tài khoản / ví:</span>
               <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{penaltyAccount.accountName}</span>
             </div>
           )}
@@ -4511,7 +4593,7 @@ function PenaltiesPage() {
   const [filterBan, setFilterBan] = useState('');
   const [confirmDel, setConfirmDel] = useState(null);
 
-  // Bank settings state
+    // Bank settings state
   const [bankModal, setBankModal] = useState(false);
   const [bankForm, setBankForm] = useState({
     bank: 'MB',
@@ -4521,6 +4603,7 @@ function PenaltiesPage() {
     customQrUrl: ''
   });
   const [bankSaving, setBankSaving] = useState(false);
+  const [uploadingQr, setUploadingQr] = useState(false);
 
   const openBankModal = () => {
     if (penaltyAccount) {
@@ -4535,10 +4618,33 @@ function PenaltiesPage() {
     setBankModal(true);
   };
 
+  const handleQrFileUpload = async e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setUploadingQr(true);
+    try {
+      const dataUrl = await compressQrImageFile(file);
+      setBankForm(p => ({ ...p, customQrUrl: dataUrl }));
+      try { playSound('pop'); } catch (err) {}
+      try { addNotification('Đã tải ảnh mã QR từ thiết bị thành công!', 'success'); } catch (err) {}
+    } catch (err) {
+      alert(err.message || 'Lỗi khi tải ảnh!');
+    } finally {
+      setUploadingQr(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveQrImage = () => {
+    setBankForm(p => ({ ...p, customQrUrl: '' }));
+    try { playSound('pop'); } catch (err) {}
+    try { addNotification('Đã xóa ảnh QR tải lên, quay về VietQR tự sinh.', 'info'); } catch (err) {}
+  };
+
   const handleSaveBank = async e => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!bankForm.accountNo.trim()) {
-      alert('Vui lòng nhập số tài khoản ngân hàng!');
+    if (!bankForm.accountNo.trim() && !bankForm.customQrUrl.trim()) {
+      alert('Vui lòng nhập Số tài khoản hoặc tải lên ảnh QR từ thiết bị!');
       return;
     }
     setBankSaving(true);
@@ -4549,7 +4655,7 @@ function PenaltiesPage() {
         bankName: bankForm.bankName.trim(),
         accountNo: bankForm.accountNo.trim(),
         accountName: bankForm.accountName.trim().toUpperCase(),
-        customQrUrl: bankForm.customQrUrl.trim(),
+        customQrUrl: bankForm.customQrUrl ? bankForm.customQrUrl.trim() : '',
         updatedAt: new Date().toISOString(),
         updatedBy: 'Admin BCN'
       };
@@ -4565,7 +4671,7 @@ function PenaltiesPage() {
     }
   };
 
-  // Club rules editing state
+// Club rules editing state
   const [editingRules, setEditingRules] = useState(false);
   const [rulesDraft, setRulesDraft] = useState('');
   const [rulesSaving, setRulesSaving] = useState(false);
@@ -5051,15 +5157,15 @@ function PenaltiesPage() {
             </form>
           </Modal>
 
-          {/* Modal Cài đặt tài khoản nhận nộp phạt */}
+                    {/* Modal Cài đặt tài khoản nhận nộp phạt */}
           <Modal open={bankModal} onClose={() => setBankModal(false)} title="⚙️ Cài Đặt Tài Khoản Nhận Nộp Phạt">
             <form onSubmit={handleSaveBank} className="space-y-4">
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Cấu hình thông tin tài khoản ngân hàng của Ban Chủ Nhiệm / Thủ quỹ để tự động sinh mã VietQR khi thành viên bấm "Nộp phạt".
+                Cấu hình thông tin tài khoản ngân hàng hoặc ví điện tử của Ban Chủ Nhiệm / Thủ quỹ để tự động sinh mã VietQR hoặc sử dụng ảnh QR riêng khi thành viên nộp phạt.
               </p>
 
               <div>
-                <label className="form-label">Ngân hàng thụ hưởng <span className="text-red-500">*</span></label>
+                <label className="form-label">Ngân hàng / Ví điện tử thụ hưởng <span className="text-red-500">*</span></label>
                 <select
                   value={bankForm.bank}
                   onChange={e => {
@@ -5069,26 +5175,35 @@ function PenaltiesPage() {
                   }}
                   className="form-input"
                 >
-                  {POPULAR_BANKS.map(b => (
-                    <option key={b.code} value={b.code}>{b.code} - {b.name}</option>
-                  ))}
+                  <optgroup label="🏦 Ngân hàng thương mại">
+                    {POPULAR_BANKS.filter(b => b.type === 'bank').map(b => (
+                      <option key={b.code} value={b.code}>{b.code} - {b.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="📱 Ví điện tử">
+                    {POPULAR_BANKS.filter(b => b.type === 'wallet').map(b => (
+                      <option key={b.code} value={b.code}>{b.code} - {b.name}</option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="form-label">Số tài khoản <span className="text-red-500">*</span></label>
+                  <label className="form-label">
+                    {POPULAR_BANKS.find(b => b.code === bankForm.bank)?.type === 'wallet' ? 'Số tài khoản / SĐT đăng ký ví' : 'Số tài khoản'} {!bankForm.customQrUrl && <span className="text-red-500">*</span>}
+                  </label>
                   <input
                     type="text"
                     value={bankForm.accountNo}
                     onChange={e => setBankForm(p => ({ ...p, accountNo: e.target.value }))}
                     className="form-input font-mono font-bold"
-                    placeholder="Ví dụ: 123456789..."
-                    required
+                    placeholder={POPULAR_BANKS.find(b => b.code === bankForm.bank)?.type === 'wallet' ? 'Ví dụ: 0987654321...' : 'Ví dụ: 123456789...'}
+                    required={!bankForm.customQrUrl}
                   />
                 </div>
                 <div>
-                  <label className="form-label">Tên chủ tài khoản</label>
+                  <label className="form-label">Tên chủ tài khoản / ví</label>
                   <input
                     type="text"
                     value={bankForm.accountName}
@@ -5099,35 +5214,78 @@ function PenaltiesPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="form-label">
-                  Link ảnh QR tự tải lên <span className="text-slate-400 font-normal">(Tùy chọn)</span>
+              {/* Tải ảnh QR trực tiếp từ thiết bị */}
+              <div className="space-y-2">
+                <label className="form-label block">
+                  Ảnh mã QR thụ hưởng từ thiết bị <span className="text-slate-400 font-normal">(Ưu tiên hiển thị nếu có)</span>
                 </label>
                 <input
-                  type="url"
-                  value={bankForm.customQrUrl}
-                  onChange={e => setBankForm(p => ({ ...p, customQrUrl: e.target.value }))}
-                  className="form-input text-xs"
-                  placeholder="https://... (nếu muốn dùng ảnh QR riêng thay vì tạo tự động qua VietQR)"
+                  type="file"
+                  id="qrFileInput"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleQrFileUpload}
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Mặc định hệ thống tự động tạo mã VietQR chuẩn ngân hàng từ Mã NH và Số tài khoản ở trên.
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { const el = document.getElementById('qrFileInput'); if (el) el.click(); }}
+                    disabled={uploadingQr}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <Icon name={uploadingQr ? 'loader' : 'upload'} size={15} className={uploadingQr ? 'animate-spin' : ''} />
+                    <span>{uploadingQr ? 'Đang xử lý ảnh...' : '📁 Tải ảnh QR từ máy (PNG, JPG)'}</span>
+                  </button>
+                  {bankForm.customQrUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveQrImage}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-xs font-medium hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer"
+                    >
+                      <Icon name="trash-2" size={14} />
+                      <span>Xóa ảnh đã tải</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Khung xem trước (preview) nhỏ gọn */}
+                {bankForm.customQrUrl ? (
+                  <div className="p-3 bg-indigo-50/50 dark:bg-slate-800/80 rounded-xl border border-indigo-200 dark:border-indigo-700 flex items-center gap-3">
+                    <img
+                      src={bankForm.customQrUrl}
+                      alt="QR Preview"
+                      className="w-16 h-16 rounded-lg object-contain bg-white border border-slate-200 shadow-sm flex-shrink-0"
+                    />
+                    <div className="text-xs space-y-1 min-w-0">
+                      <p className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <Icon name="check-circle" size={13} /> Đã có ảnh QR tải từ thiết bị
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                        Hệ thống sẽ <strong>ưu tiên hiển thị ảnh QR này</strong> thay cho mã tự sinh khi thành viên bấm "Nộp phạt".
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-400">
+                    Nếu không tải ảnh riêng, hệ thống sẽ tự động tạo mã VietQR chuẩn ngân hàng/ví từ thông tin bên trên.
+                  </p>
+                )}
               </div>
 
-              {/* Mini Preview */}
-              {bankForm.accountNo && bankForm.bank && (
+              {/* Mini Preview cho trường hợp tự sinh VietQR */}
+              {!bankForm.customQrUrl && bankForm.accountNo && bankForm.bank && (
                 <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-3">
                   <img
-                    src={bankForm.customQrUrl && bankForm.customQrUrl.trim()
-                      ? bankForm.customQrUrl.trim()
-                      : `https://img.vietqr.io/image/${bankForm.bank}-${bankForm.accountNo}-compact.png?amount=20000&addInfo=XEMTRUOC`}
+                    src={`https://img.vietqr.io/image/${getVietQrBankCode(bankForm.bank)}-${bankForm.accountNo}-compact.png?amount=20000&addInfo=XEMTRUOC`}
                     alt="Preview QR"
                     className="w-14 h-14 rounded-lg border bg-white object-contain flex-shrink-0"
                     onError={e => { e.target.style.display = 'none'; }}
                   />
                   <div className="text-xs space-y-0.5 min-w-0">
-                    <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{bankForm.bankName || bankForm.bank}</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate">{bankForm.bankName || bankForm.bank}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold">VietQR Auto</span>
+                    </div>
                     <p className="font-mono text-blue-600 dark:text-blue-400 font-bold">{bankForm.accountNo}</p>
                     {bankForm.accountName && <p className="text-slate-500 uppercase text-[11px] truncate">{bankForm.accountName}</p>}
                   </div>
@@ -5139,14 +5297,14 @@ function PenaltiesPage() {
                   type="button"
                   onClick={() => setBankModal(false)}
                   className="btn-secondary flex-1"
-                  disabled={bankSaving}
+                  disabled={bankSaving || uploadingQr}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   className="btn-primary flex-1 font-bold"
-                  disabled={bankSaving}
+                  disabled={bankSaving || uploadingQr}
                 >
                   {bankSaving ? 'Đang lưu...' : '💾 Lưu cấu hình'}
                 </button>
