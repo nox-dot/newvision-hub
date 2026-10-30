@@ -214,12 +214,12 @@
 
     /* ===== MOBILE OPTIMIZATIONS (@media max-width: 768px) ===== */
     @media (max-width: 768px) {
-      /* 1. Khoảng đệm an toàn (Safe Padding): Toàn bộ khung nội dung chính có padding-bottom: 95px trên mobile */
+      /* 1. Khoáº£ng Ä‘á»‡m an toÃ n (Safe Padding): ToÃ n bá»™ khung ná»™i dung chÃ­nh cÃ³ padding-bottom: 95px trÃªn mobile */
       main {
         padding-bottom: 95px !important;
       }
 
-      /* 2. Mascot Cú/Đại bàng: thu nhỏ max-width 50px, cách đáy 85px, lệch phải */
+      /* 2. Mascot CÃº/Äáº¡i bÃ ng: thu nhá» max-width 50px, cÃ¡ch Ä‘Ã¡y 85px, lá»‡ch pháº£i */
       .mascot-container {
         bottom: 85px !important;
         right: 12px !important;
@@ -236,13 +236,13 @@
         padding: 4px 8px !important;
       }
 
-      /* Nút tròn (+) FAB cách đáy 85px bên trái */
+      /* NÃºt trÃ²n (+) FAB cÃ¡ch Ä‘Ã¡y 85px bÃªn trÃ¡i */
       .fab-container {
         bottom: 85px !important;
         left: 14px !important;
       }
 
-      /* 3. Thanh Bottom Navigation: Cố định 65px với backdrop-filter blur, 5 tab phân bố đều */
+      /* 3. Thanh Bottom Navigation: Cá»‘ Ä‘á»‹nh 65px vá»›i backdrop-filter blur, 5 tab phÃ¢n bá»‘ Ä‘á»u */
       .bottom-nav-bar {
         height: 65px !important;
         backdrop-filter: blur(12px) !important;
@@ -280,7 +280,7 @@
         height: 4px !important;
       }
 
-      /* 4. Modal Bottom Sheet trên điện thoại: trượt từ dưới lên, nút to dễ bấm */
+      /* 4. Modal Bottom Sheet trÃªn Ä‘iá»‡n thoáº¡i: trÆ°á»£t tá»« dÆ°á»›i lÃªn, nÃºt to dá»… báº¥m */
       .modal-backdrop {
         align-items: flex-end !important;
         padding: 0 !important;
