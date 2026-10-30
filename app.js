@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // GLOBAL SAFE SOUND PLAYER (LAZY REUSED AUDIOCONTEXT)
 // ============================================================
 function playSound(type) {
@@ -24,7 +24,7 @@ function playSound(type) {
     osc.start();
     osc.stop(audioContext.currentTime + 0.18);
   } catch (e) {
-    // KhÃ´ng bao giá» cháº·n luá»“ng xá»­ lÃ½ chÃ­nh khi Ã¢m thanh bá»‹ trÃ¬nh duyá»‡t háº¡n cháº¿
+    // Không bao giờ chặn luồng xử lý chính khi âm thanh bị trình duyệt hạn chế
   }
 }
 window.playSound = playSound;
@@ -39,12 +39,12 @@ function addNotification(title, message, type = 'info') {
     let head = title;
     if (arguments.length === 1) {
       msg = title;
-      head = 'ThÃ´ng bÃ¡o';
+      head = 'Thông báo';
       t = 'info';
     } else if (arguments.length === 2 && ['info', 'success', 'warning', 'error'].includes(message)) {
       t = message;
       msg = title;
-      head = 'ThÃ´ng bÃ¡o';
+      head = 'Thông báo';
     }
     if (typeof window !== 'undefined' && typeof window.__dispatchNotification === 'function') {
       window.__dispatchNotification(msg || head, t);
@@ -52,7 +52,7 @@ function addNotification(title, message, type = 'info') {
     if (typeof notifications !== 'undefined' && Array.isArray(notifications)) {
       notifications.unshift({
         id: Date.now().toString(),
-        title: head || 'ThÃ´ng bÃ¡o',
+        title: head || 'Thông báo',
         message: msg || '',
         time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         type: t,
@@ -62,7 +62,7 @@ function addNotification(title, message, type = 'info') {
       if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
     }
   } catch (err) {
-    console.warn("Lá»—i khi thÃªm notification:", err);
+    console.warn("Lỗi khi thêm notification:", err);
   }
 }
 window.addNotification = addNotification;
@@ -136,110 +136,110 @@ function showWebPush(title, body, options = {}) {
 // ============================================================
 // CONSTANTS
 // ============================================================
-const BANS = ['Ban Chá»§ Nhiá»‡m','Ban Sá»± Kiá»‡n','Ban Truyá»n ThÃ´ng Ká»¹ Thuáº­t','Ban Äá»‘i Ngoáº¡i','Ban Ná»™i Vá»¥','ToÃ n CLB'];
-const MEMBER_ROLES = ['Ban Chá»§ Nhiá»‡m','TrÆ°á»Ÿng/PhÃ³ Ban','ThÃ nh viÃªn chÃ­nh thá»©c','CTV'];
-const DECISION_STATUSES = ['Äang bÃ n báº¡c','Cáº§n duyá»‡t','ÄÃ£ chá»‘t chÃ­nh thá»©c'];
-const EVAL_OPTIONS = ['Äáº¡t','Cáº§n theo dÃµi','KhÃ´ng Ä‘áº¡t'];
-const ATTEND_OPTIONS = ['CÃ³ máº·t','Váº¯ng','CÃ³ phÃ©p'];
-const TASK_OPTIONS = ['ÄÃºng háº¡n','Trá»… háº¡n','ChÆ°a ná»™p'];
-const TASK_PHASES = ['Chuáº©n bá»‹ trÆ°á»›c sá»± kiá»‡n','Trong thá»i gian sá»± kiá»‡n'];
-const SKILL_TAGS = ['MC','Canva','Content','Háº­u cáº§n','Äá»‘i ngoáº¡i','Chá»¥p áº£nh','Quay phim','Design','Excel','Thuyáº¿t trÃ¬nh','Ã‚m thanh & Ãnh sÃ¡ng','Trang trÃ­','Viáº¿t Script','Social Media','Äá»“ hoáº¡','Livestream'];
+const BANS = ['Ban Chủ Nhiệm','Ban Sự Kiện','Ban Truyền Thông Kỹ Thuật','Ban Đối Ngoại','Ban Nội Vụ','Toàn CLB'];
+const MEMBER_ROLES = ['Ban Chủ Nhiệm','Trưởng/Phó Ban','Thành viên chính thức','CTV'];
+const DECISION_STATUSES = ['Đang bàn bạc','Cần duyệt','Đã chốt chính thức'];
+const EVAL_OPTIONS = ['Đạt','Cần theo dõi','Không đạt'];
+const ATTEND_OPTIONS = ['Có mặt','Vắng','Có phép'];
+const TASK_OPTIONS = ['Đúng hạn','Trễ hạn','Chưa nộp'];
+const TASK_PHASES = ['Chuẩn bị trước sự kiện','Trong thời gian sự kiện'];
+const SKILL_TAGS = ['MC','Canva','Content','Hậu cần','Đối ngoại','Chụp ảnh','Quay phim','Design','Excel','Thuyết trình','Âm thanh & Ánh sáng','Trang trí','Viết Script','Social Media','Đồ hoạ','Livestream'];
 const CLASS_YEARS = ['K74','K75','K76','K77','K78','K79','K80','K81','K82','K83','K84'];
-const LINK_TYPES = ['Káº¿ hoáº¡ch & Ká»‹ch báº£n','Báº£ng tÃ­nh & Data','TÆ° liá»‡u & Media','BiÃªn báº£n & HÃ nh chÃ­nh'];
-const INVENTORY_STATUSES = ['Tá»‘t','Há»ng/Máº¥t phá»¥ kiá»‡n','Äang cho mÆ°á»£n'];
-const EXPENSE_STATUSES = ['Dá»± trÃ¹','ÄÃ£ chi - Chá» hoÃ n tiá»n','ÄÃ£ quyáº¿t toÃ¡n'];
+const LINK_TYPES = ['Kế hoạch & Kịch bản','Bảng tính & Data','Tư liệu & Media','Biên bản & Hành chính'];
+const INVENTORY_STATUSES = ['Tốt','Hỏng/Mất phụ kiện','Đang cho mượn'];
+const EXPENSE_STATUSES = ['Dự trù','Đã chi - Chờ hoàn tiền','Đã quyết toán'];
 const COLOR_THEMES = [
   {id:'orange',name:'Cam NewVision',sub:'Cam & Navy',c1:'#f97316',c2:'#1e3a5f',badge:'Cam & Navy'},
-  {id:'indigo',name:'TÃ­m Indigo',sub:'Indigo & Violet',c1:'#4f46e5',c2:'#7c3aed',badge:'Indigo'},
-  {id:'green',name:'Xanh DÆ°á»£c HÃ  Ná»™i',sub:'Emerald & Teal',c1:'#059669',c2:'#0f766e',badge:'Emerald'},
+  {id:'indigo',name:'Tím Indigo',sub:'Indigo & Violet',c1:'#4f46e5',c2:'#7c3aed',badge:'Indigo'},
+  {id:'green',name:'Xanh Dược Hà Nội',sub:'Emerald & Teal',c1:'#059669',c2:'#0f766e',badge:'Emerald'},
 ];
 const MASCOT_TYPES = [
-  {id:'vivi',name:'CÃº mÃ¨o Vi Vi',icon:'ðŸ¦‰',desc:'Tri thá»©c & kiÃªn Ä‘á»‹nh'},
-  {id:'eagle',name:'Äáº¡i bÃ ng NewVision',icon:'ðŸ¦…',desc:'Bá»©t phÃ¡ & báº£n lÄ©nh'},
+  {id:'vivi',name:'Cú mèo Vi Vi',icon:'🦉',desc:'Tri thức & kiên định'},
+  {id:'eagle',name:'Đại bàng NewVision',icon:'🦅',desc:'Bứt phá & bản lĩnh'},
 ];
 
 const GACHA_CARDS = [
-  { id: 1, name: "The Sun - HÃ o Quang Rá»±c Rá»¡", quote: "VÅ© trá»¥ báº­t Ä‘Ã¨n pha chiáº¿u tháº³ng vÃ o báº¡n. HÃ´m nay vÃ o lab chuáº©n Ä‘á»™ ra mÃ u há»“ng cÃ¡nh sen nháº¡t huyá»n thoáº¡i ngay láº§n Ä‘áº§u, khÃ´ng bá»‹ tháº§y cÃ´ báº¯t Ä‘á»• Ä‘i lÃ m láº¡i." },
-  { id: 2, name: "The Star - NgÃ´i Sao Hy Vá»ng", quote: "Má»™t tÃ­n hiá»‡u chá»¯a lÃ nh tá»« cÃ¡c vÃ¬ sao: Deadline khÃ³ nháº±n tá»± Ä‘á»™ng Ä‘Æ°á»£c lÃ¹i thÃªm 48 tiáº¿ng, hoáº·c bÃ i táº­p nhÃ³m bá»—ng cÃ³ ai Ä‘Ã³ gÃ¡nh háº¿t pháº§n viá»‡c hÃ³c bÃºa nháº¥t." },
-  { id: 3, name: "The Wheel of Fortune - BÃ¡nh Xe Sá»‘ Pháº­n", quote: "BÃ¡nh xe phong thá»§y Ä‘áº£o chiá»u ngoáº¡n má»¥c. Äen Ä‘á»§i tuáº§n trÆ°á»›c dá»«ng láº¡i á»Ÿ Ä‘Ã¢y; hÃ´m nay thi tráº¯c nghiá»‡m lá»¥i bá»«a theo linh cáº£m cÃ¢u nÃ o, Äƒn cháº¯c cÃ¢u Ä‘Ã³." },
-  { id: 4, name: "The Magician - Báº­c Tháº§y Thao TÃºng", quote: "HÃ´m nay tÃ i Äƒn nÃ³i Ä‘áº¡t Ä‘á»‰nh cáº£nh giá»›i. Thi váº¥n Ä‘Ã¡p chá»‰ cáº§n má»Ÿ miá»‡ng nÃ³i ba cÃ¢u Ä‘Ãºng tá»« khÃ³a trá»ng tÃ¢m, tháº§y cÃ´ liá»n gáº­t Ä‘áº§u má»‰m cÆ°á»i cho qua mÃ´n Ãªm Ä‘áº¹p." },
-  { id: 5, name: "The World - Äáº¡i CÃ¡t ToÃ n Váº¹n", quote: "Má»™t chu ká»³ sÃ³ng giÃ³ chÃ­nh thá»©c khÃ©p láº¡i. Äiá»ƒm danh vá»«a Ä‘á»§, bÃ i táº­p ná»™p xong trÆ°á»›c háº¡n 5 phÃºt, tá»‘i nay kÃª cao gá»‘i ngá»§ khÃ´ng ai dÃ¡m rÃ©o tÃªn." },
-  { id: 6, name: "The Empress - NÄƒng LÆ°á»£ng TrÃ¹ PhÃº", quote: "Cung tÃ i lá»™c má»Ÿ rá»™ng báº¥t thÆ°á»ng. VÃ­ tiá»n cÃ³ dáº¥u hiá»‡u há»“i sinh nhá» Ä‘Æ°á»£c ai Ä‘Ã³ bao Äƒn, hoáº·c tÃ i khoáº£n ná»• ting ting má»™t khoáº£n tiá»n tá»« trÃªn trá»i rÆ¡i xuá»‘ng." },
-  { id: 7, name: "The Chariot - Cá»— Xe Tháº§n Tá»‘c", quote: "Ã chÃ­ vÆ°á»£t chÆ°á»›ng ngáº¡i váº­t cá»±c máº¡nh. Giáº£ng viÃªn lÆ°á»›t slide nhanh nhÆ° chá»›p nhÆ°ng tay báº¡n ghi chÃ©p váº«n Ä‘uá»•i ká»‹p trá»n váº¹n báº£n cháº¥t bÃ i giáº£ng." },
-  { id: 8, name: "The High Priestess - GiÃ¡c Quan Thá»© SÃ¡u", quote: "Trá»±c giÃ¡c mÃ¡ch báº£o gÃ¬ hÃ£y nghe theo náº¥y. Tá»‘i nay linh tÃ­nh báº£o giá»Ÿ trang nÃ o trong giÃ¡o trÃ¬nh thÃ¬ láº­t Ä‘Ãºng trang Ä‘Ã³, xÃ¡c suáº¥t trÃºng Ä‘á» thi ngÃ y mai lÃªn tá»›i 99%." },
-  { id: 9, name: "Strength - Thuáº§n HÃ³a CÄƒng Tháº³ng", quote: "TÃ¢m báº¥t biáº¿n giá»¯a dÃ²ng Ä‘á»i váº¡n biáº¿n. Khá»‘i lÆ°á»£ng bÃ i vá»Ÿ dÃ¹ cháº¥t thÃ nh Ä‘á»‘ng cÅ©ng bá»‹ báº¡n giáº£i quyáº¿t gá»n gháº½ chá»‰ trong má»™t buá»•i chiá»u nghe nháº¡c chill." },
-  { id: 10, name: "The Hermit - Thuáº­t TÃ ng HÃ¬nh áº¨n SÄ©", quote: "HÃ´m nay váº­n khÃ­ 'á»Ÿ áº©n' che chá»Ÿ tuyá»‡t Ä‘á»‘i. Giáº£ng viÃªn Ä‘áº£o máº¯t quanh giáº£ng Ä‘Æ°á»ng tÃ¬m ngÆ°á»i lÃªn báº£ng nhÆ°ng Ã¡nh nhÃ¬n sáº½ lÆ°á»›t qua báº¡n nhÆ° thá»ƒ báº¡n lÃ  ngÆ°á»i vÃ´ hÃ¬nh." },
-  { id: 11, name: "The Fool - VÃ´ Æ¯u VÃ´ Lo", quote: "Cá»© thong dong bÆ°á»›c ra Ä‘Æ°á»ng. Äi há»c gáº·p toÃ n Ä‘Ã¨n xanh, trá»i rÃ¢m mÃ¡t, vá»«a dáº¯t xe vÃ o trÆ°á»ng lÃ  báº¯t gáº·p ngay má»™t chá»— Ä‘á»— xe cÃ³ bÃ³ng rÃ¢m mÃ¡t rÆ°á»£i." },
-  { id: 12, name: "Temperance - CÃ¢n Báº±ng Ã‚m DÆ°Æ¡ng", quote: "NguyÃªn tá»‘ Äáº¥t vÃ  NÆ°á»›c hÃ²a há»£p tuyá»‡t Ä‘á»‘i. Äiá»ƒm chuyÃªn cáº§n vÃ  Ä‘iá»ƒm thi giá»¯a ká»³ bÃ¹ trá»« cho nhau ra Ä‘Ãºng con sá»‘ vá»«a váº·n qua mÃ´n khÃ´ng thiáº¿u má»™t pháº©y." },
-  { id: 13, name: "Judgement - Nghiá»‡p Quáº£ Ngá»t NgÃ o", quote: "Nhá»¯ng Ä‘Ãªm cÃ y bÃ i trong bÃ³ng tá»‘i hÃ´m nay Ä‘Æ°á»£c há»“i Ä‘Ã¡p xá»©ng Ä‘Ã¡ng. Báº£ng Ä‘iá»ƒm tráº£ vá» hiá»‡n chá»¯ 'Äáº T' to Ä‘Ã¹ng khiáº¿n báº¡n thá»Ÿ phÃ o nháº¹ nhÃµm cáº£ ngÆ°á»i." },
-  { id: 14, name: "The Hierophant - QuÃ½ NhÃ¢n Chá»‰ Lá»‘i", quote: "Báº¯t Ä‘Æ°á»£c sÃ³ng nÄƒng lÆ°á»£ng cá»§a tiá»n bá»‘i khÃ³a trÃªn. MÆ°á»£n Ä‘Æ°á»£c cuá»‘n giÃ¡o trÃ¬nh cÃ³ sáºµn bÃºt dáº¡ quang highlight trÃºng tim Ä‘en Ä‘á» thi nÄƒm nay." },
-  { id: 15, name: "The Lovers - DuyÃªn LÃ nh NhÃ³m TrÆ°á»Ÿng", quote: "VÅ© trá»¥ káº¿t ná»‘i báº¡n vá»›i nhá»¯ng ngÆ°á»i Ä‘á»“ng Ä‘á»™i lÃ m viá»‡c nhÃ³m cÃ³ tÃ¢m: phÃ¢n cÃ´ng lÃ  lÃ m, khÃ´ng seen tin nháº¯n rá»“i biáº¿n máº¥t bÃ­ áº©n." },
-  { id: 16, name: "Sao Thá»§y Thuáº­n HÃ nh", quote: "TÆ° duy logic thÃ´ng suá»‘t láº¡ ká»³. Máº¥y cÃ´ng thá»©c hÃ³a dÆ°á»£c dÃ i ngoáº±ng hay sÆ¡ Ä‘á»“ chuyá»ƒn hÃ³a ráº¯c rá»‘i nhÃ¬n lÆ°á»›t qua má»™t láº§n lÃ  kháº¯c sÃ¢u vÃ o vá» nÃ£o." },
-  { id: 17, name: "Lá»­a Báº¡ch DÆ°Æ¡ng Rá»±c ChÃ¡y", quote: "NÄƒng lÆ°á»£ng bÃ¹ng ná»•. Sá»± trÃ¬ hoÃ£n bá»‹ Ä‘Ã¡nh báº¡i, ngá»“i vÃ o bÃ n Ä‘Ãºng 2 tiáº¿ng lÃ  dá»n sáº¡ch toÃ n bá»™ bÃ i táº­p tá»“n Ä‘á»ng cá»§a cáº£ tuáº§n." },
-  { id: 18, name: "Äáº¥t Kim NgÆ°u Vá»¯ng ChÃ£i", quote: "HÃ´m nay vÃ­ tiá»n Ä‘Æ°á»£c báº£o vá»‡ an toÃ n. Xuá»‘ng cÄƒng-tin giá» cao Ä‘iá»ƒm váº«n chá»™p Ä‘Æ°á»£c suáº¥t cÆ¡m ngon lÃ nh, no cÄƒng bá»¥ng vá»›i giÃ¡ sinh viÃªn." },
-  { id: 19, name: "NÆ°á»›c Cá»± Giáº£i ÃŠm Äá»m", quote: "TÃ¢m trÃ­ bÃ¬nh yÃªn nhÆ° máº·t há»“ khÃ´ng má»™t gá»£n sÃ³ng. KhÃ´ng drama, khÃ´ng tin nháº¯n giá»¥c viá»‡c, chá»‰ cÃ³ sá»± tháº£nh thÆ¡i trá»n váº¹n cáº£ ngÃ y dÃ i." },
-  { id: 20, name: "Sao Má»™c Báº£o Há»™", quote: "Váº­n may Ä‘áº¿n vÃ o phÃºt chÃ³t: Äi há»c sÃ¡t giá» nhÆ°ng vá»«a Ä‘áº·t chÃ¢n qua cá»­a lá»›p thÃ¬ tiáº¿ng chuÃ´ng Ä‘iá»ƒm danh má»›i báº¯t Ä‘áº§u vang lÃªn." },
-  { id: 21, name: "Sao Kim DuyÃªn DÃ¡ng", quote: "HÃ´m nay báº¡n tá»a ra nguá»“n nÄƒng lÆ°á»£ng dá»… máº¿n láº¡ thÆ°á»ng. Äi thá»±c táº­p hay lÃªn lá»›p Ä‘á»u Ä‘Æ°á»£c má»i ngÆ°á»i xung quanh nhiá»‡t tÃ¬nh giÃºp Ä‘á»¡, nhÆ°á»ng nhá»‹n tá»«ng chÃºt." },
-  { id: 22, name: "Quáº» Thuáº§n CÃ n - Váº­n KhÃ­ ThÄƒng Hoa", quote: "Má»i sá»± khá»Ÿi Ä‘áº§u hÃ´m nay Ä‘á»u trÆ¡n tru nhÆ° bÃ´i dáº§u. Ná»™p bÃ¡o cÃ¡o qua web trÆ°á»ng máº¡ng cháº¡y vÃ¨o vÃ¨o, khÃ´ng gáº·p cáº£nh xoay vÃ²ng trÃ²n á»©c cháº¿." },
-  { id: 23, name: "Quáº» Äá»‹a ThiÃªn ThÃ¡i - HÃ³a Nguy ThÃ nh An", quote: "TÆ°á»Ÿng chá»«ng quÃªn mang theo tÃ i liá»‡u há»c táº­p, hÃ³a ra báº¡n cÃ¹ng bÃ n Ä‘Ã£ in dÆ° má»™t báº£n rá»“i Ä‘Æ°a ngay cho báº¡n dÃ¹ng." },
-  { id: 24, name: "Quáº» Thá»§y Há»a KÃ½ Táº¿ - TrÃ²n Váº¹n Ã Nguyá»‡n", quote: "Tiáº¿n Ä‘á»™ Ã´n thi Ä‘Ã£ vÃ o guá»“ng chuáº©n chá»‰. Chá»‰ cáº§n giá»¯ vá»¯ng nhá»‹p Ä‘á»™ nÃ y, báº¡n cáº§m cháº¯c chiáº¿c vÃ© qua mÃ´n vá»›i sá»‘ Ä‘iá»ƒm Ä‘áº¹p máº¯t." },
-  { id: 25, name: "Quáº» Phong LÃ´i Ãch - TrÃ­ NÃ£o Bá»©t PhÃ¡", quote: "NÃ£o bá»™ hÃ´m nay tiáº¿p thu kiáº¿n thá»©c vá»›i tá»‘c Ä‘á»™ cÃ¡p quang. Máº¥y cÃ¢u há»i hÃ³c bÃºa tÆ°á»Ÿng khÃ´ng giáº£i ná»•i bá»—ng nhiÃªn tÃ¬m ra chÃ¬a khÃ³a Ä‘Ã¡p Ã¡n." },
-  { id: 26, name: "Sao Thá»• LÃ¹i BÆ°á»›c", quote: "Ãp lá»±c lá»›n nháº¥t cá»§a tuáº§n Ä‘Ã£ chÃ­nh thá»©c tan biáº¿n. HÃ´m nay lÃ  ngÃ y tá»± thÆ°á»Ÿng cho báº£n thÃ¢n má»™t buá»•i chiá»u Ä‘i dáº¡o hoáº·c náº±m dÃ i lÆ°á»›t web." },
-  { id: 27, name: "TÃ­n Hiá»‡u Máº·t TrÄƒng", quote: "Máº¯t tháº§n má»Ÿ ra. Soi kÃ­nh hiá»ƒn vi báº¯t dÃ­nh vi trÆ°á»ng nÃ©t cÄƒng ngay vÃ²ng váº·n á»‘c vi cáº¥p Ä‘áº§u tiÃªn, báº¡n bÃ¨ xung quanh bu láº¡i xin chá»¥p kÃ© lia lá»‹a." },
-  { id: 28, name: "ThiÃªn Thá»i Äá»‹a Lá»£i", quote: "Thá»i tiáº¿t chiá»u lÃ²ng ngÆ°á»i. Vá»«a tan há»c dáº¯t xe ra cá»•ng thÃ¬ trá»i rÃ¢m mÃ¡t, vá» Ä‘áº¿n táº­n phÃ²ng trá» khÃ³a cá»­a xong bÃªn ngoÃ i má»›i báº¯t Ä‘áº§u trÃºt mÆ°a rÃ o." },
-  { id: 29, name: "KhiÃªn Cháº¯n TÃ¢m Linh", quote: "Váº­n xui tá»± Ä‘á»™ng báº­t ngÆ°á»£c ra xa. VÃ o phÃ²ng thá»±c táº­p lÃ m viá»‡c Ãªm ru: khÃ´ng vá»¡ á»‘ng nghiá»‡m, khÃ´ng Ä‘á»• hÃ³a cháº¥t, an toÃ n lÃ nh láº·n Ä‘i vá»." },
-  { id: 30, name: "Quáº» Há»a Äá»‹a Táº¥n - Tá»a SÃ¡ng", quote: "BÃ i phÃ¡t biá»ƒu hoáº·c cÃ¢u tráº£ lá»i ngáº«u há»©ng trong lá»›p khiáº¿n giáº£ng viÃªn pháº£i má»‰m cÆ°á»i gáº­t gÃ¹ khen ngá»£i trÆ°á»›c máº·t báº¡n bÃ¨." },
-  { id: 31, name: "ThiÃªn Tháº§n 111 - Ã Niá»‡m ThÃ nh Hiá»‡n Thá»±c", quote: "VÅ© trá»¥ Ä‘ang láº¯ng nghe suy nghÄ© cá»§a báº¡n. LÃºc lÃ m bÃ i tráº¯c nghiá»‡m, hÃ£y kiÃªn Ä‘á»‹nh chá»n Ä‘Ã¡p Ã¡n Ä‘áº§u tiÃªn lÃ³e lÃªn trong Ä‘áº§u, Ä‘á»«ng xÃ³a Ä‘i chá»n láº¡i." },
-  { id: 32, name: "ThiÃªn Tháº§n 222 - BÃ¬nh TÃ¢m Chá» Äá»£i", quote: "Má»i sá»± an bÃ i Ä‘á»u diá»…n ra Ä‘Ãºng lÃºc. Äá»«ng quÃ¡ sá»‘t ruá»™t chá» Ä‘iá»ƒm sá»‘, káº¿t quáº£ tráº£ vá» sáº½ khiáº¿n báº¡n thá»Ÿ phÃ o ná»Ÿ ná»¥ cÆ°á»i." },
-  { id: 33, name: "ThiÃªn Tháº§n 333 - QuÃ½ NhÃ¢n VÃ¢y Quanh", quote: "HÃ´m nay xung quanh toÃ n ngÆ°á»i tá»‘t bá»¥ng. Äang bÃ­ bÃ i táº­p khÃ³ chá»‰ cáº§n buÃ´ng má»™t cÃ¢u than thá»Ÿ lÃ  cÃ³ ngÆ°á»i giáº£ng giáº£i cáº·n káº½ tá»«ng bÆ°á»›c." },
-  { id: 34, name: "ThiÃªn Tháº§n 444 - HÃ o Quang Báº¥t Kháº£ XÃ¢m Pháº¡m", quote: "Báº¡n Ä‘Æ°á»£c bao bá»c bá»Ÿi má»™t lá»›p khiÃªn nÄƒng lÆ°á»£ng bÃ¬nh yÃªn. Má»i lá»i phÃ n nÃ n xung quanh Ä‘á»u trÃ´i tuá»™t ra ngoÃ i, tÃ¢m tráº¡ng khÃ´ng chÃºt gá»£n sÃ³ng." },
-  { id: 35, name: "ThiÃªn Tháº§n 555 - Lá»‘i Ráº½ Báº¥t Ngá»", quote: "Sáº¯p cÃ³ má»™t tin tá»©c mang láº¡i niá»m vui nho nhá»: Má»™t tiáº¿t há»c Ä‘Æ°á»£c Ä‘á»•i sang hÃ¬nh thá»©c nháº¹ nhÃ ng hÆ¡n hoáº·c báº¥t ngá» Ä‘Æ°á»£c cho nghá»‰ sá»›m." },
-  { id: 36, name: "ThiÃªn Tháº§n 777 - Khai ThÃ´ng TrÃ­ Tuá»‡", quote: "TÃºi khÃ´n hÃ´m nay má»Ÿ rá»™ng háº¿t cá»¡. Gáº·p bÃ i toÃ¡n hÃ³c bÃºa tá»± dÆ°ng Ä‘áº§u Ã³c náº£y sá»‘ ra cÃ¡ch lÃ m nhanh gá»n báº¥t ngá»." },
-  { id: 37, name: "ThiÃªn Tháº§n 888 - TÃ i KhÃ­ Dá»“i DÃ o", quote: "DÃ²ng cháº£y tiá»n báº¡c hanh thÃ´ng. ThÃ² tay vÃ o tÃºi Ã¡o khoÃ¡c cÅ© bá»—ng tÃ¬m láº¡i Ä‘Æ°á»£c tá» tiá»n gáº¥p gá»n ngá»¡ Ä‘Ã£ Ä‘Ã¡nh rÆ¡i tá»« tuáº§n trÆ°á»›c." },
-  { id: 38, name: "ThiÃªn Tháº§n 999 - Trá»n Váº¹n Chu Ká»³", quote: "GÃ¡c láº¡i toÃ n bá»™ nhá»¯ng lo Ã¢u cá»§a bÃ i vá»Ÿ ngÃ y cÅ©. Tá»‘i nay báº¡n xá»©ng Ä‘Ã¡ng Ä‘Æ°á»£c thÆ°á»Ÿng má»™t ly trÃ  sá»¯a ngá»t ngÃ o vÃ  má»™t giáº¥c ngá»§ say khÃ´ng má»™ng má»‹." },
-  { id: 39, name: "Con Sá»‘ 000 - Tiá»m NÄƒng VÃ´ Cá»±c", quote: "NgÃ y hÃ´m nay lÃ  má»™t trang giáº¥y hoÃ n toÃ n má»›i. Má»i may máº¯n Ä‘á»u náº±m trong tay báº¡n, tá»± tin bÆ°á»›c Ä‘i lÃ  gáº·t hÃ¡i káº¿t quáº£ tá»‘t." },
-  { id: 40, name: "LÃ¡ BÃ i Äá»‹nh Má»‡nh - Váº­n Äá» ToÃ n Diá»‡n", quote: "LÃ¡ quáº» may máº¯n nháº¥t trong ngÃ y. Má»i sá»± mong cáº§u tá»« viá»‡c trÃ¡nh bá»‹ gá»i tÃªn, trÃºng Ä‘á» thi Ä‘áº¿n thá»i tiáº¿t khÃ´ rÃ¡o Ä‘á»u diá»…n ra Ä‘Ãºng nhÆ° Ã½ báº¡n mong muá»‘n." }
+  { id: 1, name: "The Sun - Hào Quang Rực Rỡ", quote: "Vũ trụ bật đèn pha chiếu thẳng vào bạn. Hôm nay vào lab chuẩn độ ra màu hồng cánh sen nhạt huyền thoại ngay lần đầu, không bị thầy cô bắt đổ đi làm lại." },
+  { id: 2, name: "The Star - Ngôi Sao Hy Vọng", quote: "Một tín hiệu chữa lành từ các vì sao: Deadline khó nhằn tự động được lùi thêm 48 tiếng, hoặc bài tập nhóm bỗng có ai đó gánh hết phần việc hóc búa nhất." },
+  { id: 3, name: "The Wheel of Fortune - Bánh Xe Số Phận", quote: "Bánh xe phong thủy đảo chiều ngoạn mục. Đen đủi tuần trước dừng lại ở đây; hôm nay thi trắc nghiệm lụi bừa theo linh cảm câu nào, ăn chắc câu đó." },
+  { id: 4, name: "The Magician - Bậc Thầy Thao Túng", quote: "Hôm nay tài ăn nói đạt đỉnh cảnh giới. Thi vấn đáp chỉ cần mở miệng nói ba câu đúng từ khóa trọng tâm, thầy cô liền gật đầu mỉm cười cho qua môn êm đẹp." },
+  { id: 5, name: "The World - Đại Cát Toàn Vẹn", quote: "Một chu kỳ sóng gió chính thức khép lại. Điểm danh vừa đủ, bài tập nộp xong trước hạn 5 phút, tối nay kê cao gối ngủ không ai dám réo tên." },
+  { id: 6, name: "The Empress - Năng Lượng Trù Phú", quote: "Cung tài lộc mở rộng bất thường. Ví tiền có dấu hiệu hồi sinh nhờ được ai đó bao ăn, hoặc tài khoản nổ ting ting một khoản tiền từ trên trời rơi xuống." },
+  { id: 7, name: "The Chariot - Cỗ Xe Thần Tốc", quote: "Ý chí vượt chướng ngại vật cực mạnh. Giảng viên lướt slide nhanh như chớp nhưng tay bạn ghi chép vẫn đuổi kịp trọn vẹn bản chất bài giảng." },
+  { id: 8, name: "The High Priestess - Giác Quan Thứ Sáu", quote: "Trực giác mách bảo gì hãy nghe theo nấy. Tối nay linh tính bảo giở trang nào trong giáo trình thì lật đúng trang đó, xác suất trúng đề thi ngày mai lên tới 99%." },
+  { id: 9, name: "Strength - Thuần Hóa Căng Thẳng", quote: "Tâm bất biến giữa dòng đời vạn biến. Khối lượng bài vở dù chất thành đống cũng bị bạn giải quyết gọn ghẽ chỉ trong một buổi chiều nghe nhạc chill." },
+  { id: 10, name: "The Hermit - Thuật Tàng Hình Ẩn Sĩ", quote: "Hôm nay vận khí 'ở ẩn' che chở tuyệt đối. Giảng viên đảo mắt quanh giảng đường tìm người lên bảng nhưng ánh nhìn sẽ lướt qua bạn như thể bạn là người vô hình." },
+  { id: 11, name: "The Fool - Vô Ưu Vô Lo", quote: "Cứ thong dong bước ra đường. Đi học gặp toàn đèn xanh, trời râm mát, vừa dắt xe vào trường là bắt gặp ngay một chỗ đỗ xe có bóng râm mát rượi." },
+  { id: 12, name: "Temperance - Cân Bằng Âm Dương", quote: "Nguyên tố Đất và Nước hòa hợp tuyệt đối. Điểm chuyên cần và điểm thi giữa kỳ bù trừ cho nhau ra đúng con số vừa vặn qua môn không thiếu một phẩy." },
+  { id: 13, name: "Judgement - Nghiệp Quả Ngọt Ngào", quote: "Những đêm cày bài trong bóng tối hôm nay được hồi đáp xứng đáng. Bảng điểm trả về hiện chữ 'ĐẠT' to đùng khiến bạn thở phào nhẹ nhõm cả người." },
+  { id: 14, name: "The Hierophant - Quý Nhân Chỉ Lối", quote: "Bắt được sóng năng lượng của tiền bối khóa trên. Mượn được cuốn giáo trình có sẵn bút dạ quang highlight trúng tim đen đề thi năm nay." },
+  { id: 15, name: "The Lovers - Duyên Lành Nhóm Trưởng", quote: "Vũ trụ kết nối bạn với những người đồng đội làm việc nhóm có tâm: phân công là làm, không seen tin nhắn rồi biến mất bí ẩn." },
+  { id: 16, name: "Sao Thủy Thuận Hành", quote: "Tư duy logic thông suốt lạ kỳ. Mấy công thức hóa dược dài ngoằng hay sơ đồ chuyển hóa rắc rối nhìn lướt qua một lần là khắc sâu vào vỏ não." },
+  { id: 17, name: "Lửa Bạch Dương Rực Cháy", quote: "Năng lượng bùng nổ. Sự trì hoãn bị đánh bại, ngồi vào bàn đúng 2 tiếng là dọn sạch toàn bộ bài tập tồn đọng của cả tuần." },
+  { id: 18, name: "Đất Kim Ngưu Vững Chãi", quote: "Hôm nay ví tiền được bảo vệ an toàn. Xuống căng-tin giờ cao điểm vẫn chộp được suất cơm ngon lành, no căng bụng với giá sinh viên." },
+  { id: 19, name: "Nước Cự Giải Êm Đềm", quote: "Tâm trí bình yên như mặt hồ không một gợn sóng. Không drama, không tin nhắn giục việc, chỉ có sự thảnh thơi trọn vẹn cả ngày dài." },
+  { id: 20, name: "Sao Mộc Bảo Hộ", quote: "Vận may đến vào phút chót: Đi học sát giờ nhưng vừa đặt chân qua cửa lớp thì tiếng chuông điểm danh mới bắt đầu vang lên." },
+  { id: 21, name: "Sao Kim Duyên Dáng", quote: "Hôm nay bạn tỏa ra nguồn năng lượng dễ mến lạ thường. Đi thực tập hay lên lớp đều được mọi người xung quanh nhiệt tình giúp đỡ, nhường nhịn từng chút." },
+  { id: 22, name: "Quẻ Thuần Càn - Vận Khí Thăng Hoa", quote: "Mọi sự khởi đầu hôm nay đều trơn tru như bôi dầu. Nộp báo cáo qua web trường mạng chạy vèo vèo, không gặp cảnh xoay vòng tròn ức chế." },
+  { id: 23, name: "Quẻ Địa Thiên Thái - Hóa Nguy Thành An", quote: "Tưởng chừng quên mang theo tài liệu học tập, hóa ra bạn cùng bàn đã in dư một bản rồi đưa ngay cho bạn dùng." },
+  { id: 24, name: "Quẻ Thủy Hỏa Ký Tế - Tròn Vẹn Ý Nguyện", quote: "Tiến độ ôn thi đã vào guồng chuẩn chỉ. Chỉ cần giữ vững nhịp độ này, bạn cầm chắc chiếc vé qua môn với số điểm đẹp mắt." },
+  { id: 25, name: "Quẻ Phong Lôi Ích - Trí Não Bứt Phá", quote: "Não bộ hôm nay tiếp thu kiến thức với tốc độ cáp quang. Mấy câu hỏi hóc búa tưởng không giải nổi bỗng nhiên tìm ra chìa khóa đáp án." },
+  { id: 26, name: "Sao Thổ Lùi Bước", quote: "Áp lực lớn nhất của tuần đã chính thức tan biến. Hôm nay là ngày tự thưởng cho bản thân một buổi chiều đi dạo hoặc nằm dài lướt web." },
+  { id: 27, name: "Tín Hiệu Mặt Trăng", quote: "Mắt thần mở ra. Soi kính hiển vi bắt dính vi trường nét căng ngay vòng vặn ốc vi cấp đầu tiên, bạn bè xung quanh bu lại xin chụp ké lia lịa." },
+  { id: 28, name: "Thiên Thời Địa Lợi", quote: "Thời tiết chiều lòng người. Vừa tan học dắt xe ra cổng thì trời râm mát, về đến tận phòng trọ khóa cửa xong bên ngoài mới bắt đầu trút mưa rào." },
+  { id: 29, name: "Khiên Chắn Tâm Linh", quote: "Vận xui tự động bật ngược ra xa. Vào phòng thực tập làm việc êm ru: không vỡ ống nghiệm, không đổ hóa chất, an toàn lành lặn đi về." },
+  { id: 30, name: "Quẻ Hỏa Địa Tấn - Tỏa Sáng", quote: "Bài phát biểu hoặc câu trả lời ngẫu hứng trong lớp khiến giảng viên phải mỉm cười gật gù khen ngợi trước mặt bạn bè." },
+  { id: 31, name: "Thiên Thần 111 - Ý Niệm Thành Hiện Thực", quote: "Vũ trụ đang lắng nghe suy nghĩ của bạn. Lúc làm bài trắc nghiệm, hãy kiên định chọn đáp án đầu tiên lóe lên trong đầu, đừng xóa đi chọn lại." },
+  { id: 32, name: "Thiên Thần 222 - Bình Tâm Chờ Đợi", quote: "Mọi sự an bài đều diễn ra đúng lúc. Đừng quá sốt ruột chờ điểm số, kết quả trả về sẽ khiến bạn thở phào nở nụ cười." },
+  { id: 33, name: "Thiên Thần 333 - Quý Nhân Vây Quanh", quote: "Hôm nay xung quanh toàn người tốt bụng. Đang bí bài tập khó chỉ cần buông một câu than thở là có người giảng giải cặn kẽ từng bước." },
+  { id: 34, name: "Thiên Thần 444 - Hào Quang Bất Khả Xâm Phạm", quote: "Bạn được bao bọc bởi một lớp khiên năng lượng bình yên. Mọi lời phàn nàn xung quanh đều trôi tuột ra ngoài, tâm trạng không chút gợn sóng." },
+  { id: 35, name: "Thiên Thần 555 - Lối Rẽ Bất Ngờ", quote: "Sắp có một tin tức mang lại niềm vui nho nhỏ: Một tiết học được đổi sang hình thức nhẹ nhàng hơn hoặc bất ngờ được cho nghỉ sớm." },
+  { id: 36, name: "Thiên Thần 777 - Khai Thông Trí Tuệ", quote: "Túi khôn hôm nay mở rộng hết cỡ. Gặp bài toán hóc búa tự dưng đầu óc nảy số ra cách làm nhanh gọn bất ngờ." },
+  { id: 37, name: "Thiên Thần 888 - Tài Khí Dồi Dào", quote: "Dòng chảy tiền bạc hanh thông. Thò tay vào túi áo khoác cũ bỗng tìm lại được tờ tiền gấp gọn ngỡ đã đánh rơi từ tuần trước." },
+  { id: 38, name: "Thiên Thần 999 - Trọn Vẹn Chu Kỳ", quote: "Gác lại toàn bộ những lo âu của bài vở ngày cũ. Tối nay bạn xứng đáng được thưởng một ly trà sữa ngọt ngào và một giấc ngủ say không mộng mị." },
+  { id: 39, name: "Con Số 000 - Tiềm Năng Vô Cực", quote: "Ngày hôm nay là một trang giấy hoàn toàn mới. Mọi may mắn đều nằm trong tay bạn, tự tin bước đi là gặt hái kết quả tốt." },
+  { id: 40, name: "Lá Bài Định Mệnh - Vận Đỏ Toàn Diện", quote: "Lá quẻ may mắn nhất trong ngày. Mọi sự mong cầu từ việc tránh bị gọi tên, trúng đề thi đến thời tiết khô ráo đều diễn ra đúng như ý bạn mong muốn." }
 ];
 const MASCOT_MESSAGES = [
-  'NewVision cá»‘ lÃªn! ðŸ’ª','Team mÃ¬nh lÃ m tá»‘t láº¯m! ðŸŒŸ','HÃ´m nay nÄƒng suáº¥t siÃªu cao! ðŸš€',
-  'Vi Vi tá»± hÃ o vá» cÃ¡c báº¡n! ðŸ¦‰','CÃ¹ng nhau lÃ m Ä‘iá»u tuyá»‡t vá»i! âœ¨','Focus mode: ON! ðŸŽ¯',
-  'NewVision â€“ Táº§m nhÃ¬n má»›i, Bá»©t phÃ¡ má»›i! ðŸ”¥','Chá»‰ cÃ²n chÃºt ná»¯a thÃ´i, cá»‘ lÃªn! ðŸ’«',
-  'Má»—i viá»‡c nhá» táº¡o nÃªn Ä‘iá»u lá»›n! ðŸŒˆ','HÃ­t thá»Ÿ sÃ¢u, má»i thá»© sáº½ á»•n! ðŸŒ¸',
+  'NewVision cố lên! 💪','Team mình làm tốt lắm! 🌟','Hôm nay năng suất siêu cao! 🚀',
+  'Vi Vi tự hào về các bạn! 🦉','Cùng nhau làm điều tuyệt vời! ✨','Focus mode: ON! 🎯',
+  'NewVision – Tầm nhìn mới, Bứt phá mới! 🔥','Chỉ còn chút nữa thôi, cố lên! 💫',
+  'Mỗi việc nhỏ tạo nên điều lớn! 🌈','Hít thở sâu, mọi thứ sẽ ổn! 🌸',
 ];
 const EAGLE_MESSAGES = [
-  'Äáº¡i bÃ ng NewVision tung cÃ¡nh! ðŸ¦…','Táº§m nhÃ¬n má»›i, Bá»©t phÃ¡ má»›i! ðŸš€','Má»¥c tiÃªu Ä‘Ã£ Ä‘á»‹nh, tiáº¿n lÃªn nÃ o! ðŸŽ¯',
-  'Bay cao vÃ  xa hÆ¡n má»—i ngÃ y! âœ¨','Táº­p trung cao Ä‘á»™ â€“ KhÃ´ng gÃ¬ lÃ  khÃ´ng thá»ƒ! ðŸ”¥','Báº£n lÄ©nh NewVision dáº«n lá»‘i! ðŸŒŸ',
-  'LÃ m viá»‡c háº¿t mÃ¬nh, bÃ¹ng ná»• háº¿t sá»©c! âš¡','NewVision â€“ Kháº³ng Ä‘á»‹nh vá»‹ tháº¿! ðŸ†',
+  'Đại bàng NewVision tung cánh! 🦅','Tầm nhìn mới, Bứt phá mới! 🚀','Mục tiêu đã định, tiến lên nào! 🎯',
+  'Bay cao và xa hơn mỗi ngày! ✨','Tập trung cao độ – Không gì là không thể! 🔥','Bản lĩnh NewVision dẫn lối! 🌟',
+  'Làm việc hết mình, bùng nổ hết sức! ⚡','NewVision – Khẳng định vị thế! 🏆',
 ];
 const DEFAULT_VENUE_ITEMS = [
-  {id:'chairs',label:'BÃ n gháº¿',icon:'armchair'},
-  {id:'projector',label:'MÃ¡y chiáº¿u',icon:'monitor'},
-  {id:'ac',label:'Äiá»u hÃ²a',icon:'wind'},
+  {id:'chairs',label:'Bàn ghế',icon:'armchair'},
+  {id:'projector',label:'Máy chiếu',icon:'monitor'},
+  {id:'ac',label:'Điều hòa',icon:'wind'},
   {id:'speaker',label:'Loa & Mic',icon:'volume-2'},
-  {id:'refreshments',label:'NÆ°á»›c & BÃ¡nh káº¹o',icon:'coffee'},
-  {id:'gifts',label:'QuÃ  khÃ¡ch má»i',icon:'gift'},
+  {id:'refreshments',label:'Nước & Bánh kẹo',icon:'coffee'},
+  {id:'gifts',label:'Quà khách mời',icon:'gift'},
 ];
 const LINK_TYPE_CFG = {
-  'Káº¿ hoáº¡ch & Ká»‹ch báº£n':{icon:'file-text',bg:'bg-blue-100',text:'text-blue-600',border:'border-blue-200'},
-  'Báº£ng tÃ­nh & Data':{icon:'table-2',bg:'bg-emerald-100',text:'text-emerald-600',border:'border-emerald-200'},
-  'TÆ° liá»‡u & Media':{icon:'image',bg:'bg-purple-100',text:'text-purple-600',border:'border-purple-200'},
-  'BiÃªn báº£n & HÃ nh chÃ­nh':{icon:'stamp',bg:'bg-amber-100',text:'text-amber-600',border:'border-amber-200'},
+  'Kế hoạch & Kịch bản':{icon:'file-text',bg:'bg-blue-100',text:'text-blue-600',border:'border-blue-200'},
+  'Bảng tính & Data':{icon:'table-2',bg:'bg-emerald-100',text:'text-emerald-600',border:'border-emerald-200'},
+  'Tư liệu & Media':{icon:'image',bg:'bg-purple-100',text:'text-purple-600',border:'border-purple-200'},
+  'Biên bản & Hành chính':{icon:'stamp',bg:'bg-amber-100',text:'text-amber-600',border:'border-amber-200'},
 };
 
 // ============================================================
 // UTILS
 // ============================================================
 function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36)}
-function fmtDate(d){if(!d)return'â€”';const dt=new Date(d);return isNaN(dt.getTime())?d:dt.toLocaleDateString('vi-VN')}
-function fmtVND(n){if(n===undefined||n===null||n==='')return'â€”';return new Intl.NumberFormat('vi-VN').format(Number(n))+'â‚«'}
+function fmtDate(d){if(!d)return'—';const dt=new Date(d);return isNaN(dt.getTime())?d:dt.toLocaleDateString('vi-VN')}
+function fmtVND(n){if(n===undefined||n===null||n==='')return'—';return new Intl.NumberFormat('vi-VN').format(Number(n))+'₫'}
 function isOverdue(dateStr){if(!dateStr)return false;return new Date(dateStr)<new Date()}
 function isSoon(dateStr){if(!dateStr)return false;const diff=new Date(dateStr)-new Date();return diff>0&&diff<24*3600*1000}
-function relTime(isoStr){const diff=Date.now()-new Date(isoStr).getTime();const m=Math.floor(diff/60000);const h=Math.floor(m/60);const d=Math.floor(h/24);if(m<1)return'Vá»«a xong';if(m<60)return`${m} phÃºt trÆ°á»›c`;if(h<24)return`${h} giá» trÆ°á»›c`;if(d<7)return`${d} ngÃ y trÆ°á»›c`;return new Date(isoStr).toLocaleDateString('vi-VN')}
-function statusColor(s){if(s==='ÄÃ£ chá»‘t chÃ­nh thá»©c')return'tag-green';if(s==='Cáº§n duyá»‡t')return'tag-yellow';return'tag-blue'}
-function evalColor(e){if(e==='Äáº¡t')return'tag-green';if(e==='KhÃ´ng Ä‘áº¡t')return'tag-red';return'tag-yellow'}
-function taskColor(t){if(t==='ÄÃºng háº¡n')return'tag-green';if(t==='Trá»… háº¡n')return'tag-red';return'tag-gray'}
-function attendColor(a){if(a==='CÃ³ máº·t')return'tag-green';if(a==='Váº¯ng')return'tag-red';return'tag-yellow'}
-function expenseColor(s){if(s==='ÄÃ£ quyáº¿t toÃ¡n')return'tag-green';if(s==='ÄÃ£ chi - Chá» hoÃ n tiá»n')return'tag-yellow';return'tag-blue'}
+function relTime(isoStr){const diff=Date.now()-new Date(isoStr).getTime();const m=Math.floor(diff/60000);const h=Math.floor(m/60);const d=Math.floor(h/24);if(m<1)return'Vừa xong';if(m<60)return`${m} phút trước`;if(h<24)return`${h} giờ trước`;if(d<7)return`${d} ngày trước`;return new Date(isoStr).toLocaleDateString('vi-VN')}
+function statusColor(s){if(s==='Đã chốt chính thức')return'tag-green';if(s==='Cần duyệt')return'tag-yellow';return'tag-blue'}
+function evalColor(e){if(e==='Đạt')return'tag-green';if(e==='Không đạt')return'tag-red';return'tag-yellow'}
+function taskColor(t){if(t==='Đúng hạn')return'tag-green';if(t==='Trễ hạn')return'tag-red';return'tag-gray'}
+function attendColor(a){if(a==='Có mặt')return'tag-green';if(a==='Vắng')return'tag-red';return'tag-yellow'}
+function expenseColor(s){if(s==='Đã quyết toán')return'tag-green';if(s==='Đã chi - Chờ hoàn tiền')return'tag-yellow';return'tag-blue'}
 function exportJSON(data,filename){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
 
 // ============================================================
@@ -272,32 +272,32 @@ function Icon({name,size=18,className=''}){
 // ============================================================
 const SAMPLE_STUDY_RESOURCES = [
   {
-    title: 'Tá»•ng há»£p Bá»™ Ä‘á» thi DÆ°á»£c lÃ½ 1 (K77 - K79) cÃ³ Ä‘Ã¡p Ã¡n chi tiáº¿t',
-    block: 'CÆ¡ sá»Ÿ ngÃ nh',
-    category: 'Äá» thi & ÄÃ¡p Ã¡n',
+    title: 'Tổng hợp Bộ đề thi Dược lý 1 (K77 - K79) có đáp án chi tiết',
+    block: 'Cơ sở ngành',
+    category: 'Đề thi & Đáp án',
     url: 'https://drive.google.com/drive/folders/newvision-duocly1',
-    contributor: 'BCN Há»c táº­p NVC',
-    note: 'TÃ i liá»‡u trá»ng tÃ¢m Ã´n thi háº¿t mÃ´n, bÃ¡m sÃ¡t cáº¥u trÃºc Ä‘á» tráº¯c nghiá»‡m vÃ  ca lÃ¢m sÃ ng.',
+    contributor: 'BCN Học tập NVC',
+    note: 'Tài liệu trọng tâm ôn thi hết môn, bám sát cấu trúc đề trắc nghiệm và ca lâm sàng.',
     pinned: true,
     createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
   },
   {
-    title: 'TÃ³m táº¯t SÆ¡ Ä‘á»“ tÆ° duy HÃ³a DÆ°á»£c 2 (KhÃ¡ng sinh & Tim máº¡ch)',
-    block: 'ChuyÃªn ngÃ nh DÆ°á»£c',
-    category: 'TÃ³m táº¯t lÃ½ thuyáº¿t',
+    title: 'Tóm tắt Sơ đồ tư duy Hóa Dược 2 (Kháng sinh & Tim mạch)',
+    block: 'Chuyên ngành Dược',
+    category: 'Tóm tắt lý thuyết',
     url: 'https://drive.google.com/drive/folders/newvision-hoaduoc2',
-    contributor: 'Tráº§n Minh QuÃ¢n - K77',
-    note: 'SÆ¡ Ä‘á»“ cÆ¡ cháº¿ tÃ¡c dá»¥ng, phÃ¢n loáº¡i vÃ  liÃªn quan cáº¥u trÃºc - tÃ¡c dá»¥ng (SAR).',
+    contributor: 'Trần Minh Quân - K77',
+    note: 'Sơ đồ cơ chế tác dụng, phân loại và liên quan cấu trúc - tác dụng (SAR).',
     pinned: true,
     createdAt: new Date(Date.now() - 86400000).toISOString()
   },
   {
-    title: 'Slide bÃ i giáº£ng & CÃ¢u há»i lÆ°á»£ng giÃ¡ Giáº£i pháº«u - Sinh lÃ½',
-    block: 'Äáº¡i cÆ°Æ¡ng',
-    category: 'Slide bÃ i giáº£ng',
+    title: 'Slide bài giảng & Câu hỏi lượng giá Giải phẫu - Sinh lý',
+    block: 'Đại cương',
+    category: 'Slide bài giảng',
     url: 'https://drive.google.com/drive/folders/newvision-giaiphau',
-    contributor: 'Ban ChuyÃªn mÃ´n NVC',
-    note: 'Trá»n bá»™ slide giáº£ng Ä‘Æ°á»ng vÃ  ngÃ¢n hÃ ng cÃ¢u há»i Ã´n táº­p giá»¯a ká»³.',
+    contributor: 'Ban Chuyên môn NVC',
+    note: 'Trọn bộ slide giảng đường và ngân hàng câu hỏi ôn tập giữa kỳ.',
     pinned: false,
     createdAt: new Date().toISOString()
   }
@@ -400,10 +400,10 @@ function AppProvider({children}){
       const n={id:Date.now()+Math.random(),message,type,read:false,timestamp:new Date().toISOString()};
       setNotifications(p=>[n,...p.slice(0,199)]);
       showToast(message,type);
-      const pushTitle=type==='error'?'ðŸš¨ BÃO Äá»˜NG SOS - NewVision HUP':type==='success'?'âœ¨ NewVision HUP':type==='warning'?'âš ï¸ NewVision HUP':'ðŸ“¢ NewVision HUP';
+      const pushTitle=type==='error'?'🚨 BÁO ĐỘNG SOS - NewVision HUP':type==='success'?'✨ NewVision HUP':type==='warning'?'⚠️ NewVision HUP':'📢 NewVision HUP';
       showWebPush(pushTitle,message,{tag:type,requireInteraction:type==='error'});
     }catch(err){
-      console.warn('Lá»—i khi thÃªm notification:',err);
+      console.warn('Lỗi khi thêm notification:',err);
     }
   },[showToast]);
 
@@ -418,16 +418,16 @@ function AppProvider({children}){
 
   const requestWebPush=useCallback(async()=>{
     if(typeof window==='undefined'||!('Notification' in window)){
-      alert('TrÃ¬nh duyá»‡t cá»§a báº¡n khÃ´ng há»— trá»£ Web Notification.');
+      alert('Trình duyệt của bạn không hỗ trợ Web Notification.');
       return false;
     }
     try{
       const perm=await Notification.requestPermission();
       setPushPermission(perm);
       if(perm==='granted'){
-        showWebPush('ðŸ”” NewVision HUP','ThÃ´ng bÃ¡o Ä‘áº©y Web Push Ä‘Ã£ Ä‘Æ°á»£c kÃ­ch hoáº¡t thÃ nh cÃ´ng!');
+        showWebPush('🔔 NewVision HUP','Thông báo đẩy Web Push đã được kích hoạt thành công!');
         try{playSound('success');}catch(e){}
-        showToast('ÄÃ£ báº­t thÃ´ng bÃ¡o Ä‘áº©y Web Push!','success');
+        showToast('Đã bật thông báo đẩy Web Push!','success');
         if(fbMessaging&&fbDb){
           try{
             const token=await fbMessaging.getToken();
@@ -444,7 +444,7 @@ function AppProvider({children}){
         }
         return true;
       }else{
-        showToast('Báº¡n Ä‘Ã£ tá»« chá»‘i quyá»n gá»­i thÃ´ng bÃ¡o.','warning');
+        showToast('Bạn đã từ chối quyền gửi thông báo.','warning');
         return false;
       }
     }catch(e){
@@ -453,8 +453,8 @@ function AppProvider({children}){
     }
   },[playSound,showToast]);
 
-  // Realtime Firestore LAZY LOAD: Khi vá»«a má»Ÿ trang CHá»ˆ láº¯ng nghe tab Tá»•ng quan (dashboard)
-  // Dá»¯ liá»‡u cÃ¡c tab khÃ¡c chá»‰ báº¯t Ä‘áº§u táº£i khi ngÆ°á»i dÃ¹ng click vÃ o tab Ä‘Ã³
+  // Realtime Firestore LAZY LOAD: Khi vừa mở trang CHỈ lắng nghe tab Tổng quan (dashboard)
+  // Dữ liệu các tab khác chỉ bắt đầu tải khi người dùng click vào tab đó
   useEffect(()=>{
     if(!fbDb){
       setCloudStatus('offline');
@@ -477,7 +477,7 @@ function AppProvider({children}){
             if (seenIds.has(id)) return;
             seenIds.add(id);
 
-            // Khá»­ trÃ¹ng láº·p cho thÃ nh viÃªn náº¿u cÃ³ báº£n ghi trÃ¹ng
+            // Khử trùng lặp cho thành viên nếu có bản ghi trùng
             if (colName === 'members') {
               const nameKey = (data.name || '').trim().toLowerCase() + '|' + (data.ban || '').trim() + '|' + (data.khoa || data.gen || '').trim();
               if (nameKey && seenNames.has(nameKey)) return;
@@ -506,11 +506,11 @@ function AppProvider({children}){
       }
     };
 
-    // 1. CHá»ˆ Táº¢I TAB Tá»”NG QUAN KHI Vá»ªA Má»ž TRANG (Checklist & Quick links):
+    // 1. CHỈ TẢI TAB TỔNG QUAN KHI VỪA MỞ TRANG (Checklist & Quick links):
     listenCol('quickChecklist',setQuickChecklist,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
     listenCol('quickLinks',setQuickLinks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
 
-    // 2. LAZY LOAD - CHá»ˆ Táº¢I CÃC TAB KHÃC KHI ÄÆ¯á»¢C KÃCH HOáº T:
+    // 2. LAZY LOAD - CHỈ TẢI CÁC TAB KHÁC KHI ĐƯỢC KÍCH HOẠT:
     if(loadedTabs.has('events')){
       listenCol('events',setEvents,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     }
@@ -576,7 +576,7 @@ function AppProvider({children}){
     }
   },[loadedTabs]);
 
-  // Táº£i trÆ°á»›c nháº¹ nhÃ ng sá»‘ liá»‡u tá»•ng quan (events, members, decisions) sau 2.5s khi mÃ¡y ráº£nh
+  // Tải trước nhẹ nhàng số liệu tổng quan (events, members, decisions) sau 2.5s khi máy rảnh
   useEffect(()=>{
     const idleTimer=setTimeout(()=>{
       loadTab('events');
@@ -586,7 +586,7 @@ function AppProvider({children}){
     return()=>clearTimeout(idleTimer);
   },[loadTab]);
 
-  // HoÃ£n di chuyá»ƒn dá»¯ liá»‡u cÅ© sau 6s Ä‘á»ƒ trang má»Ÿ tá»©c thÃ¬ dÆ°á»›i 1s
+  // Hoãn di chuyển dữ liệu cũ sau 6s để trang mở tức thì dưới 1s
   useEffect(()=>{
     const migTimer=setTimeout(async()=>{
       if(!fbDb)return;
@@ -618,7 +618,7 @@ function AppProvider({children}){
   },[]);
 
   const pushAllToCloud=useCallback(async()=>{
-    if(!fbDb){alert('Firebase chÆ°a Ä‘Æ°á»£c khá»Ÿi táº¡o.');return}
+    if(!fbDb){alert('Firebase chưa được khởi tạo.');return}
     setCloudStatus('syncing');
     try{
       const batch=fbDb.batch();
@@ -640,16 +640,16 @@ function AppProvider({children}){
       setCloudStatus('connected');
       setLastSynced(new Date());
       try{playSound('success');}catch(e){}
-      showToast('ÄÃ£ Ä‘á»“ng bá»™ toÃ n bá»™ dá»¯ liá»‡u lÃªn Cloud Firestore thÃ nh cÃ´ng!','success');
+      showToast('Đã đồng bộ toàn bộ dữ liệu lên Cloud Firestore thành công!','success');
     }catch(err){
       console.error('pushAllToCloud error:',err);
       setCloudStatus('offline');
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   },[members,events,decisions,expenses,resources,studyResources,penalties,inventory,sessions,assignTasks,quickChecklist,quickLinks,bcnPlans,bcnNotes,playSound,showToast]);
 
   const pullAllFromCloud=useCallback(async()=>{
-    if(!fbDb){alert('Firebase chÆ°a Ä‘Æ°á»£c khá»Ÿi táº¡o.');return}
+    if(!fbDb){alert('Firebase chưa được khởi tạo.');return}
     setCloudStatus('syncing');
     try{
       const[mSnap,eSnap,dSnap,expSnap,rSnap,sResSnap,penSnap,iSnap,sSnap,aSnap,cSnap,lSnap,pSnap,nDoc]=await Promise.all([
@@ -685,11 +685,11 @@ function AppProvider({children}){
       setCloudStatus('connected');
       setLastSynced(new Date());
       try{playSound('success');}catch(e){}
-      showToast('ÄÃ£ táº£i láº¡i toÃ n bá»™ dá»¯ liá»‡u tá»« Cloud Firestore thÃ nh cÃ´ng!','success');
+      showToast('Đã tải lại toàn bộ dữ liệu từ Cloud Firestore thành công!','success');
     }catch(err){
       console.error('pullAllFromCloud error:',err);
       setCloudStatus('offline');
-      alert('Lá»—i táº£i dá»¯ liá»‡u Firebase: '+err.message);
+      alert('Lỗi tải dữ liệu Firebase: '+err.message);
     }
   },[playSound,showToast]);
 
@@ -807,9 +807,9 @@ async function checkDuplicateLinkAsync(targetUrl, excludeId = null, allData = {}
     if (item.id && item.id === excludeId) continue;
     if (item.url && normalizeUrl(item.url) === normTarget) {
       return {
-        type: 'GÃ³c há»c táº­p',
-        title: item.title || 'TÃ i liá»‡u',
-        creator: item.contributor || 'ThÃ nh viÃªn CLB',
+        type: 'Góc học tập',
+        title: item.title || 'Tài liệu',
+        creator: item.contributor || 'Thành viên CLB',
         rawUrl: item.url
       };
     }
@@ -820,9 +820,9 @@ async function checkDuplicateLinkAsync(targetUrl, excludeId = null, allData = {}
     if (item.id && item.id === excludeId) continue;
     if (item.url && normalizeUrl(item.url) === normTarget) {
       return {
-        type: 'TÃ i nguyÃªn',
-        title: item.title || 'LiÃªn káº¿t',
-        creator: item.ban ? ('Ban ' + item.ban) : (item.creator || 'Ban Quáº£n trá»‹'),
+        type: 'Tài nguyên',
+        title: item.title || 'Liên kết',
+        creator: item.ban ? ('Ban ' + item.ban) : (item.creator || 'Ban Quản trị'),
         rawUrl: item.url
       };
     }
@@ -835,9 +835,9 @@ async function checkDuplicateLinkAsync(targetUrl, excludeId = null, allData = {}
         if (t.id && t.id === excludeId) continue;
         if (t.link && normalizeUrl(t.link) === normTarget) {
           return {
-            type: 'Sá»± kiá»‡n: ' + (ev.name || ''),
-            title: t.title || 'CÃ´ng viá»‡c',
-            creator: t.assignee || 'Ban Tá»• chá»©c',
+            type: 'Sự kiện: ' + (ev.name || ''),
+            title: t.title || 'Công việc',
+            creator: t.assignee || 'Ban Tổ chức',
             rawUrl: t.link
           };
         }
@@ -855,9 +855,9 @@ async function checkDuplicateLinkAsync(targetUrl, excludeId = null, allData = {}
           const d = doc.data();
           if (d.url && normalizeUrl(d.url) === normTarget) {
             return {
-              type: 'GÃ³c há»c táº­p',
-              title: d.title || 'TÃ i liá»‡u',
-              creator: d.contributor || 'ThÃ nh viÃªn CLB'
+              type: 'Góc học tập',
+              title: d.title || 'Tài liệu',
+              creator: d.contributor || 'Thành viên CLB'
             };
           }
         }
@@ -869,9 +869,9 @@ async function checkDuplicateLinkAsync(targetUrl, excludeId = null, allData = {}
           const d = doc.data();
           if (d.url && normalizeUrl(d.url) === normTarget) {
             return {
-              type: 'TÃ i nguyÃªn',
-              title: d.title || 'LiÃªn káº¿t',
-              creator: d.ban ? ('Ban ' + d.ban) : 'Ban Quáº£n trá»‹'
+              type: 'Tài nguyên',
+              title: d.title || 'Liên kết',
+              creator: d.ban ? ('Ban ' + d.ban) : 'Ban Quản trị'
             };
           }
         }
@@ -893,10 +893,10 @@ function DuplicateLinkDialog({ open, creator, onCancel, onConfirm }) {
           <Icon name="alert-triangle" size={28} />
         </div>
         <h3 className="text-lg font-bold text-center text-slate-900 dark:text-white mb-2">
-          Cáº£nh bÃ¡o trÃ¹ng láº·p liÃªn káº¿t
+          Cảnh báo trùng lặp liên kết
         </h3>
         <p className="text-sm text-center text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
-          Link nÃ y Ä‘Ã£ tá»“n táº¡i trong há»‡ thá»‘ng (do <span className="font-bold text-amber-600 dark:text-amber-400">{creator || 'ThÃ nh viÃªn CLB'}</span> Ä‘Äƒng). Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n thÃªm láº¡i khÃ´ng?
+          Link này đã tồn tại trong hệ thống (do <span className="font-bold text-amber-600 dark:text-amber-400">{creator || 'Thành viên CLB'}</span> đăng). Bạn có chắc chắn muốn thêm lại không?
         </p>
         <div className="flex gap-3 justify-center">
           <button
@@ -904,14 +904,14 @@ function DuplicateLinkDialog({ open, creator, onCancel, onConfirm }) {
             onClick={onCancel}
             className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-sm transition text-center"
           >
-            Há»§y bá»
+            Hủy bỏ
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm shadow-md transition text-center"
           >
-            Váº«n lÆ°u
+            Vẫn lưu
           </button>
         </div>
       </div>
@@ -926,11 +926,11 @@ function ConfirmDialog({open,onClose,onConfirm,message}){
       <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 slide-down">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0"><Icon name="alert-triangle" size={20} className="text-red-500"/></div>
-          <div><p className="font-semibold text-slate-800">XÃ¡c nháº­n xÃ³a</p><p className="text-sm text-slate-500 mt-0.5">{message}</p></div>
+          <div><p className="font-semibold text-slate-800">Xác nhận xóa</p><p className="text-sm text-slate-500 mt-0.5">{message}</p></div>
         </div>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn-secondary">Há»§y</button>
-          <button onClick={()=>{onConfirm();onClose()}} className="btn-danger">XÃ³a</button>
+          <button onClick={onClose} className="btn-secondary">Hủy</button>
+          <button onClick={()=>{onConfirm();onClose()}} className="btn-danger">Xóa</button>
         </div>
       </div>
     </div>
@@ -938,7 +938,7 @@ function ConfirmDialog({open,onClose,onConfirm,message}){
 }
 
 // ============================================================
-// MASCOT "Vi Vi" (CÃº MÃ¨o) & "Äáº¡i BÃ ng NewVision"
+// MASCOT "Vi Vi" (Cú Mèo) & "Đại Bàng NewVision"
 // ============================================================
 function EagleSVG({state}){
   const isSOS=state==='sos';
@@ -988,8 +988,8 @@ function EagleSVG({state}){
       )}
       {isCelebrate&&(
         <g>
-          <text x="12" y="24" fontSize="14">â­</text>
-          <text x="76" y="22" fontSize="14">âœ¨</text>
+          <text x="12" y="24" fontSize="14">⭐</text>
+          <text x="76" y="22" fontSize="14">✨</text>
           <circle cx="50" cy="6" r="4" fill="#fbbf24"/>
           <path d="M42,8 Q50,0 58,8" stroke="#f59e0b" strokeWidth="2" fill="none"/>
         </g>
@@ -1060,8 +1060,8 @@ function ViViSVG({state}){
           <circle cx="50" cy="7" r="3.5" fill="#f9a8d4"/>
           <line x1="50" y1="7" x2="49" y2="3.5" stroke="#f9a8d4" strokeWidth="1.5"/>
           <circle cx="49" cy="3" r="2.8" fill="#fbbf24"/>
-          <text x="16" y="27" fontSize="13">â­</text>
-          <text x="73" y="23" fontSize="11">âœ¨</text>
+          <text x="16" y="27" fontSize="13">⭐</text>
+          <text x="73" y="23" fontSize="11">✨</text>
         </g>
       )}
       {isGavel&&(
@@ -1122,7 +1122,7 @@ function Mascot(){
 
   if(!mounted) return null;
   const stateClass={idle:'mascot-idle',wave:'mascot-wave',celebrate:'mascot-celebrate',sos:'mascot-sos',gavel:'mascot-gavel',write:'mascot-write'}[mascotState]||'mascot-idle';
-  const mascotTitle=mascotType==='eagle'?'Äáº¡i bÃ ng NewVision â€“ Báº¥m Ä‘á»ƒ nháº­n lá»i cá»• vÅ©!':'Vi Vi â€“ Báº¥m Ä‘á»ƒ nháº­n lá»i cá»• vÅ©!';
+  const mascotTitle=mascotType==='eagle'?'Đại bàng NewVision – Bấm để nhận lời cổ vũ!':'Vi Vi – Bấm để nhận lời cổ vũ!';
 
   return(
     <div className="mascot-container fixed bottom-20 right-3 md:bottom-8 z-[80] flex flex-col items-center gap-1 select-none">
@@ -1137,7 +1137,7 @@ function Mascot(){
       <div className="w-16 bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
         <div className="h-1.5 rounded-full bg-gradient-to-r from-orange-500 to-indigo-500 transition-all duration-1000" style={{width:`${energy}%`}}/>
       </div>
-      <p className="text-[9px] text-slate-400 dark:text-slate-500 text-center">âš¡ {energy}% NL CLB</p>
+      <p className="text-[9px] text-slate-400 dark:text-slate-500 text-center">⚡ {energy}% NL CLB</p>
     </div>
   );
 }
@@ -1181,7 +1181,7 @@ function ScreenCatCompanion(){
     speechTimerRef.current=setTimeout(()=>setSpeech(''),duration);
   },[]);
 
-  // Láº¯ng nghe thao tÃ¡c ngÆ°á»i dÃ¹ng toÃ n trang: sau 20s khÃ´ng cháº¡m web, mÃ¨o tá»± Ä‘á»™ng ngá»§
+  // Lắng nghe thao tác người dùng toàn trang: sau 20s không chạm web, mèo tự động ngủ
   useEffect(()=>{
     if(!catEnabled)return;
     const onUserAct=()=>{
@@ -1200,16 +1200,16 @@ function ScreenCatCompanion(){
     };
   },[catEnabled]);
 
-  // Sá»± kiá»‡n kÃ­ch hoáº¡t tá»« há»‡ thá»‘ng (khi hoÃ n thÃ nh task hoáº·c sá»± kiá»‡n Ä‘áº·c biá»‡t)
+  // Sự kiện kích hoạt từ hệ thống (khi hoàn thành task hoặc sự kiện đặc biệt)
   useEffect(()=>{
     if(!catEnabled||!catEvent)return;
     if(catEvent.action==='dash'){
       setState('dash');
       setFacing(1);
-      showCatSpeech('VÃ¨o vÃ¨o~! ðŸš€ðŸ¾',1500);
+      showCatSpeech('Vèo vèo~! 🚀🐾',1500);
       try{playSound('pop');}catch(e){}
       const newSparks=Array.from({length:6},(_,i)=>({
-        id:Date.now()+i,x:Math.random()*40-20,y:Math.random()*20-10,emoji:['âœ¨','â­','ðŸ’«'][i%3]
+        id:Date.now()+i,x:Math.random()*40-20,y:Math.random()*20-10,emoji:['✨','⭐','💫'][i%3]
       }));
       setSparks(newSparks);
       setTimeout(()=>setSparks([]),1500);
@@ -1217,7 +1217,7 @@ function ScreenCatCompanion(){
     }else if(catEvent.action==='celebrate'){
       setState('celebrate');
       try{playSound('success');}catch(e){}
-      showCatSpeech('Hoan hÃ´! Xong viá»‡c rá»“i! ðŸŽ‰ðŸ±',1500);
+      showCatSpeech('Hoan hô! Xong việc rồi! 🎉🐱',1500);
       if(window.confetti){
         try{
           window.confetti({
@@ -1244,7 +1244,7 @@ function ScreenCatCompanion(){
     return()=>window.removeEventListener('resize',handleResize);
   },[catEnabled,getFloorY]);
 
-  // Xá»­ lÃ½ kÃ©o tháº£ (Pointer move / Pointer up)
+  // Xử lý kéo thả (Pointer move / Pointer up)
   useEffect(()=>{
     if(!catEnabled)return;
     const handlePointerMove=e=>{
@@ -1254,7 +1254,7 @@ function ScreenCatCompanion(){
       if(clientX===undefined||clientY===undefined)return;
 
       const dist=Math.hypot(clientX-dragStartRef.current.x,clientY-dragStartRef.current.y);
-      // Náº¿u di chuyá»ƒn quÃ¡ 6px, xÃ¡c Ä‘á»‹nh Ä‘Ã¢y lÃ  hÃ nh Ä‘á»™ng kÃ©o (drag) chá»© KHÃ”NG PHáº¢I click
+      // Nếu di chuyển quá 6px, xác định đây là hành động kéo (drag) chứ KHÔNG PHẢI click
       if(dist>6){
         hasDraggedRef.current=true;
         setState('drag');
@@ -1271,11 +1271,11 @@ function ScreenCatCompanion(){
       lastUserActivityRef.current=now;
 
       if(hasDraggedRef.current){
-        // ÄÃ¡nh dáº¥u vá»«a kÃ©o tháº£ Ä‘á»ƒ cháº·n sá»± kiá»‡n click chuá»™t Äƒn theo
+        // Đánh dấu vừa kéo thả để chặn sự kiện click chuột ăn theo
         justFinishedDragRef.current=true;
         setTimeout(()=>{justFinishedDragRef.current=false},250);
 
-        // Tháº£ mÃ¨o á»Ÿ Ä‘Ã¢u thÃ¬ cho phÃ©p mÃ¨o Ä‘á»©ng á»Ÿ Ä‘Ã³ má»™t lÃ¡t (15 giÃ¢y khÃ´ng tá»± Ä‘á»™ng Ä‘i dáº¡o)
+        // Thả mèo ở đâu thì cho phép mèo đứng ở đó một lát (15 giây không tự động đi dạo)
         lastInteractionTimeRef.current=now;
 
         const floorY=getFloorY();
@@ -1286,7 +1286,7 @@ function ScreenCatCompanion(){
           setPos(p=>({...p,y:floorY}));
           setState('idle');
         }
-        // TUYá»†T Äá»I KHÃ”NG kÃ­ch hoáº¡t hiá»‡u á»©ng phÃ¡o hoa hay chÃºc má»«ng khi ngÆ°á»i dÃ¹ng vá»«a kÃ©o tháº£ mÃ¨o xong
+        // TUYỆT ĐỐI KHÔNG kích hoạt hiệu ứng pháo hoa hay chúc mừng khi người dùng vừa kéo thả mèo xong
       }
     };
 
@@ -1302,7 +1302,7 @@ function ScreenCatCompanion(){
     };
   },[catEnabled,getFloorY,pos.y]);
 
-  // Hiá»‡u á»©ng rÆ¡i bung dÃ¹ khi tháº£ tá»« trÃªn cao
+  // Hiệu ứng rơi bung dù khi thả từ trên cao
   useEffect(()=>{
     if(!catEnabled||state!=='fall')return;
     let animId;
@@ -1327,20 +1327,20 @@ function ScreenCatCompanion(){
     return()=>cancelAnimationFrame(animId);
   },[catEnabled,state,getFloorY,playSound]);
 
-  // VÃ²ng láº·p hÃ nh vi tá»± nhiÃªn: 20s idle ngá»§, 10s sau tháº£ má»›i Ä‘i dáº¡o, quay láº¡i lá» an toÃ n
+  // Vòng lặp hành vi tự nhiên: 20s idle ngủ, 10s sau thả mới đi dạo, quay lại lề an toàn
   useEffect(()=>{
     if(!catEnabled)return;
     const interval=setInterval(()=>{
       if(isPointerDownRef.current||state==='fall'||state==='drag'||state==='dash'||state==='celebrate'||state==='landing'||state==='bounce')return;
       const now=Date.now();
 
-      // Tráº¡ng thÃ¡i nhÃ n rá»—i (Idle): Khi ngÆ°á»i dÃ¹ng khÃ´ng cháº¡m vÃ o web 20 giÃ¢y, mÃ¨o tá»± Ä‘á»™ng chuyá»ƒn tÆ° tháº¿ náº±m ngá»§
+      // Trạng thái nhàn rỗi (Idle): Khi người dùng không chạm vào web 20 giây, mèo tự động chuyển tư thế nằm ngủ
       if(now-lastUserActivityRef.current>=20000){
         if(state!=='sleep')setState('sleep');
         return;
       }
 
-      // Sau 15 giÃ¢y khÃ´ng tÆ°Æ¡ng tÃ¡c: tá»± Ä‘á»™ng Ä‘Æ°a mÃ¨o vá» gÃ³c lá» an toÃ n
+      // Sau 15 giây không tương tác: tự động đưa mèo về góc lề an toàn
       if(now-lastInteractionTimeRef.current>=15000){
         const isNearLeft=pos.x<100;
         const isNearRight=pos.x>window.innerWidth-120;
@@ -1354,10 +1354,10 @@ function ScreenCatCompanion(){
         }
       }
 
-      // Tháº£ mÃ¨o á»Ÿ Ä‘Ã¢u thÃ¬ Ä‘á»©ng yÃªn 15 giÃ¢y trÆ°á»›c khi tá»± Ä‘á»™ng Ä‘i dáº¡o
+      // Thả mèo ở đâu thì đứng yên 15 giây trước khi tự động đi dạo
       if(now-lastInteractionTimeRef.current<15000)return;
 
-      // Náº¿u náº±m sÃ¡t viá»n quÃ¡ (lá» trÃ¡i < 25px hoáº·c lá» pháº£i > width - 75px), quay láº¡i lá» an toÃ n
+      // Nếu nằm sát viền quá (lề trái < 25px hoặc lề phải > width - 75px), quay lại lề an toàn
       if(pos.x<25||pos.x>window.innerWidth-75){
         const safeX=pos.x<25?70:window.innerWidth-120;
         targetXRef.current=safeX;
@@ -1366,7 +1366,7 @@ function ScreenCatCompanion(){
         return;
       }
 
-      // Äi dáº¡o nháº¹ nhÃ ng thong tháº£
+      // Đi dạo nhẹ nhàng thong thả
       const r=Math.random();
       if(r<0.28){
         const delta=(Math.random()*70+30)*(Math.random()>0.5?1:-1);
@@ -1383,7 +1383,7 @@ function ScreenCatCompanion(){
     return()=>clearInterval(interval);
   },[catEnabled,state,pos.x]);
 
-  // BÆ°á»›c chÃ¢n khi Ä‘i dáº¡o
+  // Bước chân khi đi dạo
   useEffect(()=>{
     if(!catEnabled||state!=='walk')return;
     let animId;
@@ -1414,9 +1414,9 @@ function ScreenCatCompanion(){
     dragOffsetRef.current={x:clientX-pos.x,y:clientY-pos.y};
   };
 
-  // Xá»­ lÃ½ CLICK CHá»¦ Äá»˜NG vÃ o chÃº mÃ¨o
+  // Xử lý CLICK CHỦ ĐỘNG vào chú mèo
   const handleClick=()=>{
-    // Náº¿u di chuyá»ƒn quÃ¡ 6px hoáº·c vá»«a kÃ©o tháº£ xong thÃ¬ KHÃ”NG PHáº¢I click
+    // Nếu di chuyển quá 6px hoặc vừa kéo thả xong thì KHÔNG PHẢI click
     if(hasDraggedRef.current||justFinishedDragRef.current)return;
 
     const now=Date.now();
@@ -1427,7 +1427,7 @@ function ScreenCatCompanion(){
       setState('idle');
     }
 
-    // Cá» chá»‘ng spam (cooldown 3 giÃ¢y): Náº¿u báº¥m liÃªn tá»¥c chá»‰ nháº¥p nhÃ¡y máº¯t, khÃ´ng nháº£y chá»¯ dá»“n dáº­p
+    // Cờ chống spam (cooldown 3 giây): Nếu bấm liên tục chỉ nhấp nháy mắt, không nhảy chữ dồn dập
     if(now-lastClickTimeRef.current<3000){
       setIsBlinking(true);
       setTimeout(()=>setIsBlinking(false),350);
@@ -1435,26 +1435,26 @@ function ScreenCatCompanion(){
     }
     lastClickTimeRef.current=now;
 
-    // Tuyá»‡t Ä‘á»‘i KHÃ”NG báº¯n phÃ¡o hoa confetti toÃ n mÃ n hÃ¬nh
-    // Pháº£n há»“i ngáº«u nhiÃªn 1 trong cÃ¡c hÃ nh Ä‘á»™ng dá»… thÆ°Æ¡ng:
+    // Tuyệt đối KHÔNG bắn pháo hoa confetti toàn màn hình
+    // Phản hồi ngẫu nhiên 1 trong các hành động dễ thương:
     const choice=Math.floor(Math.random()*3);
     if(choice===0){
-      // 1. KÃªu "Meow! ðŸ¾" nháº¹ kÃ¨m Ã¢m thanh nhá»
+      // 1. Kêu "Meow! 🐾" nhẹ kèm âm thanh nhỏ
       try{playSound('pop');}catch(e){}
-      showCatSpeech('Meow! ðŸ¾',1500);
+      showCatSpeech('Meow! 🐾',1500);
     }else if(choice===1){
-      // 2. Nháº£y dá»±ng lÃªn nháº¹ (hiá»‡u á»©ng bounce/nhÃºn chÃ¢n 0.3s)
+      // 2. Nhảy dựng lên nhẹ (hiệu ứng bounce/nhún chân 0.3s)
       try{playSound('pop');}catch(e){}
       setState('bounce');
       setTimeout(()=>setState('idle'),320);
-      showCatSpeech('Boing! ðŸ¾ Cá»‘ lÃªn nhÃ©!',1500);
+      showCatSpeech('Boing! 🐾 Cố lên nhé!',1500);
     }else{
-      // 3. Hiá»‡n bÃ³ng thoáº¡i ngáº¯n 1.5s tá»± biáº¿n máº¥t
+      // 3. Hiện bóng thoại ngắn 1.5s tự biến mất
       const msgs=[
-        'Cá»‘ lÃªn NVC! ðŸ”¥',
-        'Táº­p trung há»c táº­p nhÃ©! ðŸ“š',
-        'NewVision Ä‘á»‰nh nÃ³c ká»‹ch tráº§n! âœ¨',
-        'Nghá»‰ ngÆ¡i uá»‘ng nÆ°á»›c nhÃ©! ðŸµ'
+        'Cố lên NVC! 🔥',
+        'Tập trung học tập nhé! 📚',
+        'NewVision đỉnh nóc kịch trần! ✨',
+        'Nghỉ ngơi uống nước nhé! 🍵'
       ];
       const msg=msgs[Math.floor(Math.random()*msgs.length)];
       try{playSound('pop');}catch(e){}
@@ -1462,14 +1462,14 @@ function ScreenCatCompanion(){
     }
   };
 
-  // Click Ä‘Ãºp (double click) vÃ o mÃ¨o Ä‘á»ƒ quay vá» vá»‹ trÃ­ ban Ä‘áº§u
+  // Click đúp (double click) vào mèo để quay về vị trí ban đầu
   const handleDoubleClick=e=>{
     if(e&&e.stopPropagation)e.stopPropagation();
     const floorY=getFloorY();
     setPos({x:120,y:floorY});
     setState('idle');
     setFacing(1);
-    showCatSpeech('Meow~! ðŸ± Vá» chá»— cÅ© rá»“i!',1500);
+    showCatSpeech('Meow~! 🐱 Về chỗ cũ rồi!',1500);
     try{playSound('pop');}catch(e){}
   };
 
@@ -1497,7 +1497,7 @@ function ScreenCatCompanion(){
       onTouchStart={handlePointerStart}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
-      title="BÃ© mÃ¨o NewVision â€“ KÃ©o tháº£ hoáº·c click Ä‘á»ƒ chÆ¡i Ä‘Ã¹a, click Ä‘Ãºp Ä‘á»ƒ vá» chá»— cÅ©!"
+      title="Bé mèo NewVision – Kéo thả hoặc click để chơi đùa, click đúp để về chỗ cũ!"
     >
       {speech&&(
         <div
@@ -1615,12 +1615,12 @@ function SettingsModal({open,onClose}){
 
   const handleExport=()=>{
     exportJSON({
-      exportedAt:new Date().toISOString(),version:'2.5',clb:'NewVision HUP â€“ CLB Ká»¹ nÄƒng má»m ÄH DÆ°á»£c HN',
+      exportedAt:new Date().toISOString(),version:'2.5',clb:'NewVision HUP – CLB Kỹ năng mềm ĐH Dược HN',
       decisions,events,members,sessions,assignTasks,quickChecklist,quickLinks,
       resources,inventory,expenses,notifications:notifications.slice(0,100),
     },`newvision-hup-${new Date().toISOString().slice(0,10)}.json`);
     try{playSound('success');}catch(e){}
-    try{addNotification('ðŸ“¦ ÄÃ£ xuáº¥t backup dá»¯ liá»‡u thÃ nh cÃ´ng!','success');}catch(e){}
+    try{addNotification('📦 Đã xuất backup dữ liệu thành công!','success');}catch(e){}
   };
 
   const handleImport=e=>{
@@ -1631,7 +1631,7 @@ function SettingsModal({open,onClose}){
       try{
         const d=JSON.parse(ev.target.result);
         if(!fbDb){
-          alert('Lá»—i lÆ°u Firebase: ChÆ°a káº¿t ná»‘i Ä‘Æ°á»£c Firebase Firestore!');
+          alert('Lỗi lưu Firebase: Chưa kết nối được Firebase Firestore!');
           return;
         }
         const batch=fbDb.batch();
@@ -1649,11 +1649,11 @@ function SettingsModal({open,onClose}){
         if(d.bcnNotes&&typeof d.bcnNotes==='object')batch.set(fbDb.collection('bcnNotes').doc('general'),{data:d.bcnNotes},{merge:true});
         await batch.commit();
         try{playSound('success');}catch(e){}
-        try{addNotification('âœ… Nháº­p dá»¯ liá»‡u backup lÃªn Cloud Firestore thÃ nh cÃ´ng!','success');}catch(e){}
+        try{addNotification('✅ Nhập dữ liệu backup lên Cloud Firestore thành công!','success');}catch(e){}
         onClose();
       }catch(err){
         console.error('Import error:',err);
-        alert('Lá»—i lÆ°u Firebase: '+err.message);
+        alert('Lỗi lưu Firebase: '+err.message);
       }
     };
     reader.readAsText(file);
@@ -1661,10 +1661,10 @@ function SettingsModal({open,onClose}){
   };
 
   return(
-    <Modal open={open} onClose={onClose} title="CÃ i Äáº·t Há»‡ Thá»‘ng & Giao Diá»‡n" wide>
+    <Modal open={open} onClose={onClose} title="Cài Đặt Hệ Thống & Giao Diện" wide>
       <div className="space-y-6">
         <div>
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">ðŸŽ¨ TÃ¹y chá»n Theme mÃ u chá»§ Ä‘áº¡o</label>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">🎨 Tùy chọn Theme màu chủ đạo</label>
           <div className="grid sm:grid-cols-3 gap-3">
             {COLOR_THEMES.map(t=>(
               <div
@@ -1674,10 +1674,10 @@ function SettingsModal({open,onClose}){
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full shadow-inner flex items-center justify-center text-white text-[10px]" style={{background:t.c1}}>âœ“</span>
+                    <span className="w-5 h-5 rounded-full shadow-inner flex items-center justify-center text-white text-[10px]" style={{background:t.c1}}>✓</span>
                     <span className="font-bold text-sm text-slate-800 dark:text-slate-100">{t.name}</span>
                   </div>
-                  {theme===t.id&&<span className="text-[10px] bg-orange-500 text-white font-bold px-1.5 py-0.5 rounded-full">Äang dÃ¹ng</span>}
+                  {theme===t.id&&<span className="text-[10px] bg-orange-500 text-white font-bold px-1.5 py-0.5 rounded-full">Đang dùng</span>}
                 </div>
                 <div className="h-2 rounded-full mb-2" style={{background:`linear-gradient(90deg, ${t.c1}, ${t.c2})`}}/>
                 <p className="text-[11px] text-slate-400 leading-snug">{t.sub}</p>
@@ -1687,7 +1687,7 @@ function SettingsModal({open,onClose}){
         </div>
 
         <div>
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">ðŸ¦‰ TÃ¹y chá»n Linh váº­t CLB</label>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">🦉 Tùy chọn Linh vật CLB</label>
           <div className="grid sm:grid-cols-2 gap-3">
             {MASCOT_TYPES.map(m=>(
               <div
@@ -1701,7 +1701,7 @@ function SettingsModal({open,onClose}){
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-sm text-slate-800 dark:text-slate-100">{m.name}</span>
-                    {mascotType===m.id&&<span className="text-[10px] bg-orange-500 text-white font-bold px-1.5 py-0.5 rounded-full">Äang dÃ¹ng</span>}
+                    {mascotType===m.id&&<span className="text-[10px] bg-orange-500 text-white font-bold px-1.5 py-0.5 rounded-full">Đang dùng</span>}
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5">{m.desc}</p>
                 </div>
@@ -1713,10 +1713,10 @@ function SettingsModal({open,onClose}){
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="card p-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">ðŸ±</span>
+              <span className="text-2xl">🐱</span>
               <div>
-                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">BÃ© MÃ¨o Cháº¡y MÃ n HÃ¬nh</p>
-                <p className="text-[11px] text-slate-400">Pet áº£o xáº£ stress, kÃ©o tháº£ vÃ  vá»n chuá»™t</p>
+                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">Bé Mèo Chạy Màn Hình</p>
+                <p className="text-[11px] text-slate-400">Pet ảo xả stress, kéo thả và vờn chuột</p>
               </div>
             </div>
             <button
@@ -1729,10 +1729,10 @@ function SettingsModal({open,onClose}){
 
           <div className="card p-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">ðŸ”Š</span>
+              <span className="text-2xl">🔊</span>
               <div>
-                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">Ã‚m Thanh Hiá»‡u á»¨ng</p>
-                <p className="text-[11px] text-slate-400">Ã‚m thanh vui tai khi chá»‘t viá»‡c & SOS</p>
+                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">Âm Thanh Hiệu Ứng</p>
+                <p className="text-[11px] text-slate-400">Âm thanh vui tai khi chốt việc & SOS</p>
               </div>
             </div>
             <button
@@ -1748,7 +1748,7 @@ function SettingsModal({open,onClose}){
         <div className="card p-4 border border-blue-200 dark:border-blue-900/50 bg-slate-50/70 dark:bg-slate-800/40">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Tráº¡ng thÃ¡i: <span className="font-bold text-emerald-600 dark:text-emerald-400">â— ÄÃ£ Ä‘á»“ng bá»™ Cloud</span>
+              Trạng thái: <span className="font-bold text-emerald-600 dark:text-emerald-400">● Đã đồng bộ Cloud</span>
             </span>
             <span className="font-mono text-[11px] text-slate-400">newvision-hub</span>
           </div>
@@ -1760,41 +1760,41 @@ function SettingsModal({open,onClose}){
                 onClick={requestWebPush}
                 className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5 shadow-sm"
               >
-                <Icon name="bell" size={14}/> Báº­t ThÃ´ng BÃ¡o Äáº©y (Web Push)
+                <Icon name="bell" size={14}/> Bật Thông Báo Đẩy (Web Push)
               </button>
             ) : (
               <button
                 onClick={()=>{
-                  showWebPush('ðŸŽ‰ Test ThÃ´ng BÃ¡o Web Push','Há»‡ thá»‘ng thÃ´ng bÃ¡o Ä‘áº©y NewVision HUP Ä‘ang hoáº¡t Ä‘á»™ng hoÃ n háº£o trÃªn mÃ¡y tÃ­nh cá»§a báº¡n!');
+                  showWebPush('🎉 Test Thông Báo Web Push','Hệ thống thông báo đẩy NewVision HUP đang hoạt động hoàn hảo trên máy tính của bạn!');
                   try{playSound('success');}catch(e){}
-                  try{addNotification('ðŸ§ª ÄÃ£ gá»­i thá»­ thÃ´ng bÃ¡o Ä‘áº©y Web Push lÃªn mÃ n hÃ¬nh!','success');}catch(e){}
+                  try{addNotification('🧪 Đã gửi thử thông báo đẩy Web Push lên màn hình!','success');}catch(e){}
                 }}
                 className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 text-slate-700 hover:text-blue-600"
               >
-                <Icon name="send" size={14}/> ðŸ§ª Báº¯n Thá»­ ThÃ´ng BÃ¡o
+                <Icon name="send" size={14}/> 🧪 Bắn Thử Thông Báo
               </button>
             )}
 
             <button
               onClick={pushAllToCloud}
               className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
-              title="Ghi Ä‘Ã¨ dá»¯ liá»‡u hiá»‡n táº¡i lÃªn Cloud Firestore"
+              title="Ghi đè dữ liệu hiện tại lên Cloud Firestore"
             >
-              <Icon name="upload-cloud" size={14}/> Äáº©y LÃªn Cloud (Push)
+              <Icon name="upload-cloud" size={14}/> Đẩy Lên Cloud (Push)
             </button>
 
             <button
               onClick={pullAllFromCloud}
               className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
-              title="Táº£i láº¡i toÃ n bá»™ dá»¯ liá»‡u má»›i nháº¥t tá»« Cloud Firestore"
+              title="Tải lại toàn bộ dữ liệu mới nhất từ Cloud Firestore"
             >
-              <Icon name="download-cloud" size={14}/> KÃ©o Tá»« Cloud (Pull)
+              <Icon name="download-cloud" size={14}/> Kéo Từ Cloud (Pull)
             </button>
           </div>
         </div>
 
         <div>
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">ðŸ’¾ Sao LÆ°u & Äá»“ng Bá»™ Dá»¯ Liá»‡u</label>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">💾 Sao Lưu & Đồng Bộ Dữ Liệu</label>
           <div className="grid sm:grid-cols-2 gap-3">
             <button
               onClick={handleExport}
@@ -1804,8 +1804,8 @@ function SettingsModal({open,onClose}){
                 <Icon name="download" size={20}/>
               </div>
               <div>
-                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">Xuáº¥t Backup (JSON)</p>
-                <p className="text-[11px] text-slate-400">Táº£i file dá»¯ liá»‡u lÆ°u vá» mÃ¡y</p>
+                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">Xuất Backup (JSON)</p>
+                <p className="text-[11px] text-slate-400">Tải file dữ liệu lưu về máy</p>
               </div>
             </button>
 
@@ -1818,16 +1818,16 @@ function SettingsModal({open,onClose}){
                 <Icon name="upload" size={20}/>
               </div>
               <div>
-                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">Nháº­p Backup (JSON)</p>
-                <p className="text-[11px] text-slate-400">Äá»“ng bá»™ tá»« file backup cÃ³ sáºµn</p>
+                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">Nhập Backup (JSON)</p>
+                <p className="text-[11px] text-slate-400">Đồng bộ từ file backup có sẵn</p>
               </div>
             </button>
           </div>
         </div>
 
         <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs text-slate-400">
-          <span>NewVision HUP v2.5 Pro Â· ÄH DÆ°á»£c HÃ  Ná»™i</span>
-          <button onClick={onClose} className="btn-secondary text-xs py-1.5 px-4">ÄÃ³ng</button>
+          <span>NewVision HUP v2.5 Pro · ĐH Dược Hà Nội</span>
+          <button onClick={onClose} className="btn-secondary text-xs py-1.5 px-4">Đóng</button>
         </div>
       </div>
     </Modal>
@@ -1835,7 +1835,7 @@ function SettingsModal({open,onClose}){
 }
 
 // ============================================================
-// PHÃ’NG BAN CHá»¦ NHIá»†M (BCN SECRET HUB)
+// PHÒNG BAN CHỦ NHIỆM (BCN SECRET HUB)
 // ============================================================
 function BcnRoomPage(){
   const{
@@ -1852,15 +1852,15 @@ function BcnRoomPage(){
   const[planModal,setPlanModal]=useState(false);
   const[editingPlan,setEditingPlan]=useState(null);
   const[newMilestone,setNewMilestone]=useState('');
-  const emptyPlan={title:'',deadline:'',level:'Tuyá»‡t máº­t',pic:'',content:'',milestones:[]};
+  const emptyPlan={title:'',deadline:'',level:'Tuyệt mật',pic:'',content:'',milestones:[]};
   const[planForm,setPlanForm]=useState(emptyPlan);
 
   const handleSavePin=()=>{
-    if(!pinEdit.trim()||pinEdit.length<4){alert('MÃ£ PIN má»›i pháº£i cÃ³ Ã­t nháº¥t 4 kÃ½ tá»±!');return}
+    if(!pinEdit.trim()||pinEdit.length<4){alert('Mã PIN mới phải có ít nhất 4 ký tự!');return}
     setBcnPin(pinEdit.trim());
     setPinSaved(true);
     try{playSound('success');}catch(e){}
-    try{addNotification('ðŸ”’ ÄÃ£ Ä‘á»•i mÃ£ PIN Ban Chá»§ Nhiá»‡m thÃ nh cÃ´ng!','success');}catch(e){}
+    try{addNotification('🔒 Đã đổi mã PIN Ban Chủ Nhiệm thành công!','success');}catch(e){}
     setTimeout(()=>{setPinSaved(false);setPinEdit('');},2000);
   };
 
@@ -1883,12 +1883,12 @@ function BcnRoomPage(){
     if(input===bcnPin){
       try{playSound('success');}catch(e){}
       setBcnUnlocked(true);
-      try{addNotification('ðŸ”“ Má»Ÿ khÃ³a thÃ nh cÃ´ng PhÃ²ng Ban Chá»§ Nhiá»‡m!','success');}catch(e){}
+      try{addNotification('🔓 Mở khóa thành công Phòng Ban Chủ Nhiệm!','success');}catch(e){}
       setPinInput('');
     }else{
       setShaking(true);
       try{playSound('sos');}catch(e){}
-      try{addNotification('MÃ£ PIN khÃ´ng chÃ­nh xÃ¡c! Vui lÃ²ng thá»­ láº¡i.','error');}catch(e){}
+      try{addNotification('Mã PIN không chính xác! Vui lòng thử lại.','error');}catch(e){}
       setTimeout(()=>{
         setShaking(false);
         setPinInput('');
@@ -1908,69 +1908,69 @@ function BcnRoomPage(){
   const handleLockNow=()=>{
     setBcnUnlocked(false);
     try{playSound('pop');}catch(e){}
-    try{addNotification('ðŸ”’ ÄÃ£ khÃ³a PhÃ²ng Ban Chá»§ Nhiá»‡m an toÃ n!','info');}catch(e){}
+    try{addNotification('🔒 Đã khóa Phòng Ban Chủ Nhiệm an toàn!','info');}catch(e){}
   };
 
   const saveMemberBcnNote=async(memberId,noteText)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('bcnNotes').doc('general').set({
         data:{...bcnNotes,[memberId]:noteText}
       },{merge:true});
       try{playSound('pop');}catch(e){}
-      try{addNotification('ðŸ“ ÄÃ£ lÆ°u ghi chÃº BCN cho thÃ nh viÃªn!','success');}catch(e){}
+      try{addNotification('📝 Đã lưu ghi chú BCN cho thành viên!','success');}catch(e){}
     }catch(err){
-      console.error('Lá»—i lÆ°u ghi chÃº BCN:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu ghi chú BCN:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const setMemberEval=async(memberId,newEval)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(memberId).set({eval:newEval},{merge:true});
       try{playSound('pop');}catch(e){}
-      try{addNotification(`ÄÃ£ cáº­p nháº­t Ä‘Ã¡nh giÃ¡ thÃ nh viÃªn thÃ nh: ${newEval}`,'info');}catch(e){}
+      try{addNotification(`Đã cập nhật đánh giá thành viên thành: ${newEval}`,'info');}catch(e){}
     }catch(err){
-      console.error('Lá»—i lÆ°u Ä‘Ã¡nh giÃ¡ thÃ nh viÃªn:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu đánh giá thành viên:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const handleApproveExpense=async(exp)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
-      await fbDb.collection('expenses').doc(exp.id).set({status:'ÄÃ£ quyáº¿t toÃ¡n'},{merge:true});
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      await fbDb.collection('expenses').doc(exp.id).set({status:'Đã quyết toán'},{merge:true});
       try{playSound('success');}catch(e){}
       triggerCat('celebrate');
-      try{addNotification(`âœ… ÄÃ£ duyá»‡t quyáº¿t toÃ¡n cho ${exp.person||'thÃ nh viÃªn'}: ${fmtVND(exp.amount)}`,'success');}catch(e){}
+      try{addNotification(`✅ Đã duyệt quyết toán cho ${exp.person||'thành viên'}: ${fmtVND(exp.amount)}`,'success');}catch(e){}
     }catch(err){
-      console.error('Lá»—i duyá»‡t quyáº¿t toÃ¡n:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi duyệt quyết toán:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const handleRejectExpense=async(exp)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('expenses').doc(exp.id).set({
-        status:'Cáº§n giáº£i trÃ¬nh',
-        note:(exp.note||'')+' [BCN yÃªu cáº§u giáº£i trÃ¬nh thÃªm]'
+        status:'Cần giải trình',
+        note:(exp.note||'')+' [BCN yêu cầu giải trình thêm]'
       },{merge:true});
       try{playSound('pop');}catch(e){}
-      try{addNotification(`âš ï¸ ÄÃ£ yÃªu cáº§u giáº£i trÃ¬nh khoáº£n chi "${exp.name}"`,'warning');}catch(e){}
+      try{addNotification(`⚠️ Đã yêu cầu giải trình khoản chi "${exp.name}"`,'warning');}catch(e){}
     }catch(err){
-      console.error('Lá»—i tá»« chá»‘i quyáº¿t toÃ¡n:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi từ chối quyết toán:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const openAddPlan=()=>{setEditingPlan(null);setPlanForm(emptyPlan);setPlanModal(true)};
   const openEditPlan=p=>{setEditingPlan(p.id);setPlanForm({...p});setPlanModal(true)};
   const handleSavePlan=async()=>{
-    if(!planForm.title.trim()){alert('Vui lÃ²ng nháº­p tÃªn chiáº¿n lÆ°á»£c!');return}
+    if(!planForm.title.trim()){alert('Vui lòng nhập tên chiến lược!');return}
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       if(editingPlan){
         await fbDb.collection('bcnPlans').doc(editingPlan).set(planForm,{merge:true});
       }else{
@@ -1983,34 +1983,34 @@ function BcnRoomPage(){
       }
       setPlanModal(false);
       try{playSound('success');}catch(e){}
-      try{addNotification('ðŸŽ¯ ÄÃ£ lÆ°u káº¿ hoáº¡ch tÃ¡c chiáº¿n máº­t!','success');}catch(e){}
+      try{addNotification('🎯 Đã lưu kế hoạch tác chiến mật!','success');}catch(e){}
     }catch(err){
-      console.error('Lá»—i lÆ°u káº¿ hoáº¡ch BCN:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu kế hoạch BCN:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const toggleMilestone=async(planId,mId)=>{
     const pl=bcnPlans.find(x=>x.id===planId);
     if(!pl)return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const updatedMilestones=(pl.milestones||[]).map(m=>m.id===mId?{...m,done:!m.done}:m);
       await fbDb.collection('bcnPlans').doc(planId).set({milestones:updatedMilestones},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i cáº­p nháº­t má»‘c tiáº¿n Ä‘á»™:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi cập nhật mốc tiến độ:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const handleDeletePlan=async(id)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('bcnPlans').doc(id).delete();
       try{playSound('pop');}catch(e){}
-      try{addNotification('ÄÃ£ xÃ³a káº¿ hoáº¡ch BCN','info');}catch(e){}
+      try{addNotification('Đã xóa kế hoạch BCN','info');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a káº¿ hoáº¡ch:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa kế hoạch:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const addMilestoneToForm=()=>{
@@ -2022,18 +2022,18 @@ function BcnRoomPage(){
   const totalSessions=sessions.length;
   const alertMembers=useMemo(()=>{
     return members.filter(m=>{
-      const isBadEval=m.eval==='Cáº§n theo dÃµi'||m.eval==='KhÃ´ng Ä‘áº¡t';
-      const presentCount=sessions.filter(s=>m.attendance?.[s.id]==='CÃ³ máº·t').length;
+      const isBadEval=m.eval==='Cần theo dõi'||m.eval==='Không đạt';
+      const presentCount=sessions.filter(s=>m.attendance?.[s.id]==='Có mặt').length;
       const attPct=totalSessions>0?Math.round(presentCount/totalSessions*100):100;
       const trackedTasks=assignTasks.filter(t=>m.taskStatus?.[t.id]);
-      const onTimeCount=trackedTasks.filter(t=>m.taskStatus?.[t.id]==='ÄÃºng háº¡n').length;
+      const onTimeCount=trackedTasks.filter(t=>m.taskStatus?.[t.id]==='Đúng hạn').length;
       const taskPct=trackedTasks.length>0?Math.round(onTimeCount/trackedTasks.length*100):100;
       return isBadEval||attPct<60||taskPct<60;
     });
   },[members,sessions,assignTasks,totalSessions]);
 
   const pendingExpenses=useMemo(()=>{
-    return expenses.filter(e=>e.status==='ÄÃ£ chi - Chá» hoÃ n tiá»n'||(Number(e.amount)||0)>=300000);
+    return expenses.filter(e=>e.status==='Đã chi - Chờ hoàn tiền'||(Number(e.amount)||0)>=300000);
   },[expenses]);
 
   if(!bcnUnlocked){
@@ -2043,8 +2043,8 @@ function BcnRoomPage(){
           <div className="w-16 h-16 rounded-2xl bg-amber-500 text-white flex items-center justify-center mx-auto mb-4 shadow-lg pulse-shield">
             <Icon name="shield-alert" size={32}/>
           </div>
-          <h2 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wide">Khu Vá»±c Báº£o Máº­t BCN</h2>
-          <p className="text-xs text-slate-400 mt-1 mb-5">Nháº­p mÃ£ PIN Ä‘á»ƒ truy cáº­p phÃ²ng tÃ¡c chiáº¿n kÃ­n</p>
+          <h2 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wide">Khu Vực Bảo Mật BCN</h2>
+          <p className="text-xs text-slate-400 mt-1 mb-5">Nhập mã PIN để truy cập phòng tác chiến kín</p>
           <div className="flex justify-center items-center gap-3 mb-6">
             {[0,1,2,3].map(i=>(
               <div
@@ -2067,7 +2067,7 @@ function BcnRoomPage(){
               onClick={()=>{setPinInput('');try{playSound('pop');}catch(e){}}}
               className="h-12 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700/50 text-slate-500 hover:bg-slate-200 transition"
             >
-              XÃ³a
+              Xóa
             </button>
             <button
               onClick={()=>handleNumClick('0')}
@@ -2079,7 +2079,7 @@ function BcnRoomPage(){
               onClick={()=>setPinInput(p=>p.slice(0,-1))}
               className="h-12 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-700/50 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center"
             >
-              âŒ«
+              ⌫
             </button>
           </div>
         </div>
@@ -2096,26 +2096,26 @@ function BcnRoomPage(){
           </div>
           <div>
             <h1 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-              PhÃ²ng Ban Chá»§ Nhiá»‡m (BCN Secret Hub)
-              <span className="text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded-full">ÄÃƒ Má»ž KHÃ“A</span>
+              Phòng Ban Chủ Nhiệm (BCN Secret Hub)
+              <span className="text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded-full">ĐÃ MỞ KHÓA</span>
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">KhÃ´ng gian quáº£n trá»‹ tá»‘i máº­t dÃ nh cho BCN NewVision</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Không gian quản trị tối mật dành cho BCN NewVision</p>
           </div>
         </div>
         <button onClick={handleLockNow} className="btn-danger flex items-center gap-1.5 text-xs py-2 px-3">
-          <Icon name="lock" size={14}/>KhÃ³a PhÃ²ng Ngay
+          <Icon name="lock" size={14}/>Khóa Phòng Ngay
         </button>
       </div>
 
-      {/* KHU Vá»°C THIáº¾T Láº¬P MÃƒ PIN Báº¢O Máº¬T BCN */}
+      {/* KHU VỰC THIẾT LẬP MÃ PIN BẢO MẬT BCN */}
       <div className="card p-3.5 border border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 flex items-center justify-center flex-shrink-0">
             <Icon name="key" size={16}/>
           </div>
           <div>
-            <p className="text-xs font-bold text-amber-900 dark:text-amber-200">Äá»•i MÃ£ PIN Ban Chá»§ Nhiá»‡m</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Chá»‰ thÃ nh viÃªn BCN Ä‘Ã£ má»Ÿ khÃ³a má»›i cÃ³ quyá»n Ä‘á»•i mÃ£ nÃ y</p>
+            <p className="text-xs font-bold text-amber-900 dark:text-amber-200">Đổi Mã PIN Ban Chủ Nhiệm</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Chỉ thành viên BCN đã mở khóa mới có quyền đổi mã này</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -2125,19 +2125,19 @@ function BcnRoomPage(){
             value={pinEdit}
             onChange={e=>setPinEdit(e.target.value)}
             className="form-input text-xs font-mono tracking-widest text-center w-28 py-1.5"
-            placeholder="PIN má»›i..."
+            placeholder="PIN mới..."
           />
           <button onClick={handleSavePin} className="btn-primary text-xs py-1.5 px-3 whitespace-nowrap">
-            {pinSaved ? 'âœ“ ÄÃ£ LÆ°u' : 'LÆ°u PIN'}
+            {pinSaved ? '✓ Đã Lưu' : 'Lưu PIN'}
           </button>
         </div>
       </div>
 
       <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
         {[
-          ['radar','ðŸš¨ Radar NhÃ¢n Sá»± Nháº¡y Cáº£m',alertMembers.length],
-          ['expenses','ðŸ’° Duyá»‡t Quá»¹ & Chi PhÃ­ Lá»›n',pendingExpenses.length],
-          ['plans','ðŸŽ¯ Káº¿ Hoáº¡ch TÃ¡c Chiáº¿n Máº­t',bcnPlans.length],
+          ['radar','🚨 Radar Nhân Sự Nhạy Cảm',alertMembers.length],
+          ['expenses','💰 Duyệt Quỹ & Chi Phí Lớn',pendingExpenses.length],
+          ['plans','🎯 Kế Hoạch Tác Chiến Mật',bcnPlans.length],
         ].map(([v,l,count])=>(
           <button
             key={v}
@@ -2154,27 +2154,27 @@ function BcnRoomPage(){
         <div className="space-y-4">
           <div className="grid sm:grid-cols-3 gap-3">
             <div className="card p-3 border-l-4 border-red-500">
-              <p className="text-xs text-slate-400">Tá»•ng Cáº£nh BÃ¡o</p>
+              <p className="text-xs text-slate-400">Tổng Cảnh Báo</p>
               <p className="text-2xl font-black text-red-500">{alertMembers.length}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">ThÃ nh viÃªn / CTV cáº§n can thiá»‡p</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Thành viên / CTV cần can thiệp</p>
             </div>
             <div className="card p-3 border-l-4 border-amber-500">
-              <p className="text-xs text-slate-400">Cáº§n Theo DÃµi</p>
-              <p className="text-2xl font-black text-amber-500">{alertMembers.filter(m=>m.eval==='Cáº§n theo dÃµi').length}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Cáº§n nháº¯c nhá»Ÿ & há»— trá»£</p>
+              <p className="text-xs text-slate-400">Cần Theo Dõi</p>
+              <p className="text-2xl font-black text-amber-500">{alertMembers.filter(m=>m.eval==='Cần theo dõi').length}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Cần nhắc nhở & hỗ trợ</p>
             </div>
             <div className="card p-3 border-l-4 border-rose-600">
-              <p className="text-xs text-slate-400">KhÃ´ng Äáº¡t</p>
-              <p className="text-2xl font-black text-rose-600">{alertMembers.filter(m=>m.eval==='KhÃ´ng Ä‘áº¡t').length}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Xem xÃ©t cho thÃ´i sinh hoáº¡t</p>
+              <p className="text-xs text-slate-400">Không Đạt</p>
+              <p className="text-2xl font-black text-rose-600">{alertMembers.filter(m=>m.eval==='Không đạt').length}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Xem xét cho thôi sinh hoạt</p>
             </div>
           </div>
 
           {alertMembers.length===0?(
             <div className="card py-16 text-center">
-              <span className="text-4xl block mb-2">ðŸŽ‰</span>
-              <p className="font-bold text-slate-700 dark:text-slate-200">KhÃ´ng cÃ³ nhÃ¢n sá»± nÃ o trong danh sÃ¡ch cáº£nh bÃ¡o!</p>
-              <p className="text-xs text-slate-400 mt-1">ToÃ n bá»™ thÃ nh viÃªn vÃ  CTV Ä‘á»u cÃ³ tinh tháº§n lÃ m viá»‡c vÃ  tham gia Ä‘áº¡t chuáº©n.</p>
+              <span className="text-4xl block mb-2">🎉</span>
+              <p className="font-bold text-slate-700 dark:text-slate-200">Không có nhân sự nào trong danh sách cảnh báo!</p>
+              <p className="text-xs text-slate-400 mt-1">Toàn bộ thành viên và CTV đều có tinh thần làm việc và tham gia đạt chuẩn.</p>
             </div>
           ):(
             <div className="space-y-3">
@@ -2188,26 +2188,26 @@ function BcnRoomPage(){
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="font-bold text-base text-slate-800 dark:text-white">{m.name}</h4>
-                          <span className={`status-badge text-[11px] ${evalColor(m.eval||'Äáº¡t')}`}>{m.eval}</span>
+                          <span className={`status-badge text-[11px] ${evalColor(m.eval||'Đạt')}`}>{m.eval}</span>
                           <span className="status-badge tag-gray text-[11px]">{m.role}</span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{m.ban||'ChÆ°a phÃ¢n ban'} Â· {m.khoa||''} {m.phone?`Â· ðŸ“ž ${m.phone}`:''}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{m.ban||'Chưa phân ban'} · {m.khoa||''} {m.phone?`· 📞 ${m.phone}`:''}</p>
                       </div>
                     </div>
                     <div className="flex gap-1.5">
-                      <button onClick={()=>setMemberEval(m.id,'Äáº¡t')} className="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold px-2.5 py-1 rounded-lg">Chuyá»ƒn "Äáº¡t"</button>
-                      <button onClick={()=>setMemberEval(m.id,'Cáº§n theo dÃµi')} className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold px-2.5 py-1 rounded-lg">Cáº§n theo dÃµi</button>
-                      <button onClick={()=>setMemberEval(m.id,'KhÃ´ng Ä‘áº¡t')} className="text-xs bg-red-100 hover:bg-red-200 text-red-800 font-semibold px-2.5 py-1 rounded-lg">KhÃ´ng Ä‘áº¡t</button>
+                      <button onClick={()=>setMemberEval(m.id,'Đạt')} className="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold px-2.5 py-1 rounded-lg">Chuyển "Đạt"</button>
+                      <button onClick={()=>setMemberEval(m.id,'Cần theo dõi')} className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold px-2.5 py-1 rounded-lg">Cần theo dõi</button>
+                      <button onClick={()=>setMemberEval(m.id,'Không đạt')} className="text-xs bg-red-100 hover:bg-red-200 text-red-800 font-semibold px-2.5 py-1 rounded-lg">Không đạt</button>
                     </div>
                   </div>
 
                   <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <label className="text-[11px] font-bold text-slate-500 block mb-1.5">ðŸ”’ Sá»• ghi chÃº kÃ­n cá»§a BCN (Chá»‰ BCN nhÃ¬n tháº¥y):</label>
+                    <label className="text-[11px] font-bold text-slate-500 block mb-1.5">🔒 Sổ ghi chú kín của BCN (Chỉ BCN nhìn thấy):</label>
                     <div className="flex gap-2">
                       <input
                         defaultValue={bcnNotes[m.id]||''}
                         onBlur={e=>saveMemberBcnNote(m.id,e.target.value)}
-                        placeholder="VD: Cáº§n háº¹n gáº·p 1-1 trao Ä‘á»•i, dáº¡o nÃ y báº­n thi chuyÃªn ngÃ nh..."
+                        placeholder="VD: Cần hẹn gặp 1-1 trao đổi, dạo này bận thi chuyên ngành..."
                         className="form-input text-xs py-1.5 flex-1"
                       />
                       <button
@@ -2217,7 +2217,7 @@ function BcnRoomPage(){
                         }}
                         className="btn-primary text-xs py-1.5 px-3"
                       >
-                        LÆ°u
+                        Lưu
                       </button>
                     </div>
                   </div>
@@ -2231,15 +2231,15 @@ function BcnRoomPage(){
       {tab==='expenses'&&(
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm text-slate-800 dark:text-white">Khoáº£n Chi Cáº§n Duyá»‡t & Chi PhÃ­ Lá»›n</h3>
-            <span className="text-xs text-slate-400">Tá»•ng chá» duyá»‡t: <strong>{fmtVND(pendingExpenses.filter(e=>e.status==='ÄÃ£ chi - Chá» hoÃ n tiá»n').reduce((s,e)=>s+(Number(e.amount)||0),0))}</strong></span>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-white">Khoản Chi Cần Duyệt & Chi Phí Lớn</h3>
+            <span className="text-xs text-slate-400">Tổng chờ duyệt: <strong>{fmtVND(pendingExpenses.filter(e=>e.status==='Đã chi - Chờ hoàn tiền').reduce((s,e)=>s+(Number(e.amount)||0),0))}</strong></span>
           </div>
 
           {pendingExpenses.length===0?(
             <div className="card py-16 text-center">
-              <span className="text-3xl block mb-2">ðŸ’°</span>
-              <p className="font-bold text-slate-700 dark:text-slate-200">KhÃ´ng cÃ³ khoáº£n chi nÃ o chá» duyá»‡t!</p>
-              <p className="text-xs text-slate-400 mt-1">Táº¥t cáº£ chi tiÃªu cá»§a CLB Ä‘Ã£ Ä‘Æ°á»£c quyáº¿t toÃ¡n hoÃ n táº¥t.</p>
+              <span className="text-3xl block mb-2">💰</span>
+              <p className="font-bold text-slate-700 dark:text-slate-200">Không có khoản chi nào chờ duyệt!</p>
+              <p className="text-xs text-slate-400 mt-1">Tất cả chi tiêu của CLB đã được quyết toán hoàn tất.</p>
             </div>
           ):(
             <div className="space-y-3">
@@ -2247,7 +2247,7 @@ function BcnRoomPage(){
                 <div key={e.id} className="card p-4 border-l-4 border-amber-500 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-base flex-shrink-0">
-                      â‚«
+                      ₫
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -2255,7 +2255,7 @@ function BcnRoomPage(){
                         <span className={`status-badge text-[11px] ${expenseColor(e.status)}`}>{e.status}</span>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        NgÆ°á»i chi: <strong>{e.person||'â€”'}</strong> Â· Ban: {e.ban||'ToÃ n CLB'} {e.note?`Â· "${e.note}"`:''}
+                        Người chi: <strong>{e.person||'—'}</strong> · Ban: {e.ban||'Toàn CLB'} {e.note?`· "${e.note}"`:''}
                       </p>
                       <p className="text-base font-black text-orange-600 mt-1">{fmtVND(e.amount)}</p>
                     </div>
@@ -2263,10 +2263,10 @@ function BcnRoomPage(){
 
                   <div className="flex gap-2">
                     <button onClick={()=>handleRejectExpense(e)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1">
-                      <Icon name="alert-circle" size={13}/>YÃªu Cáº§u Giáº£i TrÃ¬nh
+                      <Icon name="alert-circle" size={13}/>Yêu Cầu Giải Trình
                     </button>
                     <button onClick={()=>handleApproveExpense(e)} className="btn-primary text-xs py-1.5 px-4 flex items-center gap-1">
-                      <Icon name="check" size={14}/>Duyá»‡t Quyáº¿t ToÃ¡n
+                      <Icon name="check" size={14}/>Duyệt Quyết Toán
                     </button>
                   </div>
                 </div>
@@ -2280,11 +2280,11 @@ function BcnRoomPage(){
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-sm text-slate-800 dark:text-white">Chiáº¿n LÆ°á»£c & Káº¿ Hoáº¡ch TÃ¡c Chiáº¿n KÃ­n</h3>
-              <p className="text-xs text-slate-400">CÃ¡c Ä‘á»‹nh hÆ°á»›ng nhÃ¢n sá»±, tÃ i trá»£ vÃ  sá»± kiá»‡n chÆ°a cÃ´ng bá»‘</p>
+              <h3 className="font-bold text-sm text-slate-800 dark:text-white">Chiến Lược & Kế Hoạch Tác Chiến Kín</h3>
+              <p className="text-xs text-slate-400">Các định hướng nhân sự, tài trợ và sự kiện chưa công bố</p>
             </div>
             <button onClick={openAddPlan} className="btn-primary text-xs flex items-center gap-1.5">
-              <Icon name="plus" size={14}/>Táº¡o Káº¿ Hoáº¡ch Má»›i
+              <Icon name="plus" size={14}/>Tạo Kế Hoạch Mới
             </button>
           </div>
 
@@ -2293,18 +2293,18 @@ function BcnRoomPage(){
               <div key={p.id} className="card p-4 border-t-4 border-amber-500 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.level==='Tuyá»‡t máº­t'?'bg-red-100 text-red-700':'bg-amber-100 text-amber-700'}`}>{p.level}</span>
-                    {p.deadline&&<span className="text-xs text-slate-400">Má»¥c tiÃªu: {fmtDate(p.deadline)}</span>}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.level==='Tuyệt mật'?'bg-red-100 text-red-700':'bg-amber-100 text-amber-700'}`}>{p.level}</span>
+                    {p.deadline&&<span className="text-xs text-slate-400">Mục tiêu: {fmtDate(p.deadline)}</span>}
                   </div>
                   <h4 className="font-bold text-base text-slate-800 dark:text-white mb-1.5">{p.title}</h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{p.content}</p>
 
                   <div className="space-y-1.5 mb-3 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase">Má»‘c HÃ nh Äá»™ng:</p>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase">Mốc Hành Động:</p>
                     {(p.milestones||[]).map(m=>(
                       <div key={m.id} onClick={()=>toggleMilestone(p.id,m.id)} className="flex items-center gap-2 cursor-pointer text-xs">
                         <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] border ${m.done?'bg-emerald-500 text-white border-emerald-500':'border-slate-300'}`}>
-                          {m.done?'âœ“':''}
+                          {m.done?'✓':''}
                         </span>
                         <span className={m.done?'line-through text-slate-400':'text-slate-700 dark:text-slate-300'}>{m.text}</span>
                       </div>
@@ -2313,10 +2313,10 @@ function BcnRoomPage(){
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700 text-xs">
-                  <span className="text-slate-400">Phá»¥ trÃ¡ch: <strong>{p.pic||'BCN'}</strong></span>
+                  <span className="text-slate-400">Phụ trách: <strong>{p.pic||'BCN'}</strong></span>
                   <div className="flex gap-2">
-                    <button onClick={()=>openEditPlan(p)} className="text-blue-500 hover:text-blue-700 font-medium">Sá»­a</button>
-                    <button onClick={()=>handleDeletePlan(p.id)} className="text-red-400 hover:text-red-600 font-medium">XÃ³a</button>
+                    <button onClick={()=>openEditPlan(p)} className="text-blue-500 hover:text-blue-700 font-medium">Sửa</button>
+                    <button onClick={()=>handleDeletePlan(p.id)} className="text-red-400 hover:text-red-600 font-medium">Xóa</button>
                   </div>
                 </div>
               </div>
@@ -2325,20 +2325,20 @@ function BcnRoomPage(){
         </div>
       )}
 
-      <Modal open={planModal} onClose={()=>setPlanModal(false)} title={editingPlan?'Sá»­a Káº¿ Hoáº¡ch TÃ¡c Chiáº¿n':'Táº¡o Káº¿ Hoáº¡ch TÃ¡c Chiáº¿n Máº­t Má»›i'}>
+      <Modal open={planModal} onClose={()=>setPlanModal(false)} title={editingPlan?'Sửa Kế Hoạch Tác Chiến':'Tạo Kế Hoạch Tác Chiến Mật Mới'}>
         <div className="space-y-3">
-          <div><label className="form-label">TÃªn chiáº¿n lÆ°á»£c / Dá»± Ã¡n máº­t</label><input value={planForm.title} onChange={e=>setPlanForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="VD: Chiáº¿n dá»‹ch Tuyá»ƒn CTV K81..."/></div>
+          <div><label className="form-label">Tên chiến lược / Dự án mật</label><input value={planForm.title} onChange={e=>setPlanForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="VD: Chiến dịch Tuyển CTV K81..."/></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="form-label">Cáº¥p Ä‘á»™ báº£o máº­t</label><select value={planForm.level} onChange={e=>setPlanForm(p=>({...p,level:e.target.value}))} className="form-input"><option>Tuyá»‡t máº­t</option><option>Ná»™i bá»™ BCN</option><option>Æ¯u tiÃªn cao</option></select></div>
-            <div><label className="form-label">Thá»i háº¡n má»¥c tiÃªu</label><input type="date" value={planForm.deadline} onChange={e=>setPlanForm(p=>({...p,deadline:e.target.value}))} className="form-input"/></div>
+            <div><label className="form-label">Cấp độ bảo mật</label><select value={planForm.level} onChange={e=>setPlanForm(p=>({...p,level:e.target.value}))} className="form-input"><option>Tuyệt mật</option><option>Nội bộ BCN</option><option>Ưu tiên cao</option></select></div>
+            <div><label className="form-label">Thời hạn mục tiêu</label><input type="date" value={planForm.deadline} onChange={e=>setPlanForm(p=>({...p,deadline:e.target.value}))} className="form-input"/></div>
           </div>
-          <div><label className="form-label">NgÆ°á»i phá»¥ trÃ¡ch chÃ­nh (PIC)</label><input value={planForm.pic} onChange={e=>setPlanForm(p=>({...p,pic:e.target.value}))} className="form-input" placeholder="VD: Chá»§ nhiá»‡m, PhÃ³ CN..."/></div>
-          <div><label className="form-label">Ná»™i dung chiáº¿n lÆ°á»£c</label><textarea value={planForm.content} onChange={e=>setPlanForm(p=>({...p,content:e.target.value}))} className="form-input resize-none min-h-[70px]" placeholder="Má»¥c tiÃªu, phÆ°Æ¡ng thá»©c triá»ƒn khai kÃ­n..."/></div>
+          <div><label className="form-label">Người phụ trách chính (PIC)</label><input value={planForm.pic} onChange={e=>setPlanForm(p=>({...p,pic:e.target.value}))} className="form-input" placeholder="VD: Chủ nhiệm, Phó CN..."/></div>
+          <div><label className="form-label">Nội dung chiến lược</label><textarea value={planForm.content} onChange={e=>setPlanForm(p=>({...p,content:e.target.value}))} className="form-input resize-none min-h-[70px]" placeholder="Mục tiêu, phương thức triển khai kín..."/></div>
           <div>
-            <label className="form-label">Má»‘c hÃ nh Ä‘á»™ng</label>
+            <label className="form-label">Mốc hành động</label>
             <div className="flex gap-2 mb-2">
-              <input value={newMilestone} onChange={e=>setNewMilestone(e.target.value)} onKeyDown={e=>e.key==='Enter'&&(e.preventDefault(),addMilestoneToForm())} className="form-input text-xs flex-1" placeholder="ThÃªm má»‘c cÃ´ng viá»‡c..."/>
-              <button type="button" onClick={addMilestoneToForm} className="btn-secondary text-xs px-3">ThÃªm má»‘c</button>
+              <input value={newMilestone} onChange={e=>setNewMilestone(e.target.value)} onKeyDown={e=>e.key==='Enter'&&(e.preventDefault(),addMilestoneToForm())} className="form-input text-xs flex-1" placeholder="Thêm mốc công việc..."/>
+              <button type="button" onClick={addMilestoneToForm} className="btn-secondary text-xs px-3">Thêm mốc</button>
             </div>
             <div className="space-y-1">
               {(planForm.milestones||[]).map((m,idx)=>(
@@ -2350,8 +2350,8 @@ function BcnRoomPage(){
             </div>
           </div>
           <div className="flex gap-2 pt-2">
-            <button onClick={()=>setPlanModal(false)} className="btn-secondary flex-1">Há»§y</button>
-            <button onClick={handleSavePlan} className="btn-primary flex-1">LÆ°u Káº¿ Hoáº¡ch</button>
+            <button onClick={()=>setPlanModal(false)} className="btn-secondary flex-1">Hủy</button>
+            <button onClick={handleSavePlan} className="btn-primary flex-1">Lưu Kế Hoạch</button>
           </div>
         </div>
       </Modal>
@@ -2377,12 +2377,12 @@ function CommandPalette({open,onClose,setActiveTab}){
     if(!query.trim())return[];
     const q=query.toLowerCase();
     const r=[];
-    decisions.filter(d=>d.title.toLowerCase().includes(q)).slice(0,2).forEach(d=>r.push({label:d.title,sub:d.status,icon:'file-check-2',tab:'decisions',type:'Quyáº¿t Ä‘á»‹nh',tcolor:'text-amber-600',tbg:'bg-amber-50'}));
-    events.filter(e=>e.name.toLowerCase().includes(q)).slice(0,2).forEach(e=>r.push({label:e.name,sub:fmtDate(e.date),icon:'calendar-days',tab:'events',type:'Sá»± kiá»‡n',tcolor:'text-blue-600',tbg:'bg-blue-50'}));
-    (studyResources||[]).filter(s=>(s.title||'').toLowerCase().includes(q)||(s.note||'').toLowerCase().includes(q)).slice(0,3).forEach(s=>r.push({label:s.title,sub:`${s.category} â€¢ ${s.block}`,icon:'book-open',tab:'study',type:'Há»c táº­p',tcolor:'text-orange-600',tbg:'bg-orange-50'}));
-    members.filter(m=>m.name.toLowerCase().includes(q)).slice(0,2).forEach(m=>r.push({label:m.name,sub:m.ban||m.role,icon:'user',tab:'members',type:'ThÃ nh viÃªn',tcolor:'text-emerald-600',tbg:'bg-emerald-50'}));
-    resources.filter(r2=>r2.title.toLowerCase().includes(q)).slice(0,2).forEach(r2=>r.push({label:r2.title,sub:r2.type,icon:'link',tab:'resources',type:'TÃ i nguyÃªn',tcolor:'text-purple-600',tbg:'bg-purple-50'}));
-    inventory.filter(i=>i.name.toLowerCase().includes(q)).slice(0,2).forEach(i=>r.push({label:i.name,sub:i.status,icon:'box',tab:'resources',type:'Váº­t dá»¥ng',tcolor:'text-teal-600',tbg:'bg-teal-50'}));
+    decisions.filter(d=>d.title.toLowerCase().includes(q)).slice(0,2).forEach(d=>r.push({label:d.title,sub:d.status,icon:'file-check-2',tab:'decisions',type:'Quyết định',tcolor:'text-amber-600',tbg:'bg-amber-50'}));
+    events.filter(e=>e.name.toLowerCase().includes(q)).slice(0,2).forEach(e=>r.push({label:e.name,sub:fmtDate(e.date),icon:'calendar-days',tab:'events',type:'Sự kiện',tcolor:'text-blue-600',tbg:'bg-blue-50'}));
+    (studyResources||[]).filter(s=>(s.title||'').toLowerCase().includes(q)||(s.note||'').toLowerCase().includes(q)).slice(0,3).forEach(s=>r.push({label:s.title,sub:`${s.category} • ${s.block}`,icon:'book-open',tab:'study',type:'Học tập',tcolor:'text-orange-600',tbg:'bg-orange-50'}));
+    members.filter(m=>m.name.toLowerCase().includes(q)).slice(0,2).forEach(m=>r.push({label:m.name,sub:m.ban||m.role,icon:'user',tab:'members',type:'Thành viên',tcolor:'text-emerald-600',tbg:'bg-emerald-50'}));
+    resources.filter(r2=>r2.title.toLowerCase().includes(q)).slice(0,2).forEach(r2=>r.push({label:r2.title,sub:r2.type,icon:'link',tab:'resources',type:'Tài nguyên',tcolor:'text-purple-600',tbg:'bg-purple-50'}));
+    inventory.filter(i=>i.name.toLowerCase().includes(q)).slice(0,2).forEach(i=>r.push({label:i.name,sub:i.status,icon:'box',tab:'resources',type:'Vật dụng',tcolor:'text-teal-600',tbg:'bg-teal-50'}));
     return r.slice(0,9);
   },[query,decisions,events,members,resources,studyResources,inventory]);
 
@@ -2392,14 +2392,14 @@ function CommandPalette({open,onClose,setActiveTab}){
       <div className="w-full max-w-xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden cmd-in border border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
           <Icon name="search" size={18} className="text-slate-400 flex-shrink-0"/>
-          <input ref={inputRef} value={query} onChange={e=>setQuery(e.target.value)} placeholder="TÃ¬m nhanh cÃ´ng viá»‡c, sá»± kiá»‡n, thÃ nh viÃªn, tÃ i liá»‡u..." className="flex-1 bg-transparent outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400"/>
+          <input ref={inputRef} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Tìm nhanh công việc, sự kiện, thành viên, tài liệu..." className="flex-1 bg-transparent outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400"/>
           <div className="flex items-center gap-1 flex-shrink-0">
             <kbd className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-400 rounded px-1.5 py-0.5">Ctrl K</kbd>
             <button onClick={onClose} className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"><Icon name="x" size={14} className="text-slate-400"/></button>
           </div>
         </div>
         <div className="max-h-80 overflow-y-auto">
-          {query&&results.length===0&&<p className="text-center text-sm text-slate-400 py-10">KhÃ´ng tÃ¬m tháº¥y káº¿t quáº£ nÃ o cho "<b>{query}</b>"</p>}
+          {query&&results.length===0&&<p className="text-center text-sm text-slate-400 py-10">Không tìm thấy kết quả nào cho "<b>{query}</b>"</p>}
           {query&&results.map((r,i)=>(
             <button key={i} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 transition text-left" onClick={()=>{setActiveTab(r.tab);onClose()}}>
               <span className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${r.tbg}`}><Icon name={r.icon} size={17} className={r.tcolor}/></span>
@@ -2413,8 +2413,8 @@ function CommandPalette({open,onClose,setActiveTab}){
           {!query&&(
             <div className="px-4 py-8 text-center">
               <Icon name="search" size={36} className="text-slate-200 mx-auto mb-3"/>
-              <p className="text-sm text-slate-400 font-medium">Báº¯t Ä‘áº§u gÃµ Ä‘á»ƒ tÃ¬m kiáº¿m toÃ n CLB</p>
-              <p className="text-xs text-slate-300 mt-1">TÃ¬m trong: Quyáº¿t Ä‘á»‹nh Â· Sá»± kiá»‡n Â· ThÃ nh viÃªn Â· TÃ i nguyÃªn Â· Váº­t dá»¥ng</p>
+              <p className="text-sm text-slate-400 font-medium">Bắt đầu gõ để tìm kiếm toàn CLB</p>
+              <p className="text-xs text-slate-300 mt-1">Tìm trong: Quyết định · Sự kiện · Thành viên · Tài nguyên · Vật dụng</p>
             </div>
           )}
         </div>
@@ -2446,18 +2446,18 @@ function NotificationBell(){
       {open&&(
         <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 slide-down overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <span className="font-bold text-slate-800 text-sm">ThÃ´ng bÃ¡o {unreadCount>0&&<span className="ml-1 bg-red-100 text-red-600 text-[11px] font-bold px-1.5 rounded-full">{unreadCount}</span>}</span>
-            {unreadCount>0&&<button onClick={markAllRead} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Äá»c táº¥t cáº£</button>}
+            <span className="font-bold text-slate-800 text-sm">Thông báo {unreadCount>0&&<span className="ml-1 bg-red-100 text-red-600 text-[11px] font-bold px-1.5 rounded-full">{unreadCount}</span>}</span>
+            {unreadCount>0&&<button onClick={markAllRead} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Đọc tất cả</button>}
           </div>
           <div className="max-h-96 overflow-y-auto">
-            {recent.length===0?<div className="py-10 text-center text-slate-400 text-sm"><Icon name="bell-off" size={28} className="mx-auto mb-2 text-slate-200"/>ChÆ°a cÃ³ thÃ´ng bÃ¡o</div>:recent.map(n=>(
+            {recent.length===0?<div className="py-10 text-center text-slate-400 text-sm"><Icon name="bell-off" size={28} className="mx-auto mb-2 text-slate-200"/>Chưa có thông báo</div>:recent.map(n=>(
               <div key={n.id} className={`flex gap-3 px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition ${!n.read?'bg-blue-50/60':''}`}>
                 <span className={`mt-0.5 flex-shrink-0 ${typeColors[n.type]||typeColors.info}`}><Icon name={typeIcons[n.type]||'info'} size={16}/></span>
                 <div className="flex-1 min-w-0">
                   <p className={`text-xs leading-snug ${!n.read?'font-semibold text-slate-800':'text-slate-600'}`}>{n.message}</p>
                   <p className="text-[11px] text-slate-400 mt-0.5">{relTime(n.timestamp)}</p>
                 </div>
-                {!n.read&&<button onClick={()=>markRead(n.id)} className="flex-shrink-0 text-[11px] text-blue-500 hover:text-blue-700 font-medium">Äá»c</button>}
+                {!n.read&&<button onClick={()=>markRead(n.id)} className="flex-shrink-0 text-[11px] text-blue-500 hover:text-blue-700 font-medium">Đọc</button>}
               </div>
             ))}
           </div>
@@ -2489,7 +2489,7 @@ function Dashboard({setActiveTab}){
   const allTasks=events.flatMap(e=>(e.tasks||[]).map(t=>({...t,eventId:e.id})));
   const activeTasks=allTasks.filter(t=>!t.done);
   const overdueTasks=allTasks.filter(t=>!t.done&&isOverdue(t.deadline));
-  const pendingDecisions=decisions.filter(d=>d.status!=='ÄÃ£ chá»‘t chÃ­nh thá»©c');
+  const pendingDecisions=decisions.filter(d=>d.status!=='Đã chốt chính thức');
 
   const nextEvent=events.filter(e=>e.date&&new Date(e.date)>=new Date(Date.now()-86400000)).sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
   const effectiveGTime=targetGTime||(nextEvent?`${nextEvent.date}T18:00`:'');
@@ -2500,7 +2500,7 @@ function Dashboard({setActiveTab}){
   if(diffG!==null){
     if(diffG<=0){
       isGPassed=true;
-      gCountdownText='âš¡ ÄÃƒ Äáº¾N GIá»œ G!';
+      gCountdownText='⚡ ĐÃ ĐẾN GIỜ G!';
     }else{
       const days=Math.floor(diffG/(1000*60*60*24));
       const hours=Math.floor((diffG/(1000*60*60))%24);
@@ -2514,7 +2514,7 @@ function Dashboard({setActiveTab}){
   const addCLItem=async()=>{
     if(!newItem.trim())return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const id=uid();
       await fbDb.collection('quickChecklist').doc(id).set({
         id,
@@ -2527,27 +2527,27 @@ function Dashboard({setActiveTab}){
       setShowCLForm(false);
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i thÃªm checklist:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi thêm checklist:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const toggleCL=async(id)=>{
     const item=quickChecklist.find(i=>i.id===id);
     if(!item)return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const newDone=!item.done;
       if(newDone && !isInitialSnapshot)triggerCat('celebrate');
       await fbDb.collection('quickChecklist').doc(id).set({done:newDone},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i cáº­p nháº­t checklist:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi cập nhật checklist:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const resetCL=async()=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const batch=fbDb.batch();
       quickChecklist.forEach(i=>{
         batch.set(fbDb.collection('quickChecklist').doc(i.id),{done:false},{merge:true});
@@ -2555,24 +2555,24 @@ function Dashboard({setActiveTab}){
       await batch.commit();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i reset checklist:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi reset checklist:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const delCL=async(id)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('quickChecklist').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a checklist:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa checklist:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const addLink=async()=>{
     if(!newLink.title.trim()||!newLink.url.trim())return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const id=uid();
       await fbDb.collection('quickLinks').doc(id).set({
         id,
@@ -2583,33 +2583,33 @@ function Dashboard({setActiveTab}){
       setShowLinkForm(false);
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i thÃªm quick link:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi thêm quick link:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const delLink=async(id)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('quickLinks').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a quick link:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa quick link:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const stats=[
-    {label:'Viá»‡c Ä‘ang cháº¡y',value:activeTasks.length,icon:'list-todo',gradient:'from-blue-600 to-blue-800',onClick:()=>setActiveTab('events')},
-    {label:'Viá»‡c quÃ¡ háº¡n',value:overdueTasks.length,icon:'alarm-clock',gradient:'from-red-500 to-red-700',onClick:()=>setActiveTab('events')},
-    {label:'Quyáº¿t Ä‘á»‹nh chá» chá»‘t',value:pendingDecisions.length,icon:'file-question',gradient:'from-amber-500 to-orange-600',onClick:()=>setActiveTab('decisions')},
-    {label:'Tá»•ng thÃ nh viÃªn/CTV',value:members.length,icon:'users',gradient:'from-emerald-500 to-teal-700',onClick:()=>setActiveTab('members')},
+    {label:'Việc đang chạy',value:activeTasks.length,icon:'list-todo',gradient:'from-blue-600 to-blue-800',onClick:()=>setActiveTab('events')},
+    {label:'Việc quá hạn',value:overdueTasks.length,icon:'alarm-clock',gradient:'from-red-500 to-red-700',onClick:()=>setActiveTab('events')},
+    {label:'Quyết định chờ chốt',value:pendingDecisions.length,icon:'file-question',gradient:'from-amber-500 to-orange-600',onClick:()=>setActiveTab('decisions')},
+    {label:'Tổng thành viên/CTV',value:members.length,icon:'users',gradient:'from-emerald-500 to-teal-700',onClick:()=>setActiveTab('members')},
   ];
 
   return(
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-800">Báº£ng Äiá»u Khiá»ƒn</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Tá»•ng quan hoáº¡t Ä‘á»™ng CLB NewVision HUP â€“ ÄH DÆ°á»£c HN</p>
+        <h1 className="text-xl font-bold text-slate-800">Bảng Điều Khiển</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Tổng quan hoạt động CLB NewVision HUP – ĐH Dược HN</p>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((s,i)=>(
@@ -2625,22 +2625,22 @@ function Dashboard({setActiveTab}){
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center"><Icon name="zap" size={15} className="text-amber-600"/></div>
-              <span className="font-bold text-sm text-slate-800">Checklist 15 PhÃºt TrÆ°á»›c Giá» G</span>
+              <span className="font-bold text-sm text-slate-800">Checklist 15 Phút Trước Giờ G</span>
             </div>
             <div className="flex gap-1">
               {quickChecklist.some(i=>i.done)&&<button onClick={resetCL} title="Reset" className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400"><Icon name="rotate-ccw" size={13}/></button>}
-              <button onClick={()=>setShowCLForm(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>ThÃªm</button>
+              <button onClick={()=>setShowCLForm(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>Thêm</button>
             </div>
           </div>
 
-          {/* Äá»’NG Há»’ Äáº¾M NGÆ¯á»¢C GIá»œ G THá»œI GIAN THá»°C */}
+          {/* ĐỒNG HỒ ĐẾM NGƯỢC GIỜ G THỜI GIAN THỰC */}
           <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/5 rounded-xl p-2.5 mb-3 border border-orange-200 dark:border-orange-900/50 flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
               </span>
-              <span className="text-xs font-bold text-orange-950 dark:text-orange-200">Äáº¿m NgÆ°á»£c Giá» G:</span>
+              <span className="text-xs font-bold text-orange-950 dark:text-orange-200">Đếm Ngược Giờ G:</span>
               <span className={`font-mono font-black text-sm tracking-wider ${isGPassed?'text-emerald-600 dark:text-emerald-400':'text-orange-600 dark:text-orange-400'}`}>
                 {gCountdownText}
               </span>
@@ -2648,20 +2648,20 @@ function Dashboard({setActiveTab}){
             <button
               onClick={()=>{setCustomGInput(effectiveGTime||'');setShowGTimeModal(true)}}
               className="text-[10px] text-orange-600 hover:text-orange-800 font-semibold flex items-center gap-1 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-orange-200 dark:border-slate-700 shadow-sm flex-shrink-0"
-              title="CÃ i Ä‘áº·t Giá» G"
+              title="Cài đặt Giờ G"
             >
               <Icon name="clock" size={11}/>
-              {effectiveGTime ? new Date(effectiveGTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : 'Chá»n giá»'}
+              {effectiveGTime ? new Date(effectiveGTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : 'Chọn giờ'}
             </button>
           </div>
           {showCLForm&&(
             <div className="flex gap-2 mb-3">
-              <input value={newItem} onChange={e=>setNewItem(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addCLItem()} placeholder="TÃªn háº¡ng má»¥c..." className="form-input flex-1 text-sm" autoFocus/>
-              <button onClick={addCLItem} className="btn-primary text-xs px-3">ThÃªm</button>
-              <button onClick={()=>setShowCLForm(false)} className="btn-secondary text-xs px-2">Há»§y</button>
+              <input value={newItem} onChange={e=>setNewItem(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addCLItem()} placeholder="Tên hạng mục..." className="form-input flex-1 text-sm" autoFocus/>
+              <button onClick={addCLItem} className="btn-primary text-xs px-3">Thêm</button>
+              <button onClick={()=>setShowCLForm(false)} className="btn-secondary text-xs px-2">Hủy</button>
             </div>
           )}
-          {quickChecklist.length===0&&<div className="py-8 text-center"><Icon name="clipboard-list" size={32} className="text-slate-300 mx-auto mb-2"/><p className="text-sm text-slate-400">ThÃªm cÃ¡c háº¡ng má»¥c kiá»ƒm tra nhanh</p></div>}
+          {quickChecklist.length===0&&<div className="py-8 text-center"><Icon name="clipboard-list" size={32} className="text-slate-300 mx-auto mb-2"/><p className="text-sm text-slate-400">Thêm các hạng mục kiểm tra nhanh</p></div>}
           <div className="space-y-1.5 max-h-64 overflow-y-auto">
             {quickChecklist.map(item=>(
               <div key={item.id} className={`flex items-center gap-2.5 p-2 rounded-lg hover:bg-slate-50 group transition ${item.done?'opacity-60':''}`}>
@@ -2671,21 +2671,21 @@ function Dashboard({setActiveTab}){
               </div>
             ))}
           </div>
-          {quickChecklist.length>0&&<div className="mt-2 pt-2 border-t border-slate-100 text-xs text-slate-400">{quickChecklist.filter(i=>i.done).length}/{quickChecklist.length} má»¥c hoÃ n thÃ nh</div>}
+          {quickChecklist.length>0&&<div className="mt-2 pt-2 border-t border-slate-100 text-xs text-slate-400">{quickChecklist.filter(i=>i.done).length}/{quickChecklist.length} mục hoàn thành</div>}
         </div>
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 bg-purple-100 rounded-lg flex items-center justify-center"><Icon name="link" size={15} className="text-purple-600"/></div>
-              <span className="font-bold text-sm text-slate-800">Link Nhanh DÃ¹ng Chung</span>
+              <span className="font-bold text-sm text-slate-800">Link Nhanh Dùng Chung</span>
             </div>
-            <button onClick={()=>setShowLinkForm(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>ThÃªm</button>
+            <button onClick={()=>setShowLinkForm(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>Thêm</button>
           </div>
           {showLinkForm&&(
             <div className="space-y-2 mb-3 p-3 bg-slate-50 rounded-xl">
-              <input value={newLink.title} onChange={e=>setNewLink(p=>({...p,title:e.target.value}))} placeholder="TÃªn tÃ i nguyÃªn..." className="form-input text-sm"/>
+              <input value={newLink.title} onChange={e=>setNewLink(p=>({...p,title:e.target.value}))} placeholder="Tên tài nguyên..." className="form-input text-sm"/>
               <input value={newLink.url} onChange={e=>setNewLink(p=>({...p,url:e.target.value}))} placeholder="https://..." className="form-input text-sm"/>
-              <div className="flex gap-2"><button onClick={addLink} className="btn-primary text-xs px-3">ThÃªm</button><button onClick={()=>setShowLinkForm(false)} className="btn-secondary text-xs px-2">Há»§y</button></div>
+              <div className="flex gap-2"><button onClick={addLink} className="btn-primary text-xs px-3">Thêm</button><button onClick={()=>setShowLinkForm(false)} className="btn-secondary text-xs px-2">Hủy</button></div>
             </div>
           )}
           {quickLinks.length===0&&<div className="py-8 text-center"><Icon name="folder-open" size={32} className="text-slate-300 mx-auto mb-2"/><p className="text-sm text-slate-400">Ghim nhanh link Drive, Canva, Form...</p></div>}
@@ -2704,32 +2704,32 @@ function Dashboard({setActiveTab}){
         </div>
       </div>
       <div className="card p-4">
-        <h3 className="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><Icon name="activity" size={16} className="text-indigo-500"/>Tá»•ng Quan Nhanh</h3>
+        <h3 className="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><Icon name="activity" size={16} className="text-indigo-500"/>Tổng Quan Nhanh</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="bg-blue-50 rounded-xl p-3">
-            <p className="text-xs text-blue-600 font-semibold mb-1">ðŸ“… Sá»± kiá»‡n sáº¯p tá»›i</p>
-            {events.filter(e=>new Date(e.date)>=new Date()).slice(0,3).map(e=><p key={e.id} className="text-slate-700 text-xs truncate mt-1">Â· {e.name} â€” {fmtDate(e.date)}</p>)}
-            {events.filter(e=>new Date(e.date)>=new Date()).length===0&&<p className="text-slate-400 text-xs">ChÆ°a cÃ³ sá»± kiá»‡n nÃ o</p>}
+            <p className="text-xs text-blue-600 font-semibold mb-1">📅 Sự kiện sắp tới</p>
+            {events.filter(e=>new Date(e.date)>=new Date()).slice(0,3).map(e=><p key={e.id} className="text-slate-700 text-xs truncate mt-1">· {e.name} — {fmtDate(e.date)}</p>)}
+            {events.filter(e=>new Date(e.date)>=new Date()).length===0&&<p className="text-slate-400 text-xs">Chưa có sự kiện nào</p>}
           </div>
           <div className="bg-amber-50 rounded-xl p-3">
-            <p className="text-xs text-amber-600 font-semibold mb-1">âš¡ Cáº§n duyá»‡t</p>
-            {decisions.filter(d=>d.status==='Cáº§n duyá»‡t').slice(0,3).map(d=><p key={d.id} className="text-slate-700 text-xs truncate mt-1">Â· {d.title}</p>)}
-            {decisions.filter(d=>d.status==='Cáº§n duyá»‡t').length===0&&<p className="text-slate-400 text-xs">KhÃ´ng cÃ³</p>}
+            <p className="text-xs text-amber-600 font-semibold mb-1">⚡ Cần duyệt</p>
+            {decisions.filter(d=>d.status==='Cần duyệt').slice(0,3).map(d=><p key={d.id} className="text-slate-700 text-xs truncate mt-1">· {d.title}</p>)}
+            {decisions.filter(d=>d.status==='Cần duyệt').length===0&&<p className="text-slate-400 text-xs">Không có</p>}
           </div>
           <div className="bg-red-50 rounded-xl p-3">
-            <p className="text-xs text-red-600 font-semibold mb-1">ðŸ”´ QuÃ¡ háº¡n</p>
-            {allTasks.filter(t=>!t.done&&isOverdue(t.deadline)).slice(0,3).map(t=><p key={t.id} className="text-slate-700 text-xs truncate mt-1">Â· {t.title}</p>)}
-            {allTasks.filter(t=>!t.done&&isOverdue(t.deadline)).length===0&&<p className="text-slate-400 text-xs">Tá»‘t, khÃ´ng cÃ³ viá»‡c quÃ¡ háº¡n!</p>}
+            <p className="text-xs text-red-600 font-semibold mb-1">🔴 Quá hạn</p>
+            {allTasks.filter(t=>!t.done&&isOverdue(t.deadline)).slice(0,3).map(t=><p key={t.id} className="text-slate-700 text-xs truncate mt-1">· {t.title}</p>)}
+            {allTasks.filter(t=>!t.done&&isOverdue(t.deadline)).length===0&&<p className="text-slate-400 text-xs">Tốt, không có việc quá hạn!</p>}
           </div>
         </div>
       </div>
 
       {showGTimeModal&&(
-        <Modal open={showGTimeModal} onClose={()=>setShowGTimeModal(false)} title="CÃ i Äáº·t Má»‘c Giá» G Sá»± Kiá»‡n">
+        <Modal open={showGTimeModal} onClose={()=>setShowGTimeModal(false)} title="Cài Đặt Mốc Giờ G Sự Kiện">
           <div className="space-y-3">
-            <p className="text-xs text-slate-500">Thiáº¿t láº­p má»‘c thá»i gian diá»…n ra sá»± kiá»‡n (Giá» G) Ä‘á»ƒ Ä‘á»“ng há»“ Ä‘áº¿m ngÆ°á»£c trá»±c tiáº¿p:</p>
+            <p className="text-xs text-slate-500">Thiết lập mốc thời gian diễn ra sự kiện (Giờ G) để đồng hồ đếm ngược trực tiếp:</p>
             <div>
-              <label className="form-label">Chá»n NgÃ y & Giá» G</label>
+              <label className="form-label">Chọn Ngày & Giờ G</label>
               <input
                 type="datetime-local"
                 value={customGInput}
@@ -2743,7 +2743,7 @@ function Dashboard({setActiveTab}){
                 onClick={()=>setCustomGInput(`${nextEvent.date}T18:00`)}
                 className="text-xs text-orange-600 hover:underline flex items-center gap-1 font-medium"
               >
-                ðŸ“… Láº¥y theo sá»± kiá»‡n gáº§n nháº¥t: {nextEvent.name} ({fmtDate(nextEvent.date)})
+                📅 Lấy theo sự kiện gần nhất: {nextEvent.name} ({fmtDate(nextEvent.date)})
               </button>
             )}
             <div className="flex gap-2 pt-2">
@@ -2751,13 +2751,13 @@ function Dashboard({setActiveTab}){
                 onClick={()=>{setTargetGTime('');setShowGTimeModal(false)}}
                 className="btn-secondary flex-1 text-xs"
               >
-                Máº·c Ä‘á»‹nh theo sá»± kiá»‡n
+                Mặc định theo sự kiện
               </button>
               <button
                 onClick={()=>{if(customGInput)setTargetGTime(customGInput);setShowGTimeModal(false)}}
                 className="btn-primary flex-1 text-xs"
               >
-                LÆ°u Má»‘c Giá» G
+                Lưu Mốc Giờ G
               </button>
             </div>
           </div>
@@ -2768,7 +2768,7 @@ function Dashboard({setActiveTab}){
 }
 
 // ============================================================
-// DECISIONS PAGE â€“ with Fast Poll / Biá»ƒu Quyáº¿t Nhanh
+// DECISIONS PAGE – with Fast Poll / Biểu Quyết Nhanh
 // ============================================================
 function DecisionsPage(){
   const{decisions,setDecisions,addNotification,triggerMascot}=useContext(AppCtx);
@@ -2778,7 +2778,7 @@ function DecisionsPage(){
   const[filterStatus,setFilterStatus]=useState('');
   const[confirmDel,setConfirmDel]=useState(null);
   const[pollInput,setPollInput]=useState({});
-  const emptyForm={title:'',proposer:'',ban:'',pic:'',deadline:'',resolution:'',status:'Äang bÃ n báº¡c'};
+  const emptyForm={title:'',proposer:'',ban:'',pic:'',deadline:'',resolution:'',status:'Đang bàn bạc'};
   const[form,setForm]=useState(emptyForm);
 
   const openAdd=()=>{setEditing(null);setForm(emptyForm);setModal(true)};
@@ -2786,50 +2786,50 @@ function DecisionsPage(){
   const handleClose=()=>{setModal(false);setEditing(null);setForm(emptyForm)};
 
   const handleSave=async()=>{
-    if(!form.title.trim()){alert('Vui lÃ²ng nháº­p tÃªn váº¥n Ä‘á»!');return}
-    if(form.status==='ÄÃ£ chá»‘t chÃ­nh thá»©c'&&!form.resolution.trim()){alert('Báº¯t buá»™c nháº­p phÆ°Æ¡ng Ã¡n chá»‘t!');return}
+    if(!form.title.trim()){alert('Vui lòng nhập tên vấn đề!');return}
+    if(form.status==='Đã chốt chính thức'&&!form.resolution.trim()){alert('Bắt buộc nhập phương án chốt!');return}
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       if(editing){
         const old=decisions.find(d=>d.id===editing);
         await fbDb.collection('decisions').doc(editing).set(form,{merge:true});
         try{playSound('success');}catch(e){}
-        if(old&&old.status!=='ÄÃ£ chá»‘t chÃ­nh thá»©c'&&form.status==='ÄÃ£ chá»‘t chÃ­nh thá»©c'){
-          try{addNotification(`âœ… Váº¥n Ä‘á» "${form.title}" Ä‘Ã£ chá»‘t chÃ­nh thá»©c!`,'success');}catch(e){}
-          triggerMascot('gavel','âš–ï¸ ÄÃ£ chá»‘t chÃ­nh thá»©c!');
+        if(old&&old.status!=='Đã chốt chính thức'&&form.status==='Đã chốt chính thức'){
+          try{addNotification(`✅ Vấn đề "${form.title}" đã chốt chính thức!`,'success');}catch(e){}
+          triggerMascot('gavel','⚖️ Đã chốt chính thức!');
         }
       }else{
         const id=uid();
         const newD={...form,id,poll:{options:[],locked:false},createdAt:new Date().toISOString()};
         await fbDb.collection('decisions').doc(id).set(newD);
         try{playSound('success');}catch(e){}
-        if(form.status==='ÄÃ£ chá»‘t chÃ­nh thá»©c'){
-          try{addNotification(`âœ… Váº¥n Ä‘á» "${form.title}" Ä‘Ã£ chá»‘t!`,'success');}catch(e){}
-          triggerMascot('gavel','âš–ï¸ ÄÃ£ chá»‘t!');
+        if(form.status==='Đã chốt chính thức'){
+          try{addNotification(`✅ Vấn đề "${form.title}" đã chốt!`,'success');}catch(e){}
+          triggerMascot('gavel','⚖️ Đã chốt!');
         }else{
-          triggerMascot('write','ðŸ“ Váº¥n Ä‘á» má»›i ghi nháº­n!');
+          triggerMascot('write','📝 Vấn đề mới ghi nhận!');
         }
       }
       handleClose();
     }catch(err){
-      console.error('Lá»—i lÆ°u quyáº¿t Ä‘á»‹nh:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu quyết định:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const handleStatusChange=async(d,ns)=>{
-    if(ns==='ÄÃ£ chá»‘t chÃ­nh thá»©c'&&!d.resolution){openEdit({...d,status:ns});return}
+    if(ns==='Đã chốt chính thức'&&!d.resolution){openEdit({...d,status:ns});return}
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('decisions').doc(d.id).set({status:ns},{merge:true});
       try{playSound('pop');}catch(e){}
-      if(ns==='ÄÃ£ chá»‘t chÃ­nh thá»©c'){
-        try{addNotification(`âœ… "${d.title}" Ä‘Ã£ chá»‘t!`,'success');}catch(e){}
-        triggerMascot('gavel','âš–ï¸ ÄÃ£ chá»‘t chÃ­nh thá»©c!');
+      if(ns==='Đã chốt chính thức'){
+        try{addNotification(`✅ "${d.title}" đã chốt!`,'success');}catch(e){}
+        triggerMascot('gavel','⚖️ Đã chốt chính thức!');
       }
     }catch(err){
-      console.error('Lá»—i Ä‘á»•i tráº¡ng thÃ¡i:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi đổi trạng thái:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
@@ -2839,29 +2839,29 @@ function DecisionsPage(){
     const d=decisions.find(x=>x.id===dId);
     if(!d)return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const poll=d.poll||{options:[],locked:false};
       const updatedPoll={...poll,options:[...poll.options,{id:uid(),text:txt,votes:0}]};
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
       setPollInput(p=>({...p,[dId]:''}));
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i thÃªm phÆ°Æ¡ng Ã¡n:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi thêm phương án:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const vote=async(dId,optId)=>{
     const d=decisions.find(x=>x.id===dId);
     if(!d||(d.poll&&d.poll.locked))return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const poll=d.poll||{options:[],locked:false};
       const updatedPoll={...poll,options:poll.options.map(o=>o.id===optId?{...o,votes:(o.votes||0)+1}:o)};
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i bá» phiáº¿u:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi bỏ phiếu:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const lockPoll=(dId)=>{
@@ -2874,25 +2874,25 @@ function DecisionsPage(){
     const d=decisions.find(x=>x.id===dId);
     if(!d)return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const poll=d.poll||{options:[],locked:false};
       const updatedPoll={...poll,options:poll.options.filter(o=>o.id!==optId)};
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a phÆ°Æ¡ng Ã¡n:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa phương án:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const handleDeleteDecision=async(id)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('decisions').doc(id).delete();
       try{playSound('pop');}catch(e){}
-      try{addNotification('ÄÃ£ xÃ³a váº¥n Ä‘á»','info');}catch(e){}
+      try{addNotification('Đã xóa vấn đề','info');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a quyáº¿t Ä‘á»‹nh:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa quyết định:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
@@ -2908,11 +2908,11 @@ function DecisionsPage(){
       <div className="mt-3 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
         <div className="flex items-center justify-between mb-2.5">
           <p className="text-xs font-bold text-indigo-700 flex items-center gap-1.5">
-            <Icon name="bar-chart-2" size={13}/>Biá»ƒu Quyáº¿t Nhanh
-            {poll.locked&&<span className="text-[10px] bg-indigo-200 text-indigo-700 px-1.5 py-0.5 rounded-full">ðŸ”’ ÄÃ£ khÃ³a</span>}
+            <Icon name="bar-chart-2" size={13}/>Biểu Quyết Nhanh
+            {poll.locked&&<span className="text-[10px] bg-indigo-200 text-indigo-700 px-1.5 py-0.5 rounded-full">🔒 Đã khóa</span>}
           </p>
           {!poll.locked&&maxVotes>0&&poll.options.length>1&&(
-            <button onClick={()=>lockPoll(d.id)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-2.5 py-1 font-semibold">Chá»‘t phÆ°Æ¡ng Ã¡n tháº¯ng</button>
+            <button onClick={()=>lockPoll(d.id)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-2.5 py-1 font-semibold">Chốt phương án thắng</button>
           )}
         </div>
         <div className="space-y-2 mb-2.5">
@@ -2923,7 +2923,7 @@ function DecisionsPage(){
               <div key={opt.id} className="flex items-center gap-2">
                 <div className="flex-1">
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className={`font-medium ${isLeading?'text-indigo-700':'text-slate-700'}`}>{isLeading&&total>0?'ðŸ† ':''}{opt.text}</span>
+                    <span className={`font-medium ${isLeading?'text-indigo-700':'text-slate-700'}`}>{isLeading&&total>0?'🏆 ':''}{opt.text}</span>
                     <span className="text-slate-500 ml-2 flex-shrink-0">{opt.votes||0} ({pct}%)</span>
                   </div>
                   <div className="h-2 bg-white rounded-full overflow-hidden border border-indigo-100">
@@ -2935,12 +2935,12 @@ function DecisionsPage(){
               </div>
             );
           })}
-          {poll.options.length===0&&<p className="text-xs text-indigo-400 text-center py-3">ChÆ°a cÃ³ phÆ°Æ¡ng Ã¡n. ThÃªm Ä‘á»ƒ báº¯t Ä‘áº§u biá»ƒu quyáº¿t!</p>}
+          {poll.options.length===0&&<p className="text-xs text-indigo-400 text-center py-3">Chưa có phương án. Thêm để bắt đầu biểu quyết!</p>}
         </div>
-        {!poll.locked&&d.status!=='ÄÃ£ chá»‘t chÃ­nh thá»©c'&&(
+        {!poll.locked&&d.status!=='Đã chốt chính thức'&&(
           <div className="flex gap-2">
-            <input value={pollInput[d.id]||''} onChange={e=>setPollInput(p=>({...p,[d.id]:e.target.value}))} onKeyDown={e=>e.key==='Enter'&&addPollOption(d.id)} placeholder="Nháº­p tÃªn phÆ°Æ¡ng Ã¡n..." className="flex-1 text-xs border border-indigo-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 outline-none focus:border-indigo-400"/>
-            <button onClick={()=>addPollOption(d.id)} className="text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-lg px-3 font-semibold">ThÃªm</button>
+            <input value={pollInput[d.id]||''} onChange={e=>setPollInput(p=>({...p,[d.id]:e.target.value}))} onKeyDown={e=>e.key==='Enter'&&addPollOption(d.id)} placeholder="Nhập tên phương án..." className="flex-1 text-xs border border-indigo-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 outline-none focus:border-indigo-400"/>
+            <button onClick={()=>addPollOption(d.id)} className="text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-lg px-3 font-semibold">Thêm</button>
           </div>
         )}
       </div>
@@ -2950,24 +2950,24 @@ function DecisionsPage(){
   return(
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-bold text-slate-800">Sá»• Quyáº¿t Äá»‹nh & Biá»ƒu Quyáº¿t</h1><p className="text-xs text-slate-500 mt-0.5">Theo dÃµi, biá»ƒu quyáº¿t nhanh vÃ  chá»‘t phÆ°Æ¡ng Ã¡n chÃ­nh thá»©c</p></div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>ThÃªm má»›i</button>
+        <div><h1 className="text-xl font-bold text-slate-800">Sổ Quyết Định & Biểu Quyết</h1><p className="text-xs text-slate-500 mt-0.5">Theo dõi, biểu quyết nhanh và chốt phương án chính thức</p></div>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>Thêm mới</button>
       </div>
       <div className="flex flex-wrap gap-2">
         <select value={filterBan} onChange={e=>setFilterBan(e.target.value)} className="form-input text-sm w-auto">
-          <option value="">Táº¥t cáº£ ban</option>
+          <option value="">Tất cả ban</option>
           {BANS.map(b=><option key={b}>{b}</option>)}
         </select>
         <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="form-input text-sm w-auto">
-          <option value="">Táº¥t cáº£ tráº¡ng thÃ¡i</option>
+          <option value="">Tất cả trạng thái</option>
           {DECISION_STATUSES.map(s=><option key={s}>{s}</option>)}
         </select>
-        {(filterBan||filterStatus)&&<button onClick={()=>{setFilterBan('');setFilterStatus('')}} className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"><Icon name="x-circle" size={13}/>XÃ³a lá»c</button>}
+        {(filterBan||filterStatus)&&<button onClick={()=>{setFilterBan('');setFilterStatus('')}} className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"><Icon name="x-circle" size={13}/>Xóa lọc</button>}
       </div>
-      {filtered.length===0&&<div className="card py-16 text-center"><Icon name="file-text" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">ChÆ°a cÃ³ váº¥n Ä‘á» nÃ o Ä‘Æ°á»£c ghi nháº­n</p></div>}
+      {filtered.length===0&&<div className="card py-16 text-center"><Icon name="file-text" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có vấn đề nào được ghi nhận</p></div>}
       <div className="space-y-3">
         {filtered.map(d=>{
-          const over=d.status!=='ÄÃ£ chá»‘t chÃ­nh thá»©c'&&isOverdue(d.deadline);
+          const over=d.status!=='Đã chốt chính thức'&&isOverdue(d.deadline);
           return(
             <div key={d.id} className={`card p-4 fade-in ${over?'overdue':''}`}>
               <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -2975,16 +2975,16 @@ function DecisionsPage(){
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className={`status-badge ${statusColor(d.status)}`}>{d.status}</span>
                     {d.ban&&<span className="status-badge tag-gray text-xs">{d.ban}</span>}
-                    {over&&<span className="status-badge tag-red text-xs">âš  QuÃ¡ háº¡n</span>}
+                    {over&&<span className="status-badge tag-red text-xs">⚠ Quá hạn</span>}
                   </div>
                   <h3 className="font-bold text-slate-800 mt-1">{d.title}</h3>
                   <div className="flex flex-wrap gap-3 mt-2 text-xs text-slate-500">
-                    {d.proposer&&<span className="flex items-center gap-1"><Icon name="user" size={11}/>Äá» xuáº¥t: <b className="text-slate-700">{d.proposer}</b></span>}
+                    {d.proposer&&<span className="flex items-center gap-1"><Icon name="user" size={11}/>Đề xuất: <b className="text-slate-700">{d.proposer}</b></span>}
                     {d.pic&&<span className="flex items-center gap-1"><Icon name="user-check" size={11}/>PIC: <b className="text-slate-700">{d.pic}</b></span>}
-                    {d.deadline&&<span className="flex items-center gap-1"><Icon name="calendar" size={11}/>Háº¡n: <b className={over?'text-red-600':'text-slate-700'}>{fmtDate(d.deadline)}</b></span>}
+                    {d.deadline&&<span className="flex items-center gap-1"><Icon name="calendar" size={11}/>Hạn: <b className={over?'text-red-600':'text-slate-700'}>{fmtDate(d.deadline)}</b></span>}
                   </div>
-                  {d.resolution&&<div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800"><b>âœ… PhÆ°Æ¡ng Ã¡n chá»‘t:</b> {d.resolution}</div>}
-                  {d.status!=='ÄÃ£ chá»‘t chÃ­nh thá»©c'&&<PollSection d={d}/>}
+                  {d.resolution&&<div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800"><b>✅ Phương án chốt:</b> {d.resolution}</div>}
+                  {d.status!=='Đã chốt chính thức'&&<PollSection d={d}/>}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <select value={d.status} onChange={e=>handleStatusChange(d,e.target.value)} className="form-input text-xs py-1 px-2 w-auto">
@@ -2998,23 +2998,23 @@ function DecisionsPage(){
           );
         })}
       </div>
-      <Modal open={modal} onClose={handleClose} title={editing?'Chá»‰nh sá»­a váº¥n Ä‘á»':'Ghi nháº­n váº¥n Ä‘á» má»›i'}>
+      <Modal open={modal} onClose={handleClose} title={editing?'Chỉnh sửa vấn đề':'Ghi nhận vấn đề mới'}>
         <div className="space-y-4">
-          <div><label className="form-label">Váº¥n Ä‘á» / Äá» xuáº¥t <span className="text-red-500">*</span></label><input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="MÃ´ táº£ ngáº¯n gá»n váº¥n Ä‘á» hoáº·c Ä‘á» xuáº¥t..."/></div>
+          <div><label className="form-label">Vấn đề / Đề xuất <span className="text-red-500">*</span></label><input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="Mô tả ngắn gọn vấn đề hoặc đề xuất..."/></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="form-label">NgÆ°á»i Ä‘á» xuáº¥t</label><input value={form.proposer} onChange={e=>setForm(p=>({...p,proposer:e.target.value}))} className="form-input" placeholder="TÃªn ngÆ°á»i Ä‘á» xuáº¥t"/></div>
-            <div><label className="form-label">Ban liÃªn quan</label><select value={form.ban} onChange={e=>setForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chá»n ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
+            <div><label className="form-label">Người đề xuất</label><input value={form.proposer} onChange={e=>setForm(p=>({...p,proposer:e.target.value}))} className="form-input" placeholder="Tên người đề xuất"/></div>
+            <div><label className="form-label">Ban liên quan</label><select value={form.ban} onChange={e=>setForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="form-label">PIC â€“ NgÆ°á»i chá»‹u trÃ¡ch nhiá»‡m</label><input value={form.pic} onChange={e=>setForm(p=>({...p,pic:e.target.value}))} className="form-input" placeholder="TÃªn ngÆ°á»i phá»¥ trÃ¡ch"/></div>
-            <div><label className="form-label">Háº¡n pháº£n há»“i</label><input type="date" value={form.deadline} onChange={e=>setForm(p=>({...p,deadline:e.target.value}))} className="form-input"/></div>
+            <div><label className="form-label">PIC – Người chịu trách nhiệm</label><input value={form.pic} onChange={e=>setForm(p=>({...p,pic:e.target.value}))} className="form-input" placeholder="Tên người phụ trách"/></div>
+            <div><label className="form-label">Hạn phản hồi</label><input type="date" value={form.deadline} onChange={e=>setForm(p=>({...p,deadline:e.target.value}))} className="form-input"/></div>
           </div>
-          <div><label className="form-label">Tráº¡ng thÃ¡i</label><select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} className="form-input">{DECISION_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
-          <div><label className="form-label">PhÆ°Æ¡ng Ã¡n chá»‘t cuá»‘i cÃ¹ng {form.status==='ÄÃ£ chá»‘t chÃ­nh thá»©c'&&<span className="text-red-500">*</span>}</label><textarea value={form.resolution} onChange={e=>setForm(p=>({...p,resolution:e.target.value}))} className="form-input min-h-[80px] resize-none" placeholder={form.status==='ÄÃ£ chá»‘t chÃ­nh thá»©c'?'Báº¯t buá»™c â€“ ghi rÃµ phÆ°Æ¡ng Ã¡n...':'Ghi láº¡i phÆ°Æ¡ng Ã¡n Ä‘Ã£ thá»‘ng nháº¥t...'}/></div>
-          <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Há»§y</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'LÆ°u thay Ä‘á»•i':'Ghi nháº­n'}</button></div>
+          <div><label className="form-label">Trạng thái</label><select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} className="form-input">{DECISION_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+          <div><label className="form-label">Phương án chốt cuối cùng {form.status==='Đã chốt chính thức'&&<span className="text-red-500">*</span>}</label><textarea value={form.resolution} onChange={e=>setForm(p=>({...p,resolution:e.target.value}))} className="form-input min-h-[80px] resize-none" placeholder={form.status==='Đã chốt chính thức'?'Bắt buộc – ghi rõ phương án...':'Ghi lại phương án đã thống nhất...'}/></div>
+          <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu thay đổi':'Ghi nhận'}</button></div>
         </div>
       </Modal>
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteDecision(confirmDel)} message="Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a váº¥n Ä‘á» nÃ y?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteDecision(confirmDel)} message="Bạn có chắc muốn xóa vấn đề này?"/>
     </div>
   );
 }
@@ -3033,7 +3033,7 @@ function TaskRow({task,onToggle,onEdit,onDelete}){
 
   const handleToggle=()=>{
     if(isAssignedToOther){
-      alert(`Äáº§u viá»‡c nÃ y do ${task.assignee} Ä‘áº£m nháº­n!`);
+      alert(`Đầu việc này do ${task.assignee} đảm nhận!`);
       return;
     }
     if(!task.done && !isInitialSnapshot)triggerCat('celebrate');
@@ -3047,27 +3047,27 @@ function TaskRow({task,onToggle,onEdit,onDelete}){
         checked={task.done}
         onChange={handleToggle}
         className="w-4 h-4 accent-orange-600 cursor-pointer flex-shrink-0"
-        title={isAssignedToOther ? `Äáº§u viá»‡c nÃ y do ${task.assignee} Ä‘áº£m nháº­n` : ''}
+        title={isAssignedToOther ? `Đầu việc này do ${task.assignee} đảm nhận` : ''}
       />
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium ${task.done?'line-through text-slate-400':'text-slate-800'}`}>{task.title}</p>
         <div className="flex flex-wrap gap-1.5 mt-1">
           {task.assignee&&<span className="text-xs text-slate-500 flex items-center gap-0.5"><Icon name="user" size={11}/>{task.assignee}</span>}
           {task.ban&&<span className="status-badge tag-gray text-[11px]">{task.ban}</span>}
-          {task.deadline&&<span className={`status-badge text-[11px] ${over?'tag-red':soon?'tag-yellow':'tag-gray'}`}><Icon name="clock" size={10}/>&nbsp;{fmtDate(task.deadline)}{over?' âš ':soon?' â°':''}</span>}
+          {task.deadline&&<span className={`status-badge text-[11px] ${over?'tag-red':soon?'tag-yellow':'tag-gray'}`}><Icon name="clock" size={10}/>&nbsp;{fmtDate(task.deadline)}{over?' ⚠':soon?' ⏰':''}</span>}
           {task.link&&<a href={task.link} target="_blank" rel="noopener noreferrer" className="text-[11px] text-blue-500 hover:underline flex items-center gap-0.5"><Icon name="link" size={10}/>Link</a>}
         </div>
       </div>
       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
-        {canEdit && <button onClick={()=>onEdit(task)} className="p-1.5 rounded-lg hover:bg-slate-100" title="Chá»‰nh sá»­a"><Icon name="pencil" size={13} className="text-slate-400"/></button>}
-        {canDelete && <button onClick={()=>onDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-50" title="XÃ³a"><Icon name="trash-2" size={13} className="text-red-400"/></button>}
+        {canEdit && <button onClick={()=>onEdit(task)} className="p-1.5 rounded-lg hover:bg-slate-100" title="Chỉnh sửa"><Icon name="pencil" size={13} className="text-slate-400"/></button>}
+        {canDelete && <button onClick={()=>onDelete(task.id)} className="p-1.5 rounded-lg hover:bg-red-50" title="Xóa"><Icon name="trash-2" size={13} className="text-red-400"/></button>}
       </div>
     </div>
   );
 }
 
 // ============================================================
-// LIVE EVENT MODE â€“ Cháº¿ Ä‘á»™ Thá»±c Äá»‹a
+// LIVE EVENT MODE – Chế độ Thực Địa
 // ============================================================
 function LiveEventMode({event,onBack,onUpdate}){
   const{addNotification,triggerMascot}=useContext(AppCtx);
@@ -3085,8 +3085,8 @@ function LiveEventMode({event,onBack,onUpdate}){
     if(!sosText.trim())return;
     const inc={id:uid(),time:new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),desc:sosText.trim(),resolved:false};
     onUpdate({...event,liveData:{...ld,incidents:[inc,...(ld.incidents||[])]}});
-    try{addNotification(`ðŸš¨ SOS táº¡i "${event.name}": ${sosText.slice(0,60)}`,'error');}catch(e){}
-    triggerMascot('sos','ðŸš¨ SOS! Äang xá»­ lÃ½ sá»± cá»‘!');
+    try{addNotification(`🚨 SOS tại "${event.name}": ${sosText.slice(0,60)}`,'error');}catch(e){}
+    triggerMascot('sos','🚨 SOS! Đang xử lý sự cố!');
     setSosText('');setSosModal(false);
   };
 
@@ -3106,7 +3106,7 @@ function LiveEventMode({event,onBack,onUpdate}){
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-red-500" style={{animation:'pulseRed 1s ease-in-out infinite'}}/>
-              <span className="text-xs font-bold text-red-400 uppercase tracking-wider">âš¡ LIVE EVENT MODE</span>
+              <span className="text-xs font-bold text-red-400 uppercase tracking-wider">⚡ LIVE EVENT MODE</span>
             </div>
             <h1 className="text-base font-bold text-white truncate">{event.name}</h1>
           </div>
@@ -3119,12 +3119,12 @@ function LiveEventMode({event,onBack,onUpdate}){
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4 pb-24">
         {openInc.length>0&&(
           <div className="sos-flash rounded-2xl border border-red-800 p-3">
-            <p className="text-red-300 font-bold text-sm mb-2 flex items-center gap-2"><Icon name="alert-octagon" size={16} className="text-red-400"/>ðŸš¨ {openInc.length} Sá»° Cá» ÄANG Má»ž</p>
+            <p className="text-red-300 font-bold text-sm mb-2 flex items-center gap-2"><Icon name="alert-octagon" size={16} className="text-red-400"/>🚨 {openInc.length} SỰ CỐ ĐANG MỞ</p>
             {openInc.map(i=>(
               <div key={i.id} className="flex items-center gap-2 bg-red-950/40 rounded-xl p-2.5 mb-1">
                 <p className="flex-1 text-red-200 text-sm font-semibold">{i.desc}</p>
                 <span className="text-red-400 text-xs flex-shrink-0">{i.time}</span>
-                <button onClick={()=>resolveInc(i.id)} className="flex-shrink-0 text-xs bg-emerald-700 text-white rounded-lg px-2 py-1 hover:bg-emerald-600">âœ“</button>
+                <button onClick={()=>resolveInc(i.id)} className="flex-shrink-0 text-xs bg-emerald-700 text-white rounded-lg px-2 py-1 hover:bg-emerald-600">✓</button>
               </div>
             ))}
           </div>
@@ -3132,7 +3132,7 @@ function LiveEventMode({event,onBack,onUpdate}){
 
         <div className="rounded-2xl p-4" style={{background:'#1e293b',border:'1px solid #334155'}}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-white flex items-center gap-2"><Icon name="clipboard-check" size={16} className="text-indigo-400"/>Check-in Háº¡ng Má»¥c</h2>
+            <h2 className="font-bold text-white flex items-center gap-2"><Icon name="clipboard-check" size={16} className="text-indigo-400"/>Check-in Hạng Mục</h2>
             <span className="text-sm font-bold" style={{color:checkedCount===DEFAULT_VENUE_ITEMS.length?'#34d399':'#818cf8'}}>{checkedCount}/{DEFAULT_VENUE_ITEMS.length}</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -3152,10 +3152,10 @@ function LiveEventMode({event,onBack,onUpdate}){
 
         <div className="rounded-2xl p-4" style={{background:'#1e293b',border:'1px solid #334155'}}>
           <h2 className="font-bold text-white flex items-center gap-2 mb-3">
-            <Icon name="git-branch" size={16} className="text-indigo-400"/>Timeline CÃ´ng Viá»‡c
-            {tasks.filter(t=>!t.done).length>0&&<span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full">{tasks.filter(t=>!t.done).length} chá» xá»­ lÃ½</span>}
+            <Icon name="git-branch" size={16} className="text-indigo-400"/>Timeline Công Việc
+            {tasks.filter(t=>!t.done).length>0&&<span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full">{tasks.filter(t=>!t.done).length} chờ xử lý</span>}
           </h2>
-          {tasks.length===0?<p className="text-slate-500 text-sm text-center py-4">ChÆ°a cÃ³ Ä‘áº§u viá»‡c nÃ o</p>:(
+          {tasks.length===0?<p className="text-slate-500 text-sm text-center py-4">Chưa có đầu việc nào</p>:(
             <div className="space-y-2.5">
               {[...tasks].reverse().map(t=>(
                 <div key={t.id} className={`flex items-start gap-3 pl-4 border-l-2 ${t.done?'border-emerald-600':'border-indigo-600'}`}>
@@ -3163,12 +3163,12 @@ function LiveEventMode({event,onBack,onUpdate}){
                   <div className="flex-1">
                     <p className={`text-sm font-medium ${t.done?'line-through text-slate-500':'text-white'}`}>{t.title}</p>
                     <div className="flex flex-wrap gap-2 mt-0.5 text-xs" style={{color:'#94a3b8'}}>
-                      {t.assignee&&<span>ðŸ‘¤ {t.assignee}</span>}
-                      {t.deadline&&<span>â° {new Date(t.deadline).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</span>}
+                      {t.assignee&&<span>👤 {t.assignee}</span>}
+                      {t.deadline&&<span>⏰ {new Date(t.deadline).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</span>}
                       <span style={{color:t.phase===TASK_PHASES[0]?'#818cf8':'#34d399'}}>{t.phase}</span>
                     </div>
                   </div>
-                  <div className={`flex-shrink-0 text-xs px-2 py-0.5 rounded-full ${t.done?'bg-emerald-900 text-emerald-300':'bg-indigo-900 text-indigo-300'}`}>{t.done?'âœ“ Xong':'Äang lÃ m'}</div>
+                  <div className={`flex-shrink-0 text-xs px-2 py-0.5 rounded-full ${t.done?'bg-emerald-900 text-emerald-300':'bg-indigo-900 text-indigo-300'}`}>{t.done?'✓ Xong':'Đang làm'}</div>
                 </div>
               ))}
             </div>
@@ -3177,10 +3177,10 @@ function LiveEventMode({event,onBack,onUpdate}){
 
         {(ld.incidents||[]).filter(i=>i.resolved).length>0&&(
           <div className="rounded-2xl p-4" style={{background:'#1e293b',border:'1px solid #334155'}}>
-            <h2 className="font-bold text-slate-400 flex items-center gap-2 mb-3 text-sm"><Icon name="check-circle" size={14}/>Sá»± Cá»‘ ÄÃ£ Xá»­ LÃ½</h2>
+            <h2 className="font-bold text-slate-400 flex items-center gap-2 mb-3 text-sm"><Icon name="check-circle" size={14}/>Sự Cố Đã Xử Lý</h2>
             {(ld.incidents||[]).filter(i=>i.resolved).map(i=>(
               <div key={i.id} className="flex items-center gap-2 py-1.5 text-slate-500 text-sm">
-                <span>âœ…</span><span className="line-through flex-1">{i.desc}</span><span className="text-xs">{i.time}</span>
+                <span>✅</span><span className="line-through flex-1">{i.desc}</span><span className="text-xs">{i.time}</span>
               </div>
             ))}
           </div>
@@ -3191,14 +3191,14 @@ function LiveEventMode({event,onBack,onUpdate}){
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.85)'}}>
           <div className="rounded-2xl p-6 max-w-sm w-full shadow-2xl" style={{background:'#1a0000',border:'2px solid #7f1d1d'}}>
             <div className="text-center mb-4">
-              <p className="text-5xl mb-2">ðŸš¨</p>
-              <h3 className="text-xl font-bold text-red-300">BÃ¡o Sá»± Cá»‘ Kháº©n Cáº¥p</h3>
-              <p className="text-red-400/80 text-sm mt-1">MÃ´ táº£ nhanh sá»± cá»‘ Ä‘ang xáº£y ra táº¡i hiá»‡n trÆ°á»ng</p>
+              <p className="text-5xl mb-2">🚨</p>
+              <h3 className="text-xl font-bold text-red-300">Báo Sự Cố Khẩn Cấp</h3>
+              <p className="text-red-400/80 text-sm mt-1">Mô tả nhanh sự cố đang xảy ra tại hiện trường</p>
             </div>
-            <textarea value={sosText} onChange={e=>setSosText(e.target.value)} className="w-full rounded-xl p-3 text-white text-sm resize-none min-h-[90px] outline-none" style={{background:'rgba(239,68,68,0.1)',border:'1px solid #7f1d1d'}} placeholder="VD: Máº¥t nguá»“n loa há»‡ thá»‘ng... / Thiáº¿u 20 gháº¿ khu A..."/>
+            <textarea value={sosText} onChange={e=>setSosText(e.target.value)} className="w-full rounded-xl p-3 text-white text-sm resize-none min-h-[90px] outline-none" style={{background:'rgba(239,68,68,0.1)',border:'1px solid #7f1d1d'}} placeholder="VD: Mất nguồn loa hệ thống... / Thiếu 20 ghế khu A..."/>
             <div className="flex gap-3 mt-4">
-              <button onClick={()=>{setSosModal(false);setSosText('')}} className="flex-1 py-2.5 rounded-xl font-medium text-sm" style={{border:'1px solid #7f1d1d',color:'#fca5a5'}}>Há»§y</button>
-              <button onClick={addSOS} className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white" style={{background:'#dc2626'}}>ðŸš¨ Gá»­i BÃ¡o CÃ¡o SOS</button>
+              <button onClick={()=>{setSosModal(false);setSosText('')}} className="flex-1 py-2.5 rounded-xl font-medium text-sm" style={{border:'1px solid #7f1d1d',color:'#fca5a5'}}>Hủy</button>
+              <button onClick={addSOS} className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white" style={{background:'#dc2626'}}>🚨 Gửi Báo Cáo SOS</button>
             </div>
           </div>
         </div>
@@ -3228,7 +3228,7 @@ function EventDetail({event,onBack}){
   const handleTaskClose=()=>{setTaskModal(false);setEditingTask(null)};
 
   const handleTaskSave=async(forceSave=false)=>{
-    if(!taskForm.title.trim()){alert('Vui lÃ²ng nháº­p tÃªn cÃ´ng viá»‡c!');return}
+    if(!taskForm.title.trim()){alert('Vui lòng nhập tên công việc!');return}
     if(taskForm.link&&taskForm.link.trim()&&!forceSave){
       const dup = await checkDuplicateLinkAsync(taskForm.link, editingTask, { studyResources, resources, events });
       if(dup){
@@ -3243,7 +3243,7 @@ function EventDetail({event,onBack}){
       }
     }
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       let updatedTasks;
       let savedTask;
       if(editingTask){
@@ -3253,15 +3253,15 @@ function EventDetail({event,onBack}){
         savedTask={...taskForm,id:uid(),createdAt:new Date().toISOString()};
         updatedTasks=[...(curEvent.tasks||[]),savedTask];
         if(taskForm.assignee.trim()){
-          try{addNotification(`ðŸ“‹ ÄÃ£ giao viá»‡c "${taskForm.title}" cho ${taskForm.assignee}`,'info');}catch(e){}
-          triggerMascot('write',`ðŸ“‹ Giao cho ${taskForm.assignee}!`);
+          try{addNotification(`📋 Đã giao việc "${taskForm.title}" cho ${taskForm.assignee}`,'info');}catch(e){}
+          triggerMascot('write',`📋 Giao cho ${taskForm.assignee}!`);
         }else{
-          triggerMascot('write','ðŸ“ Äáº§u viá»‡c má»›i!');
+          triggerMascot('write','📝 Đầu việc mới!');
         }
       }
-      // Ghi cáº­p nháº­t trá»±c tiáº¿p vÃ o document cá»§a Sá»± kiá»‡n trÃªn Firestore
+      // Ghi cập nhật trực tiếp vào document của Sự kiện trên Firestore
       await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
-      // Äá»“ng thá»i cáº­p nháº­t hoáº·c thÃªm vÃ o collection tasks Ä‘á»™c láº­p
+      // Đồng thời cập nhật hoặc thêm vào collection tasks độc lập
       try{
         await fbDb.collection('tasks').doc(savedTask.id).set({
           ...savedTask,
@@ -3278,8 +3278,8 @@ function EventDetail({event,onBack}){
       }
       handleTaskClose();
     }catch(err){
-      console.error('Lá»—i lÆ°u cÃ´ng viá»‡c sá»± kiá»‡n:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu công việc sự kiện:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
@@ -3288,7 +3288,7 @@ function EventDetail({event,onBack}){
     if(!task)return;
     const newDone=!task.done;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const updatedTasks=(curEvent.tasks||[]).map(t=>t.id===taskId?{...t,done:newDone}:t);
       await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
       try{
@@ -3298,20 +3298,20 @@ function EventDetail({event,onBack}){
         try{playSound('pop');}catch(e){}
       }catch(e){}
       if(newDone){
-        try{addNotification(`âœ… HoÃ n thÃ nh: "${task.title}"`,'success');}catch(e){}
-        if(!isInitialSnapshot)triggerMascot('celebrate','ðŸŽ‰ Xuáº¥t sáº¯c!');
+        try{addNotification(`✅ Hoàn thành: "${task.title}"`,'success');}catch(e){}
+        if(!isInitialSnapshot)triggerMascot('celebrate','🎉 Xuất sắc!');
       }else{
-        try{addNotification(`ðŸ”„ Má»Ÿ láº¡i: "${task.title}"`,'warning');}catch(e){}
+        try{addNotification(`🔄 Mở lại: "${task.title}"`,'warning');}catch(e){}
       }
     }catch(err){
-      console.error('Lá»—i Ä‘á»•i tráº¡ng thÃ¡i cÃ´ng viá»‡c:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi đổi trạng thái công việc:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const deleteTask=async(taskId)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const updatedTasks=(curEvent.tasks||[]).filter(t=>t.id!==taskId);
       await fbDb.collection('events').doc(curEvent.id).set({tasks:updatedTasks},{merge:true});
       try{
@@ -3321,17 +3321,17 @@ function EventDetail({event,onBack}){
         try{playSound('pop');}catch(e){}
       }catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a cÃ´ng viá»‡c:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa công việc:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const updateLiveData=async(updEv)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('events').doc(updEv.id).set(updEv,{merge:true});
     }catch(err){
-      console.error('Lá»—i lÆ°u Live Event:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu Live Event:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
@@ -3342,11 +3342,11 @@ function EventDetail({event,onBack}){
     }
     if(!taskBanFilter)return true;
     const b=(t.ban||'').toLowerCase();
-    if(taskBanFilter==='Ná»™i vá»¥')return b.includes('ná»™i vá»¥');
-    if(taskBanFilter==='Truyá»n thÃ´ng')return b.includes('truyá»n thÃ´ng');
-    if(taskBanFilter==='Sá»± kiá»‡n')return b.includes('sá»± kiá»‡n');
-    if(taskBanFilter==='Äá»‘i ngoáº¡i')return b.includes('Ä‘á»‘i ngoáº¡i');
-    if(taskBanFilter==='ToÃ n CLB')return b.includes('toÃ n clb');
+    if(taskBanFilter==='Nội vụ')return b.includes('nội vụ');
+    if(taskBanFilter==='Truyền thông')return b.includes('truyền thông');
+    if(taskBanFilter==='Sự kiện')return b.includes('sự kiện');
+    if(taskBanFilter==='Đối ngoại')return b.includes('đối ngoại');
+    if(taskBanFilter==='Toàn CLB')return b.includes('toàn clb');
     return t.ban===taskBanFilter;
   });
   const totalTasks=(curEvent.tasks||[]).length;
@@ -3367,26 +3367,26 @@ function EventDetail({event,onBack}){
           </div>
         </div>
         <button onClick={()=>setLiveMode(true)} className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-3 py-2 text-sm font-bold transition shadow-md flex-shrink-0">
-          <Icon name="zap" size={15}/>âš¡ Thá»±c Äá»‹a
+          <Icon name="zap" size={15}/>⚡ Thực Địa
         </button>
       </div>
 
       {totalTasks>0&&(
         <div className="card p-3">
           <div className="flex items-center justify-between text-xs text-slate-600 mb-1.5">
-            <span>Tiáº¿n Ä‘á»™ cÃ´ng viá»‡c</span>
+            <span>Tiến độ công việc</span>
             <span className="font-bold">{doneTasks}/{totalTasks} ({progress}%)</span>
           </div>
           <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
             <div className={`h-2.5 rounded-full transition-all duration-700 ${progress===100?'bg-emerald-500':'bg-indigo-500'}`} style={{width:`${progress}%`}}/>
           </div>
-          {progress===100&&<p className="text-xs text-emerald-600 font-semibold mt-1.5 text-center">ðŸŽ‰ HoÃ n thÃ nh 100%!</p>}
+          {progress===100&&<p className="text-xs text-emerald-600 font-semibold mt-1.5 text-center">🎉 Hoàn thành 100%!</p>}
         </div>
       )}
 
-      {curEvent.note&&<div className="card p-3 bg-amber-50 border-amber-200 text-sm text-amber-800"><Icon name="sticky-note" size={14} className="inline mr-1.5"/>Ghi chÃº: {curEvent.note}</div>}
+      {curEvent.note&&<div className="card p-3 bg-amber-50 border-amber-200 text-sm text-amber-800"><Icon name="sticky-note" size={14} className="inline mr-1.5"/>Ghi chú: {curEvent.note}</div>}
 
-      {/* Bá»˜ Lá»ŒC BAN & VIá»†C Cá»¦A TÃ”I */}
+      {/* BỘ LỌC BAN & VIỆC CỦA TÔI */}
       <div className="card p-3 flex items-center justify-between gap-2 overflow-x-auto">
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
@@ -3397,13 +3397,13 @@ function EventDetail({event,onBack}){
                 : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
             }`}
           >
-            <span>âš¡</span> Viá»‡c cá»§a tÃ´i {userIdentity ? `(${userIdentity})` : ''}
+            <span>⚡</span> Việc của tôi {userIdentity ? `(${userIdentity})` : ''}
           </button>
 
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 ml-1 mr-1">
             <Icon name="filter" size={12}/> Ban:
           </span>
-          {['', 'Ná»™i vá»¥', 'Truyá»n thÃ´ng', 'Sá»± kiá»‡n', 'Äá»‘i ngoáº¡i', 'ToÃ n CLB'].map(b => (
+          {['', 'Nội vụ', 'Truyền thông', 'Sự kiện', 'Đối ngoại', 'Toàn CLB'].map(b => (
             <button
               key={b}
               onClick={() => setTaskBanFilter(b)}
@@ -3413,7 +3413,7 @@ function EventDetail({event,onBack}){
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
-              {b || 'Táº¥t cáº£ ban'}
+              {b || 'Tất cả ban'}
             </button>
           ))}
         </div>
@@ -3422,7 +3422,7 @@ function EventDetail({event,onBack}){
             onClick={() => { setTaskBanFilter(''); setMyTasksOnly(false); }}
             className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 flex-shrink-0"
           >
-            <Icon name="x-circle" size={12}/>XÃ³a lá»c
+            <Icon name="x-circle" size={12}/>Xóa lọc
           </button>
         )}
       </div>
@@ -3439,16 +3439,16 @@ function EventDetail({event,onBack}){
                 {phase}
                 <span className="text-xs font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">{phaseTasks.length}</span>
               </h2>
-              <button onClick={()=>openAddTask(phase)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>ThÃªm viá»‡c</button>
+              <button onClick={()=>openAddTask(phase)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={13}/>Thêm việc</button>
             </div>
             <div className="space-y-2">
-              {phaseTasks.length===0&&<p className="text-xs text-slate-400 py-3 text-center">ChÆ°a cÃ³ Ä‘áº§u viá»‡c nÃ o trong giai Ä‘oáº¡n nÃ y</p>}
+              {phaseTasks.length===0&&<p className="text-xs text-slate-400 py-3 text-center">Chưa có đầu việc nào trong giai đoạn này</p>}
               {pendingTasks.map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask} onEdit={openEditTask} onDelete={id=>setConfirmDel(id)}/>)}
 
               {completedTasks.length > 0 && (
                 <details className="mt-3 pt-2 border-t border-slate-100">
                   <summary className="text-xs font-semibold text-slate-500 cursor-pointer py-1 select-none hover:text-slate-700 flex items-center gap-1">
-                    <span>âœ… ÄÃ£ xong ({completedTasks.length})</span>
+                    <span>✅ Đã xong ({completedTasks.length})</span>
                   </summary>
                   <div className="space-y-2 mt-2">
                     {completedTasks.map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask} onEdit={openEditTask} onDelete={id=>setConfirmDel(id)}/>)}
@@ -3460,32 +3460,32 @@ function EventDetail({event,onBack}){
         );
       })}
 
-      <Modal open={taskModal} onClose={handleTaskClose} title={editingTask?'Chá»‰nh sá»­a cÃ´ng viá»‡c':'ThÃªm Ä‘áº§u viá»‡c má»›i'}>
+      <Modal open={taskModal} onClose={handleTaskClose} title={editingTask?'Chỉnh sửa công việc':'Thêm đầu việc mới'}>
         <div className="space-y-4">
-          <div><label className="form-label">TÃªn cÃ´ng viá»‡c <span className="text-red-500">*</span></label><input value={taskForm.title} onChange={e=>setTaskForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="TÃªn cÃ´ng viá»‡c cáº§n lÃ m..."/></div>
-          <div><label className="form-label">Giai Ä‘oáº¡n</label><select value={taskForm.phase} onChange={e=>setTaskForm(p=>({...p,phase:e.target.value}))} className="form-input">{TASK_PHASES.map(ph=><option key={ph}>{ph}</option>)}</select></div>
+          <div><label className="form-label">Tên công việc <span className="text-red-500">*</span></label><input value={taskForm.title} onChange={e=>setTaskForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="Tên công việc cần làm..."/></div>
+          <div><label className="form-label">Giai đoạn</label><select value={taskForm.phase} onChange={e=>setTaskForm(p=>({...p,phase:e.target.value}))} className="form-input">{TASK_PHASES.map(ph=><option key={ph}>{ph}</option>)}</select></div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="form-label">NgÆ°á»i phá»¥ trÃ¡ch</label>
+              <label className="form-label">Người phụ trách</label>
               <select
                 value={taskForm.assignee}
                 onChange={e=>setTaskForm(p=>({...p,assignee:e.target.value}))}
                 className="form-input"
               >
-                <option value="">-- Chá»n thÃ nh viÃªn --</option>
+                <option value="">-- Chọn thành viên --</option>
                 {members.map(m=>(
-                  <option key={m.id} value={m.name}>{m.name} ({m.ban || m.role || 'ThÃ nh viÃªn'})</option>
+                  <option key={m.id} value={m.name}>{m.name} ({m.ban || m.role || 'Thành viên'})</option>
                 ))}
               </select>
             </div>
-            <div><label className="form-label">Ban phá»‘i há»£p</label><select value={taskForm.ban} onChange={e=>setTaskForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chá»n ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
+            <div><label className="form-label">Ban phối hợp</label><select value={taskForm.ban} onChange={e=>setTaskForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
           </div>
           <div><label className="form-label">Deadline</label><input type="datetime-local" value={taskForm.deadline} onChange={e=>setTaskForm(p=>({...p,deadline:e.target.value}))} className="form-input"/></div>
-          <div><label className="form-label">Link tÃ i liá»‡u Ä‘Ã­nh kÃ¨m</label><input value={taskForm.link} onChange={e=>setTaskForm(p=>({...p,link:e.target.value}))} className="form-input" placeholder="https://drive.google.com/..."/></div>
-          <div className="flex gap-2 pt-2"><button onClick={handleTaskClose} className="btn-secondary flex-1">Há»§y</button><button onClick={handleTaskSave} className="btn-primary flex-1">{editingTask?'LÆ°u thay Ä‘á»•i':'ThÃªm viá»‡c'}</button></div>
+          <div><label className="form-label">Link tài liệu đính kèm</label><input value={taskForm.link} onChange={e=>setTaskForm(p=>({...p,link:e.target.value}))} className="form-input" placeholder="https://drive.google.com/..."/></div>
+          <div className="flex gap-2 pt-2"><button onClick={handleTaskClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleTaskSave} className="btn-primary flex-1">{editingTask?'Lưu thay đổi':'Thêm việc'}</button></div>
         </div>
       </Modal>
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>deleteTask(confirmDel)} message="XÃ³a Ä‘áº§u viá»‡c nÃ y?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>deleteTask(confirmDel)} message="Xóa đầu việc này?"/>
       <DuplicateLinkDialog open={!!dupWarning} creator={dupWarning?.creator} onCancel={()=>setDupWarning(null)} onConfirm={dupWarning?.onConfirm}/>
     </div>
   );
@@ -3513,35 +3513,35 @@ function EventsPage(){
   const openEdit=(e2,ev)=>{e2.stopPropagation();setEditing(ev.id);setForm({name:ev.name,date:ev.date,location:ev.location,note:ev.note});setModal(true)};
   const handleClose=()=>{setModal(false);setEditing(null)};
   const handleSave=async()=>{
-    if(!form.name.trim()){alert('Vui lÃ²ng nháº­p tÃªn sá»± kiá»‡n!');return}
+    if(!form.name.trim()){alert('Vui lòng nhập tên sự kiện!');return}
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       if(editing){
         await fbDb.collection('events').doc(editing).set(form,{merge:true});
         try{playSound('success');}catch(e){}
-        try{addNotification(`ÄÃ£ cáº­p nháº­t sá»± kiá»‡n: ${form.name}`,'success');}catch(e){}
+        try{addNotification(`Đã cập nhật sự kiện: ${form.name}`,'success');}catch(e){}
       }else{
         const id=uid();
         const newEv={...form,id,tasks:[],createdAt:new Date().toISOString()};
         await fbDb.collection('events').doc(id).set(newEv);
         try{playSound('success');}catch(e){}
-        try{addNotification(`ÄÃ£ táº¡o sá»± kiá»‡n má»›i: ${form.name}`,'success');}catch(e){}
+        try{addNotification(`Đã tạo sự kiện mới: ${form.name}`,'success');}catch(e){}
       }
       handleClose();
     }catch(err){
-      console.error('Lá»—i lÆ°u sá»± kiá»‡n:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu sự kiện:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const handleDeleteEvent=async(id)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('events').doc(id).delete();
       try{playSound('pop');}catch(e){}
-      try{addNotification('ÄÃ£ xÃ³a sá»± kiá»‡n','info');}catch(e){}
+      try{addNotification('Đã xóa sự kiện','info');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a sá»± kiá»‡n:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa sự kiện:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
@@ -3563,14 +3563,14 @@ function EventsPage(){
               {e.location&&<span className="flex items-center gap-1"><Icon name="map-pin" size={11}/>{e.location}</span>}
             </div>
             <div className="flex gap-2 mt-2">
-              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{tasks.length} viá»‡c</span>
-              {done>0&&<span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">âœ“ {done} xong</span>}
-              {over>0&&<span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">âš  {over} quÃ¡ háº¡n</span>}
+              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{tasks.length} việc</span>
+              {done>0&&<span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">✓ {done} xong</span>}
+              {over>0&&<span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">⚠ {over} quá hạn</span>}
             </div>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0" onClick={ev2=>ev2.stopPropagation()}>
-            <button onClick={ev2=>openEdit(ev2,e)} className="p-2 rounded-lg hover:bg-slate-100" title="Sá»­a sá»± kiá»‡n"><Icon name="pencil" size={14} className="text-slate-400"/></button>
-            {adminMode && <button onClick={()=>setConfirmDel(e.id)} className="p-2 rounded-lg hover:bg-red-50" title="XÃ³a sá»± kiá»‡n"><Icon name="trash-2" size={14} className="text-red-400"/></button>}
+            <button onClick={ev2=>openEdit(ev2,e)} className="p-2 rounded-lg hover:bg-slate-100" title="Sửa sự kiện"><Icon name="pencil" size={14} className="text-slate-400"/></button>
+            {adminMode && <button onClick={()=>setConfirmDel(e.id)} className="p-2 rounded-lg hover:bg-red-50" title="Xóa sự kiện"><Icon name="trash-2" size={14} className="text-red-400"/></button>}
           </div>
         </div>
       </div>
@@ -3580,37 +3580,37 @@ function EventsPage(){
   return(
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-bold text-slate-800">Äiá»u Phá»‘i Sá»± Kiá»‡n & Giao Viá»‡c</h1><p className="text-xs text-slate-500 mt-0.5">Quáº£n lÃ½ sá»± kiá»‡n, Ä‘áº§u viá»‡c vÃ  cháº¿ Ä‘á»™ thá»±c Ä‘á»‹a</p></div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>Táº¡o sá»± kiá»‡n</button>
+        <div><h1 className="text-xl font-bold text-slate-800">Điều Phối Sự Kiện & Giao Việc</h1><p className="text-xs text-slate-500 mt-0.5">Quản lý sự kiện, đầu việc và chế độ thực địa</p></div>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>Tạo sự kiện</button>
       </div>
-      {events.length===0&&<div className="card py-16 text-center"><Icon name="calendar-plus" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">ChÆ°a cÃ³ sá»± kiá»‡n nÃ o</p></div>}
-      {upcoming.length>0&&<div><p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Sáº¯p tá»›i & Äang diá»…n ra</p><div className="space-y-3">{upcoming.map(e=><EventCard key={e.id} e={e}/>)}</div></div>}
-      {past.length>0&&<div><p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">ÄÃ£ qua</p><div className="space-y-3 opacity-70">{past.map(e=><EventCard key={e.id} e={e}/>)}</div></div>}
-      <Modal open={modal} onClose={handleClose} title={editing?'Chá»‰nh sá»­a sá»± kiá»‡n':'Táº¡o sá»± kiá»‡n má»›i'}>
+      {events.length===0&&<div className="card py-16 text-center"><Icon name="calendar-plus" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có sự kiện nào</p></div>}
+      {upcoming.length>0&&<div><p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Sắp tới & Đang diễn ra</p><div className="space-y-3">{upcoming.map(e=><EventCard key={e.id} e={e}/>)}</div></div>}
+      {past.length>0&&<div><p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Đã qua</p><div className="space-y-3 opacity-70">{past.map(e=><EventCard key={e.id} e={e}/>)}</div></div>}
+      <Modal open={modal} onClose={handleClose} title={editing?'Chỉnh sửa sự kiện':'Tạo sự kiện mới'}>
         <div className="space-y-4">
-          <div><label className="form-label">TÃªn sá»± kiá»‡n <span className="text-red-500">*</span></label><input value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="TÃªn sá»± kiá»‡n..."/></div>
+          <div><label className="form-label">Tên sự kiện <span className="text-red-500">*</span></label><input value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="Tên sự kiện..."/></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="form-label">NgÃ y tá»• chá»©c</label><input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))} className="form-input"/></div>
-            <div><label className="form-label">Äá»‹a Ä‘iá»ƒm</label><input value={form.location} onChange={e=>setForm(p=>({...p,location:e.target.value}))} className="form-input" placeholder="Giáº£ng Ä‘Æ°á»ng, phÃ²ng há»p..."/></div>
+            <div><label className="form-label">Ngày tổ chức</label><input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))} className="form-input"/></div>
+            <div><label className="form-label">Địa điểm</label><input value={form.location} onChange={e=>setForm(p=>({...p,location:e.target.value}))} className="form-input" placeholder="Giảng đường, phòng họp..."/></div>
           </div>
-          <div><label className="form-label">Ghi chÃº</label><textarea value={form.note} onChange={e=>setForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[72px]" placeholder="Ghi chÃº thÃªm..."/></div>
-          <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Há»§y</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'LÆ°u thay Ä‘á»•i':'Táº¡o sá»± kiá»‡n'}</button></div>
+          <div><label className="form-label">Ghi chú</label><textarea value={form.note} onChange={e=>setForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[72px]" placeholder="Ghi chú thêm..."/></div>
+          <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu thay đổi':'Tạo sự kiện'}</button></div>
         </div>
       </Modal>
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteEvent(confirmDel)} message="XÃ³a sá»± kiá»‡n vÃ  toÃ n bá»™ cÃ´ng viá»‡c bÃªn trong?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteEvent(confirmDel)} message="Xóa sự kiện và toàn bộ công việc bên trong?"/>
     </div>
   );
 }
 
 // ============================================================
-// MEMBER PROFILE MODAL â€“ Talent Hub
+// MEMBER PROFILE MODAL – Talent Hub
 // ============================================================
 function MemberProfileModal({member,open,onClose,sessions,assignTasks,events}){
   const totalSessions=sessions.length;
-  const presentCount=sessions.filter(s=>member.attendance?.[s.id]==='CÃ³ máº·t').length;
+  const presentCount=sessions.filter(s=>member.attendance?.[s.id]==='Có mặt').length;
   const attendancePct=totalSessions>0?Math.round(presentCount/totalSessions*100):null;
   const trackedTasks=assignTasks.filter(t=>member.taskStatus?.[t.id]);
-  const onTimeCount=trackedTasks.filter(t=>member.taskStatus?.[t.id]==='ÄÃºng háº¡n').length;
+  const onTimeCount=trackedTasks.filter(t=>member.taskStatus?.[t.id]==='Đúng hạn').length;
   const taskPct=trackedTasks.length>0?Math.round(onTimeCount/trackedTasks.length*100):null;
   const assignedEventTasks=events.flatMap(e=>(e.tasks||[]).filter(t=>t.assignee&&t.assignee.toLowerCase().includes(member.name.toLowerCase())).map(t=>({...t,eventName:e.name})));
   const doneEventTasks=assignedEventTasks.filter(t=>t.done).length;
@@ -3619,33 +3619,33 @@ function MemberProfileModal({member,open,onClose,sessions,assignTasks,events}){
   const kpcfg=(pct)=>pct===null?{c1:'#94a3b8',c2:'#64748b'}:pct>=80?{c1:'#059669',c2:'#0f766e'}:pct>=60?{c1:'#d97706',c2:'#c2410c'}:{c1:'#dc2626',c2:'#991b1b'};
 
   return(
-    <Modal open={open} onClose={onClose} title="Há»“ SÆ¡ NÄƒng Lá»±c ThÃ nh ViÃªn" wide>
+    <Modal open={open} onClose={onClose} title="Hồ Sơ Năng Lực Thành Viên" wide>
       <div className="space-y-5">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-2xl flex-shrink-0 shadow-lg">{member.name.charAt(0).toUpperCase()}</div>
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-black text-slate-800">{member.name}</h2>
             <div className="flex flex-wrap gap-1.5 mt-1">
-              <span className={`status-badge text-xs ${member.role==='Ban Chá»§ Nhiá»‡m'?'tag-blue':member.role==='CTV'?'tag-gray':'tag-green'}`}>{member.role}</span>
+              <span className={`status-badge text-xs ${member.role==='Ban Chủ Nhiệm'?'tag-blue':member.role==='CTV'?'tag-gray':'tag-green'}`}>{member.role}</span>
               {member.ban&&<span className="status-badge tag-gray text-xs">{member.ban}</span>}
               {member.khoa&&<span className="status-badge tag-purple text-xs">{member.khoa}</span>}
               {member.lopHup&&<span className="status-badge tag-blue text-xs">{member.lopHup}</span>}
-              <span className={`status-badge text-xs ${evalColor(member.eval||'Äáº¡t')}`}>{member.eval||'Äáº¡t'}</span>
+              <span className={`status-badge text-xs ${evalColor(member.eval||'Đạt')}`}>{member.eval||'Đạt'}</span>
             </div>
             <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-slate-400">
-              {member.phone&&<span>ðŸ“ž {member.phone}</span>}
-              {member.email&&<span>âœ‰ï¸ {member.email}</span>}
+              {member.phone&&<span>📞 {member.phone}</span>}
+              {member.email&&<span>✉️ {member.email}</span>}
             </div>
           </div>
         </div>
 
         <div>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ðŸ“Š Chá»‰ sá»‘ tá»± Ä‘á»™ng (KPI)</p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">📊 Chỉ số tự động (KPI)</p>
           <div className="grid grid-cols-3 gap-3">
             {[
-              {label:'% Äi há»p',val:attendancePct!==null?`${attendancePct}%`:'â€”',sub:`${presentCount}/${totalSessions} buá»•i`,...kpcfg(attendancePct)},
-              {label:'% ÄÃºng háº¡n',val:taskPct!==null?`${taskPct}%`:'â€”',sub:`${onTimeCount}/${trackedTasks.length} bÃ i táº­p`,...kpcfg(taskPct)},
-              {label:'Viá»‡c sá»± kiá»‡n',val:assignedEventTasks.length,sub:`âœ“ ${doneEventTasks} hoÃ n thÃ nh`,c1:'#4f46e5',c2:'#7c3aed'},
+              {label:'% Đi họp',val:attendancePct!==null?`${attendancePct}%`:'—',sub:`${presentCount}/${totalSessions} buổi`,...kpcfg(attendancePct)},
+              {label:'% Đúng hạn',val:taskPct!==null?`${taskPct}%`:'—',sub:`${onTimeCount}/${trackedTasks.length} bài tập`,...kpcfg(taskPct)},
+              {label:'Việc sự kiện',val:assignedEventTasks.length,sub:`✓ ${doneEventTasks} hoàn thành`,c1:'#4f46e5',c2:'#7c3aed'},
             ].map((k,i)=>(
               <div key={i} className="kpi-card" style={{'--kc1':k.c1,'--kc2':k.c2}}>
                 <p className="text-xs font-medium opacity-80 mb-1">{k.label}</p>
@@ -3658,7 +3658,7 @@ function MemberProfileModal({member,open,onClose,sessions,assignTasks,events}){
 
         {skills.length>0&&(
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ðŸŽ¯ Tháº¿ máº¡nh chuyÃªn mÃ´n</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">🎯 Thế mạnh chuyên môn</p>
             <div className="flex flex-wrap gap-1.5">
               {skills.map(s=><span key={s} className="status-badge tag-purple text-xs">{s}</span>)}
             </div>
@@ -3667,11 +3667,11 @@ function MemberProfileModal({member,open,onClose,sessions,assignTasks,events}){
 
         {assignedEventTasks.length>0&&(
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ðŸ“‹ CÃ´ng viá»‡c sá»± kiá»‡n Ä‘Ã£/Ä‘ang phá»¥ trÃ¡ch</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">📋 Công việc sự kiện đã/đang phụ trách</p>
             <div className="space-y-1.5 max-h-40 overflow-y-auto">
               {assignedEventTasks.map(t=>(
                 <div key={t.id} className={`flex items-center gap-2.5 p-2 rounded-lg ${t.done?'bg-emerald-50':'bg-blue-50'}`}>
-                  <span className="flex-shrink-0">{t.done?'âœ…':'ðŸ”µ'}</span>
+                  <span className="flex-shrink-0">{t.done?'✅':'🔵'}</span>
                   <div className="flex-1 min-w-0">
                     <p className={`text-xs font-medium truncate ${t.done?'text-emerald-700 line-through':'text-slate-700'}`}>{t.title}</p>
                     <p className="text-[10px] text-slate-400">{t.eventName}</p>
@@ -3685,14 +3685,14 @@ function MemberProfileModal({member,open,onClose,sessions,assignTasks,events}){
 
         {member.note&&(
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-            <p className="text-xs font-bold text-amber-600 mb-1">ðŸ’¬ Nháº­n xÃ©t thÃ¡i Ä‘á»™</p>
+            <p className="text-xs font-bold text-amber-600 mb-1">💬 Nhận xét thái độ</p>
             <p className="text-sm text-amber-800 italic">"{member.note}"</p>
           </div>
         )}
 
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
           <button onClick={()=>{
-            const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Tháº» ÄÃ¡nh GiÃ¡ - ${member.name}</title>
+            const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Thẻ Đánh Giá - ${member.name}</title>
 <style>
 body{font-family:'Segoe UI',sans-serif;padding:32px;color:#1e293b;background:#f8fafc}
 .card{background:#fff;border:2px solid #4f46e5;border-radius:16px;padding:28px;max-width:580px;margin:0 auto;box-shadow:0 10px 25px rgba(0,0,0,0.08)}
@@ -3707,31 +3707,31 @@ body{font-family:'Segoe UI',sans-serif;padding:32px;color:#1e293b;background:#f8
 <div class="card">
   <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding-bottom:14px;margin-bottom:16px">
     <div>
-      <h3 style="margin:0;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#6366f1">CLB Ká»¹ NÄƒng Má»m NewVision â€“ ÄH DÆ°á»£c HN</h3>
+      <h3 style="margin:0;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#6366f1">CLB Kỹ Năng Mềm NewVision – ĐH Dược HN</h3>
       <h1 style="margin:4px 0 0;font-size:24px;font-weight:900;color:#0f172a">${member.name}</h1>
     </div>
-    <span class="badge" style="font-size:14px;padding:4px 12px;background:#dcfce7;color:#15803d">${member.eval||'Äáº¡t'}</span>
+    <span class="badge" style="font-size:14px;padding:4px 12px;background:#dcfce7;color:#15803d">${member.eval||'Đạt'}</span>
   </div>
   <div style="font-size:13px;color:#64748b;margin-bottom:12px">
-    <span>${member.role}</span> Â· <span>${member.ban||'ToÃ n CLB'}</span> Â· <span>${member.khoa||''}</span>
-    ${member.phone?` Â· ðŸ“ž ${member.phone}`:''}
+    <span>${member.role}</span> · <span>${member.ban||'Toàn CLB'}</span> · <span>${member.khoa||''}</span>
+    ${member.phone?` · 📞 ${member.phone}`:''}
   </div>
   <div class="kpi-row">
-    <div class="kpi-box"><div style="font-size:11px;color:#64748b">% Äi Há»p</div><div class="kpi-val">${attendancePct!==null?attendancePct+'%':'â€”'}</div><div style="font-size:10px;color:#94a3b8">${presentCount}/${totalSessions} buá»•i</div></div>
-    <div class="kpi-box"><div style="font-size:11px;color:#64748b">% ÄÃºng Háº¡n</div><div class="kpi-val">${taskPct!==null?taskPct+'%':'â€”'}</div><div style="font-size:10px;color:#94a3b8">${onTimeCount}/${trackedTasks.length} bÃ i</div></div>
-    <div class="kpi-box"><div style="font-size:11px;color:#64748b">Viá»‡c Sá»± Kiá»‡n</div><div class="kpi-val">${assignedEventTasks.length}</div><div style="font-size:10px;color:#94a3b8">${doneEventTasks} hoÃ n thÃ nh</div></div>
+    <div class="kpi-box"><div style="font-size:11px;color:#64748b">% Đi Họp</div><div class="kpi-val">${attendancePct!==null?attendancePct+'%':'—'}</div><div style="font-size:10px;color:#94a3b8">${presentCount}/${totalSessions} buổi</div></div>
+    <div class="kpi-box"><div style="font-size:11px;color:#64748b">% Đúng Hạn</div><div class="kpi-val">${taskPct!==null?taskPct+'%':'—'}</div><div style="font-size:10px;color:#94a3b8">${onTimeCount}/${trackedTasks.length} bài</div></div>
+    <div class="kpi-box"><div style="font-size:11px;color:#64748b">Việc Sự Kiện</div><div class="kpi-val">${assignedEventTasks.length}</div><div style="font-size:10px;color:#94a3b8">${doneEventTasks} hoàn thành</div></div>
   </div>
-  ${skills.length>0?`<div style="margin-top:14px"><strong style="font-size:12px;color:#475569">Tháº¿ máº¡nh chuyÃªn mÃ´n:</strong><div style="margin-top:6px">${skills.map(s=>`<span class="tag">${s}</span>`).join('')}</div></div>`:''}
-  ${member.note?`<div class="note"><strong>Nháº­n xÃ©t thÃ¡i Ä‘á»™:</strong> "${member.note}"</div>`:''}
+  ${skills.length>0?`<div style="margin-top:14px"><strong style="font-size:12px;color:#475569">Thế mạnh chuyên môn:</strong><div style="margin-top:6px">${skills.map(s=>`<span class="tag">${s}</span>`).join('')}</div></div>`:''}
+  ${member.note?`<div class="note"><strong>Nhận xét thái độ:</strong> "${member.note}"</div>`:''}
   <div style="margin-top:20px;padding-top:10px;border-top:1px dashed #cbd5e1;display:flex;justify-content:space-between;font-size:11px;color:#94a3b8">
     <span>NewVision HUP Talent Profile</span>
-    <span>NgÃ y xuáº¥t: ${new Date().toLocaleDateString('vi-VN')}</span>
+    <span>Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}</span>
   </div>
 </div><script>window.onload=function(){window.print()}<\/script></body></html>`;
             const w=window.open('','_blank');
             if(w){w.document.write(html);w.document.close()}
           }} className="btn-secondary flex items-center gap-1.5 text-xs py-2 px-3">
-            <Icon name="printer" size={14}/>Xuáº¥t Tháº» ÄÃ¡nh GiÃ¡ CÃ¡ NhÃ¢n
+            <Icon name="printer" size={14}/>Xuất Thẻ Đánh Giá Cá Nhân
           </button>
         </div>
       </div>
@@ -3755,7 +3755,7 @@ function MembersPage(){
   const[newATask,setNewATask]=useState('');
   const[viewMode,setViewMode]=useState('members');
   const[profileMember,setProfileMember]=useState(null);
-  const emptyForm={name:'',role:'ThÃ nh viÃªn chÃ­nh thá»©c',ban:'',gen:'',lopHup:'',khoa:'',phone:'',email:'',note:'',eval:'Äáº¡t',skills:[],attendance:{},taskStatus:{}};
+  const emptyForm={name:'',role:'Thành viên chính thức',ban:'',gen:'',lopHup:'',khoa:'',phone:'',email:'',note:'',eval:'Đạt',skills:[],attendance:{},taskStatus:{}};
   const[form,setForm]=useState(emptyForm);
 
   const openAdd=()=>{setEditing(null);setForm(emptyForm);setModal(true)};
@@ -3763,17 +3763,17 @@ function MembersPage(){
   const handleClose=()=>{setModal(false);setEditing(null)};
 
   const handleSave=async()=>{
-    if(!form.name.trim()){alert('Vui lÃ²ng nháº­p há» tÃªn!');return}
-    const finalKhoa=form.gen?(form.lopHup?`${form.gen} Â· ${form.lopHup}`:form.gen):(form.lopHup||form.khoa||'');
+    if(!form.name.trim()){alert('Vui lòng nhập họ tên!');return}
+    const finalKhoa=form.gen?(form.lopHup?`${form.gen} · ${form.lopHup}`:form.gen):(form.lopHup||form.khoa||'');
     const memberData={...form,khoa:finalKhoa};
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       if(editing){
         await fbDb.collection('members').doc(editing).set(memberData,{merge:true});
         try{playSound('success');}catch(e){}
-        try{addNotification(`ÄÃ£ cáº­p nháº­t thÃ´ng tin: ${form.name}`,'success');}catch(e){}
+        try{addNotification(`Đã cập nhật thông tin: ${form.name}`,'success');}catch(e){}
       }else{
-        // Kiá»ƒm tra xem thÃ nh viÃªn nÃ y Ä‘Ã£ tá»“n táº¡i chÆ°a Ä‘á»ƒ trÃ¡nh táº¡o trÃ¹ng láº·p
+        // Kiểm tra xem thành viên này đã tồn tại chưa để tránh tạo trùng lặp
         const existing = members.find(m => (m.name||'').trim().toLowerCase() === form.name.trim().toLowerCase() && (m.ban||'').trim() === (form.ban||'').trim());
         const id = existing ? existing.id : uid();
         const newDoc={
@@ -3786,12 +3786,12 @@ function MembersPage(){
         await fbDb.collection('members').doc(id).set(newDoc, {merge:true});
         try{playSound('success');}catch(e){}
         try{triggerCat('dash');}catch(e){}
-        try{addNotification(`ÄÃ£ thÃªm thÃ nh viÃªn má»›i: ${form.name}`,'success');}catch(e){}
+        try{addNotification(`Đã thêm thành viên mới: ${form.name}`,'success');}catch(e){}
       }
       handleClose();
     }catch(err){
-      console.error('Lá»—i lÆ°u thÃ nh viÃªn:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu thành viên:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
@@ -3802,106 +3802,106 @@ function MembersPage(){
 
   const setAttend=async(mId,sId,val)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const m=members.find(x=>x.id===mId);
       const curAtt=m?.attendance||{};
       await fbDb.collection('members').doc(mId).set({attendance:{...curAtt,[sId]:val}},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i lÆ°u Ä‘iá»ƒm danh:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu điểm danh:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const setTaskStat=async(mId,tId,val)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const m=members.find(x=>x.id===mId);
       const curStat=m?.taskStatus||{};
       await fbDb.collection('members').doc(mId).set({taskStatus:{...curStat,[tId]:val}},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i lÆ°u bÃ i táº­p:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu bài tập:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const setNote=async(mId,note)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(mId).set({note},{merge:true});
     }catch(err){
-      console.error('Lá»—i lÆ°u ghi chÃº:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu ghi chú:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const setEval=async(mId,val)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(mId).set({eval:val},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i lÆ°u Ä‘Ã¡nh giÃ¡:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu đánh giá:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const addSession=async()=>{
     if(!newSession.trim())return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const id=uid();
       await fbDb.collection('sessions').doc(id).set({id,name:newSession.trim(),createdAt:new Date().toISOString()});
       setNewSession('');
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i thÃªm buá»•i sinh hoáº¡t:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi thêm buổi sinh hoạt:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const deleteSession=async(id)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('sessions').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a buá»•i sinh hoáº¡t:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa buổi sinh hoạt:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const addATask=async()=>{
     if(!newATask.trim())return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const id=uid();
       await fbDb.collection('assignTasks').doc(id).set({id,name:newATask.trim(),createdAt:new Date().toISOString()});
       setNewATask('');
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i thÃªm nhiá»‡m vá»¥:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi thêm nhiệm vụ:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const deleteATask=async(id)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('assignTasks').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a nhiá»‡m vá»¥:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa nhiệm vụ:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
   const handleDeleteMember=async(id)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(id).delete();
       try{playSound('pop');}catch(e){}
-      try{addNotification('ÄÃ£ xÃ³a thÃ nh viÃªn','info');}catch(e){}
+      try{addNotification('Đã xóa thành viên','info');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a thÃ nh viÃªn:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa thành viên:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
-  // Khá»­ trÃ¹ng láº·p thÃ nh viÃªn trÆ°á»›c khi duyá»‡t máº£ng Ä‘á»ƒ render giao diá»‡n
+  // Khử trùng lặp thành viên trước khi duyệt mảng để render giao diện
   const uniqueMembers = useMemo(()=>{
     const seenIds = new Set();
     const seenNames = new Set();
@@ -3918,9 +3918,9 @@ function MembersPage(){
     return cleanList;
   },[members]);
 
-  const bans=[...new Set(uniqueMembers.map(m=>m.ban||'ChÆ°a phÃ¢n ban'))];
+  const bans=[...new Set(uniqueMembers.map(m=>m.ban||'Chưa phân ban'))];
   let filteredMembers=uniqueMembers;
-  if(selectedBan)filteredMembers=filteredMembers.filter(m=>(m.ban||'ChÆ°a phÃ¢n ban')===selectedBan);
+  if(selectedBan)filteredMembers=filteredMembers.filter(m=>(m.ban||'Chưa phân ban')===selectedBan);
   if(searchKhoaLop.trim()){
     const q=searchKhoaLop.trim().toLowerCase();
     filteredMembers=filteredMembers.filter(m=>
@@ -3930,22 +3930,22 @@ function MembersPage(){
       (m.name&&m.name.toLowerCase().includes(q))
     );
   }
-  const groupedByBan=bans.reduce((acc,b)=>({...acc,[b]:filteredMembers.filter(m=>(m.ban||'ChÆ°a phÃ¢n ban')===b)}),{});
+  const groupedByBan=bans.reduce((acc,b)=>({...acc,[b]:filteredMembers.filter(m=>(m.ban||'Chưa phân ban')===b)}),{});
 
   return(
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-bold text-slate-800">ThÃ nh ViÃªn & CTV NewVision HUP</h1><p className="text-xs text-slate-500 mt-0.5">Há»“ sÆ¡ nÄƒng lá»±c, cháº¥m cÃ´ng vÃ  Ä‘Ã¡nh giÃ¡ tá»•ng káº¿t</p></div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="user-plus" size={15}/>ThÃªm má»›i</button>
+        <div><h1 className="text-xl font-bold text-slate-800">Thành Viên & CTV NewVision HUP</h1><p className="text-xs text-slate-500 mt-0.5">Hồ sơ năng lực, chấm công và đánh giá tổng kết</p></div>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="user-plus" size={15}/>Thêm mới</button>
       </div>
       <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
-        {[['members','Danh sÃ¡ch'],['attendance','Cháº¥m cÃ´ng'],['tasks','BÃ i táº­p']].map(([v,l])=>(
+        {[['members','Danh sách'],['attendance','Chấm công'],['tasks','Bài tập']].map(([v,l])=>(
           <button key={v} onClick={()=>setViewMode(v)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${viewMode===v?'bg-white shadow text-slate-800':'text-slate-500 hover:text-slate-700'}`}>{l}</button>
         ))}
       </div>
       <div className="flex flex-wrap gap-2 items-center">
         <select value={selectedBan} onChange={e=>setSelectedBan(e.target.value)} className="form-input text-sm w-auto">
-          <option value="">Táº¥t cáº£ ban</option>
+          <option value="">Tất cả ban</option>
           {bans.map(b=><option key={b}>{b}</option>)}
         </select>
         <div className="relative flex-1 min-w-[210px] max-w-xs">
@@ -3955,7 +3955,7 @@ function MembersPage(){
             value={searchKhoaLop}
             onChange={e=>setSearchKhoaLop(e.target.value)}
             className="form-input text-sm pl-8 pr-7 py-1.5 w-full"
-            placeholder="TÃ¬m theo KhÃ³a, Gen hoáº·c Lá»›p..."
+            placeholder="Tìm theo Khóa, Gen hoặc Lớp..."
           />
           {searchKhoaLop&&(
             <button onClick={()=>setSearchKhoaLop('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -3965,14 +3965,14 @@ function MembersPage(){
         </div>
         {(selectedBan||searchKhoaLop)&&(
           <button onClick={()=>{setSelectedBan('');setSearchKhoaLop('')}} className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1">
-            <Icon name="x-circle" size={13}/>XÃ³a lá»c
+            <Icon name="x-circle" size={13}/>Xóa lọc
           </button>
         )}
-        {viewMode==='attendance'&&<button onClick={()=>setSessionModal(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={12}/>ThÃªm buá»•i</button>}
-        {viewMode==='tasks'&&<button onClick={()=>setTaskModal(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={12}/>ThÃªm bÃ i táº­p</button>}
+        {viewMode==='attendance'&&<button onClick={()=>setSessionModal(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={12}/>Thêm buổi</button>}
+        {viewMode==='tasks'&&<button onClick={()=>setTaskModal(true)} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1"><Icon name="plus" size={12}/>Thêm bài tập</button>}
       </div>
 
-      {members.length===0&&<div className="card py-16 text-center"><Icon name="users" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">ChÆ°a cÃ³ thÃ nh viÃªn nÃ o</p></div>}
+      {members.length===0&&<div className="card py-16 text-center"><Icon name="users" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có thành viên nào</p></div>}
 
       {viewMode==='members'&&(
         <div className="space-y-4">
@@ -3990,23 +3990,23 @@ function MembersPage(){
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <p className="font-semibold text-slate-800 text-sm">{m.name}</p>
-                        <span className={`status-badge text-[11px] ${m.role==='Ban Chá»§ Nhiá»‡m'?'tag-blue':m.role==='CTV'?'tag-gray':'tag-green'}`}>{m.role}</span>
+                        <span className={`status-badge text-[11px] ${m.role==='Ban Chủ Nhiệm'?'tag-blue':m.role==='CTV'?'tag-gray':'tag-green'}`}>{m.role}</span>
                         {(m.gen||m.khoa)&&<span className="status-badge tag-purple text-[11px]">{m.gen||m.khoa}</span>}
                         {m.lopHup&&<span className="status-badge tag-blue text-[11px]">{m.lopHup}</span>}
-                        <span className={`status-badge text-[11px] ${evalColor(m.eval||'Äáº¡t')}`}>{m.eval||'Äáº¡t'}</span>
+                        <span className={`status-badge text-[11px] ${evalColor(m.eval||'Đạt')}`}>{m.eval||'Đạt'}</span>
                       </div>
                       <div className="flex flex-wrap gap-2 mt-0.5 text-xs text-slate-400">
-                        {m.phone&&<span>ðŸ“ž {m.phone}</span>}
-                        {(m.skills||[]).length>0&&<span className="text-indigo-400">{(m.skills||[]).slice(0,2).join(' Â· ')}{(m.skills||[]).length>2?` +${(m.skills||[]).length-2}`:''}</span>}
+                        {m.phone&&<span>📞 {m.phone}</span>}
+                        {(m.skills||[]).length>0&&<span className="text-indigo-400">{(m.skills||[]).slice(0,2).join(' · ')}{(m.skills||[]).length>2?` +${(m.skills||[]).length-2}`:''}</span>}
                       </div>
                     </div>
                     <div className="flex gap-1 flex-shrink-0" onClick={e=>e.stopPropagation()}>
-                      <select value={m.eval||'Äáº¡t'} onChange={e=>setEval(m.id,e.target.value)} disabled={!adminMode} className="form-input text-xs py-1 px-1.5 w-auto">{EVAL_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>
+                      <select value={m.eval||'Đạt'} onChange={e=>setEval(m.id,e.target.value)} disabled={!adminMode} className="form-input text-xs py-1 px-1.5 w-auto">{EVAL_OPTIONS.map(o=><option key={o}>{o}</option>)}</select>
                       {(adminMode || (userIdentity && m.name && m.name.trim().toLowerCase() === userIdentity.trim().toLowerCase())) && (
-                        <button onClick={()=>openEdit(m)} className="p-2 rounded-lg hover:bg-slate-100" title="Chá»‰nh sá»­a há»“ sÆ¡"><Icon name="pencil" size={14} className="text-slate-400"/></button>
+                        <button onClick={()=>openEdit(m)} className="p-2 rounded-lg hover:bg-slate-100" title="Chỉnh sửa hồ sơ"><Icon name="pencil" size={14} className="text-slate-400"/></button>
                       )}
                       {adminMode && (
-                        <button onClick={()=>setConfirmDel(m.id)} className="p-2 rounded-lg hover:bg-red-50" title="XÃ³a thÃ nh viÃªn"><Icon name="trash-2" size={14} className="text-red-400"/></button>
+                        <button onClick={()=>setConfirmDel(m.id)} className="p-2 rounded-lg hover:bg-red-50" title="Xóa thành viên"><Icon name="trash-2" size={14} className="text-red-400"/></button>
                       )}
                     </div>
                   </div>
@@ -4016,13 +4016,13 @@ function MembersPage(){
           ))}
           {filteredMembers.length>0&&(
             <div className="card p-4">
-              <h3 className="font-bold text-sm text-slate-700 mb-3 flex items-center gap-2"><Icon name="message-square" size={15} className="text-indigo-500"/>Ghi chÃº nháº­n xÃ©t thÃ¡i Ä‘á»™</h3>
+              <h3 className="font-bold text-sm text-slate-700 mb-3 flex items-center gap-2"><Icon name="message-square" size={15} className="text-indigo-500"/>Ghi chú nhận xét thái độ</h3>
               <div className="space-y-2">
                 {filteredMembers.map(m=>(
                   <div key={m.id} className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">{m.name.charAt(0)}</div>
                     <p className="text-xs font-medium text-slate-700 w-28 flex-shrink-0 truncate">{m.name}</p>
-                    <input value={m.note||''} onChange={e=>setNote(m.id,e.target.value)} placeholder="Nháº­n xÃ©t thÃ¡i Ä‘á»™ lÃ m viá»‡c..." className="form-input flex-1 text-xs py-1.5"/>
+                    <input value={m.note||''} onChange={e=>setNote(m.id,e.target.value)} placeholder="Nhận xét thái độ làm việc..." className="form-input flex-1 text-xs py-1.5"/>
                   </div>
                 ))}
               </div>
@@ -4034,11 +4034,11 @@ function MembersPage(){
       {viewMode==='attendance'&&(
         <div className="card overflow-x-auto">
           {sessions.length===0?(
-            <div className="py-12 text-center"><Icon name="calendar-x" size={36} className="text-slate-300 mx-auto mb-2"/><p className="text-sm text-slate-400">ThÃªm buá»•i sinh hoáº¡t Ä‘á»ƒ báº¯t Ä‘áº§u Ä‘iá»ƒm danh</p></div>
+            <div className="py-12 text-center"><Icon name="calendar-x" size={36} className="text-slate-300 mx-auto mb-2"/><p className="text-sm text-slate-400">Thêm buổi sinh hoạt để bắt đầu điểm danh</p></div>
           ):(
             <table className="w-full text-sm min-w-max">
               <thead><tr className="border-b border-slate-100">
-                <th className="text-left p-3 font-semibold text-slate-700 sticky left-0 bg-white min-w-[140px]">ThÃ nh viÃªn</th>
+                <th className="text-left p-3 font-semibold text-slate-700 sticky left-0 bg-white min-w-[140px]">Thành viên</th>
                 {sessions.map(s=><th key={s.id} className="p-3 font-semibold text-slate-700 text-center min-w-[130px]">
                   <div className="flex items-center justify-between gap-1"><span className="truncate text-xs">{s.name}</span><button onClick={()=>deleteSession(s.id)} className="text-red-300 hover:text-red-500"><Icon name="x" size={12}/></button></div>
                 </th>)}
@@ -4048,12 +4048,12 @@ function MembersPage(){
                   <tr key={m.id} className="border-b border-slate-50 hover:bg-slate-50">
                     <td className="p-3 sticky left-0 bg-white hover:bg-slate-50">
                       <p className="font-medium text-slate-800 text-xs">{m.name}</p>
-                      <p className="text-[10px] text-slate-400">{m.ban||'â€”'}</p>
+                      <p className="text-[10px] text-slate-400">{m.ban||'—'}</p>
                     </td>
                     {sessions.map(s=>(
                       <td key={s.id} className="p-2 text-center">
                         <select value={m.attendance?.[s.id]||''} onChange={e=>setAttend(m.id,s.id,e.target.value)} className="text-[11px] border border-slate-200 rounded-lg px-1 py-1 bg-white w-full">
-                          <option value="">â€”</option>
+                          <option value="">—</option>
                           {ATTEND_OPTIONS.map(o=><option key={o}>{o}</option>)}
                         </select>
                         {m.attendance?.[s.id]&&<span className={`status-badge text-[10px] mt-1 ${attendColor(m.attendance[s.id])}`}>{m.attendance[s.id]}</span>}
@@ -4070,11 +4070,11 @@ function MembersPage(){
       {viewMode==='tasks'&&(
         <div className="card overflow-x-auto">
           {assignTasks.length===0?(
-            <div className="py-12 text-center"><Icon name="file-x" size={36} className="text-slate-300 mx-auto mb-2"/><p className="text-sm text-slate-400">ThÃªm bÃ i táº­p/nhiá»‡m vá»¥ Ä‘á»ƒ theo dÃµi tiáº¿n Ä‘á»™</p></div>
+            <div className="py-12 text-center"><Icon name="file-x" size={36} className="text-slate-300 mx-auto mb-2"/><p className="text-sm text-slate-400">Thêm bài tập/nhiệm vụ để theo dõi tiến độ</p></div>
           ):(
             <table className="w-full text-sm min-w-max">
               <thead><tr className="border-b border-slate-100">
-                <th className="text-left p-3 font-semibold text-slate-700 sticky left-0 bg-white min-w-[140px]">ThÃ nh viÃªn</th>
+                <th className="text-left p-3 font-semibold text-slate-700 sticky left-0 bg-white min-w-[140px]">Thành viên</th>
                 {assignTasks.map(t=><th key={t.id} className="p-3 font-semibold text-slate-700 text-center min-w-[130px]">
                   <div className="flex items-center justify-between gap-1"><span className="truncate text-xs">{t.name}</span><button onClick={()=>deleteATask(t.id)} className="text-red-300 hover:text-red-500"><Icon name="x" size={12}/></button></div>
                 </th>)}
@@ -4084,12 +4084,12 @@ function MembersPage(){
                   <tr key={m.id} className="border-b border-slate-50 hover:bg-slate-50">
                     <td className="p-3 sticky left-0 bg-white hover:bg-slate-50">
                       <p className="font-medium text-slate-800 text-xs">{m.name}</p>
-                      <p className="text-[10px] text-slate-400">{m.ban||'â€”'}</p>
+                      <p className="text-[10px] text-slate-400">{m.ban||'—'}</p>
                     </td>
                     {assignTasks.map(t=>(
                       <td key={t.id} className="p-2 text-center">
                         <select value={m.taskStatus?.[t.id]||''} onChange={e=>setTaskStat(m.id,t.id,e.target.value)} className="text-[11px] border border-slate-200 rounded-lg px-1 py-1 bg-white w-full">
-                          <option value="">â€”</option>
+                          <option value="">—</option>
                           {TASK_OPTIONS.map(o=><option key={o}>{o}</option>)}
                         </select>
                         {m.taskStatus?.[t.id]&&<span className={`status-badge text-[10px] mt-1 ${taskColor(m.taskStatus[t.id])}`}>{m.taskStatus[t.id]}</span>}
@@ -4105,16 +4105,16 @@ function MembersPage(){
 
       {profileMember&&<MemberProfileModal member={profileMember} open={!!profileMember} onClose={()=>setProfileMember(null)} sessions={sessions} assignTasks={assignTasks} events={events}/>}
 
-      <Modal open={modal} onClose={handleClose} title={editing?'Chá»‰nh sá»­a thÃ nh viÃªn':'ThÃªm thÃ nh viÃªn / CTV má»›i'}>
+      <Modal open={modal} onClose={handleClose} title={editing?'Chỉnh sửa thành viên':'Thêm thành viên / CTV mới'}>
         <div className="space-y-4">
-          <div><label className="form-label">Há» vÃ  tÃªn <span className="text-red-500">*</span></label><input value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="Há» vÃ  tÃªn Ä‘áº§y Ä‘á»§"/></div>
+          <div><label className="form-label">Họ và tên <span className="text-red-500">*</span></label><input value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="Họ và tên đầy đủ"/></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="form-label">Vai trÃ²</label><select value={form.role} onChange={e=>setForm(p=>({...p,role:e.target.value}))} className="form-input">{MEMBER_ROLES.map(r=><option key={r}>{r}</option>)}</select></div>
-            <div><label className="form-label">Ban</label><select value={form.ban} onChange={e=>setForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chá»n ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
+            <div><label className="form-label">Vai trò</label><select value={form.role} onChange={e=>setForm(p=>({...p,role:e.target.value}))} className="form-input">{MEMBER_ROLES.map(r=><option key={r}>{r}</option>)}</select></div>
+            <div><label className="form-label">Ban</label><select value={form.ban} onChange={e=>setForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="form-label">KhÃ³a / Gen CLB</label>
+              <label className="form-label">Khóa / Gen CLB</label>
               <input
                 value={form.gen||form.khoa||''}
                 onChange={e=>setForm(p=>({...p,gen:e.target.value}))}
@@ -4123,7 +4123,7 @@ function MembersPage(){
               />
             </div>
             <div>
-              <label className="form-label">Lá»›p / KhÃ³a trÆ°á»ng HUP</label>
+              <label className="form-label">Lớp / Khóa trường HUP</label>
               <input
                 value={form.lopHup||''}
                 onChange={e=>setForm(p=>({...p,lopHup:e.target.value}))}
@@ -4132,47 +4132,47 @@ function MembersPage(){
               />
             </div>
           </div>
-          <div><label className="form-label">ÄÃ¡nh giÃ¡ tá»•ng káº¿t</label><select value={form.eval} onChange={e=>setForm(p=>({...p,eval:e.target.value}))} className="form-input">{EVAL_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
+          <div><label className="form-label">Đánh giá tổng kết</label><select value={form.eval} onChange={e=>setForm(p=>({...p,eval:e.target.value}))} className="form-input">{EVAL_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="form-label">Sá»‘ Ä‘iá»‡n thoáº¡i</label><input value={form.phone} onChange={e=>setForm(p=>({...p,phone:e.target.value}))} className="form-input" placeholder="0912345678"/></div>
+            <div><label className="form-label">Số điện thoại</label><input value={form.phone} onChange={e=>setForm(p=>({...p,phone:e.target.value}))} className="form-input" placeholder="0912345678"/></div>
             <div><label className="form-label">Email</label><input type="email" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} className="form-input" placeholder="email@example.com"/></div>
           </div>
           <div>
-            <label className="form-label">Tháº¿ máº¡nh chuyÃªn mÃ´n</label>
+            <label className="form-label">Thế mạnh chuyên môn</label>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {SKILL_TAGS.map(s=>(
                 <button key={s} type="button" onClick={()=>toggleSkill(s)} className={`text-xs px-2.5 py-1 rounded-full border font-medium transition ${(form.skills||[]).includes(s)?'bg-indigo-600 text-white border-indigo-600':'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'}`}>{s}</button>
               ))}
             </div>
           </div>
-          <div><label className="form-label">Ghi chÃº thÃ¡i Ä‘á»™</label><textarea value={form.note} onChange={e=>setForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="Ghi chÃº nháº­n xÃ©t..."/></div>
-          <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Há»§y</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'LÆ°u thay Ä‘á»•i':'ThÃªm thÃ nh viÃªn'}</button></div>
+          <div><label className="form-label">Ghi chú thái độ</label><textarea value={form.note} onChange={e=>setForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="Ghi chú nhận xét..."/></div>
+          <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu thay đổi':'Thêm thành viên'}</button></div>
         </div>
       </Modal>
 
-      <Modal open={sessionModal} onClose={()=>setSessionModal(false)} title="Quáº£n lÃ½ buá»•i sinh hoáº¡t">
+      <Modal open={sessionModal} onClose={()=>setSessionModal(false)} title="Quản lý buổi sinh hoạt">
         <div className="space-y-3">
-          <div className="flex gap-2"><input value={newSession} onChange={e=>setNewSession(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addSession()} className="form-input flex-1" placeholder="VD: Há»p Ban tuáº§n 1 thÃ¡ng 10..."/><button onClick={addSession} className="btn-primary px-4">ThÃªm</button></div>
-          <div className="space-y-1 max-h-48 overflow-y-auto">{sessions.map(s=><div key={s.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg"><span className="text-sm">{s.name}</span><button onClick={()=>deleteSession(s.id)} className="text-red-400 hover:text-red-600"><Icon name="trash-2" size={14}/></button></div>)}{sessions.length===0&&<p className="text-sm text-slate-400 text-center py-4">ChÆ°a cÃ³ buá»•i nÃ o</p>}</div>
-          <button onClick={()=>setSessionModal(false)} className="btn-secondary w-full">ÄÃ³ng</button>
+          <div className="flex gap-2"><input value={newSession} onChange={e=>setNewSession(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addSession()} className="form-input flex-1" placeholder="VD: Họp Ban tuần 1 tháng 10..."/><button onClick={addSession} className="btn-primary px-4">Thêm</button></div>
+          <div className="space-y-1 max-h-48 overflow-y-auto">{sessions.map(s=><div key={s.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg"><span className="text-sm">{s.name}</span><button onClick={()=>deleteSession(s.id)} className="text-red-400 hover:text-red-600"><Icon name="trash-2" size={14}/></button></div>)}{sessions.length===0&&<p className="text-sm text-slate-400 text-center py-4">Chưa có buổi nào</p>}</div>
+          <button onClick={()=>setSessionModal(false)} className="btn-secondary w-full">Đóng</button>
         </div>
       </Modal>
 
-      <Modal open={taskModal} onClose={()=>setTaskModal(false)} title="Quáº£n lÃ½ bÃ i táº­p / nhiá»‡m vá»¥">
+      <Modal open={taskModal} onClose={()=>setTaskModal(false)} title="Quản lý bài tập / nhiệm vụ">
         <div className="space-y-3">
-          <div className="flex gap-2"><input value={newATask} onChange={e=>setNewATask(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addATask()} className="form-input flex-1" placeholder="VD: BÃ i táº­p ká»¹ nÄƒng tuáº§n 1..."/><button onClick={addATask} className="btn-primary px-4">ThÃªm</button></div>
-          <div className="space-y-1 max-h-48 overflow-y-auto">{assignTasks.map(t=><div key={t.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg"><span className="text-sm">{t.name}</span><button onClick={()=>deleteATask(t.id)} className="text-red-400 hover:text-red-600"><Icon name="trash-2" size={14}/></button></div>)}{assignTasks.length===0&&<p className="text-sm text-slate-400 text-center py-4">ChÆ°a cÃ³ bÃ i táº­p nÃ o</p>}</div>
-          <button onClick={()=>setTaskModal(false)} className="btn-secondary w-full">ÄÃ³ng</button>
+          <div className="flex gap-2"><input value={newATask} onChange={e=>setNewATask(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addATask()} className="form-input flex-1" placeholder="VD: Bài tập kỹ năng tuần 1..."/><button onClick={addATask} className="btn-primary px-4">Thêm</button></div>
+          <div className="space-y-1 max-h-48 overflow-y-auto">{assignTasks.map(t=><div key={t.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg"><span className="text-sm">{t.name}</span><button onClick={()=>deleteATask(t.id)} className="text-red-400 hover:text-red-600"><Icon name="trash-2" size={14}/></button></div>)}{assignTasks.length===0&&<p className="text-sm text-slate-400 text-center py-4">Chưa có bài tập nào</p>}</div>
+          <button onClick={()=>setTaskModal(false)} className="btn-secondary w-full">Đóng</button>
         </div>
       </Modal>
 
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteMember(confirmDel)} message="XÃ³a thÃ nh viÃªn vÃ  toÃ n bá»™ dá»¯ liá»‡u liÃªn quan?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={()=>handleDeleteMember(confirmDel)} message="Xóa thành viên và toàn bộ dữ liệu liên quan?"/>
     </div>
   );
 }
 
 // ============================================================
-// ADMIN LOCK (Máº¬T KHáº¨ QUáº¢N TRá»Š 1072)
+// ADMIN LOCK (MẬT KHẨ QUẢN TRỊ 1072)
 // ============================================================
 function AdminLock({onUnlock}){
   const[pin,setPin]=useState('');
@@ -4183,7 +4183,7 @@ function AdminLock({onUnlock}){
     if(e&&e.preventDefault)e.preventDefault();
     if(pin.trim()==='1072'){
       try{playSound('success');}catch(e){}
-      try{addNotification('ðŸ‘‘ ÄÃ£ xÃ¡c thá»±c quyá»n Quáº£n trá»‹ BCN thÃ nh cÃ´ng!','success');}catch(e){}
+      try{addNotification('👑 Đã xác thực quyền Quản trị BCN thành công!','success');}catch(e){}
       onUnlock();
     }else{
       try{playSound('pop');}catch(e){}
@@ -4198,9 +4198,9 @@ function AdminLock({onUnlock}){
         <Icon name="lock" size={32}/>
       </div>
       <div>
-        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">Khu Vá»±c Quáº£n Trá»‹ BCN</h2>
+        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">Khu Vực Quản Trị BCN</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Ná»™i dung nÃ y Ä‘Æ°á»£c báº£o máº­t ná»™i bá»™. Vui lÃ²ng nháº­p mÃ£ quáº£n trá»‹ Ä‘á»ƒ má»Ÿ khÃ³a.
+          Nội dung này được bảo mật nội bộ. Vui lòng nhập mã quản trị để mở khóa.
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-3.5 pt-2">
@@ -4210,14 +4210,14 @@ function AdminLock({onUnlock}){
             maxLength={6}
             value={pin}
             onChange={e=>setPin(e.target.value)}
-            placeholder="Nháº­p mÃ£ quáº£n trá»‹..."
+            placeholder="Nhập mã quản trị..."
             className={`form-input text-center text-xl tracking-widest font-mono font-bold ${err?'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700':''}`}
             autoFocus
           />
-          {err&&<p className="text-xs text-red-500 font-semibold mt-1.5 animate-shake">MÃ£ quáº£n trá»‹ khÃ´ng Ä‘Ãºng. Vui lÃ²ng thá»­ láº¡i!</p>}
+          {err&&<p className="text-xs text-red-500 font-semibold mt-1.5 animate-shake">Mã quản trị không đúng. Vui lòng thử lại!</p>}
         </div>
         <button type="submit" className="btn-primary w-full py-2.5 font-bold text-sm shadow-md flex items-center justify-center gap-2">
-          <Icon name="key" size={16}/> Má»Ÿ KhÃ³a Truy Cáº­p
+          <Icon name="key" size={16}/> Mở Khóa Truy Cập
         </button>
       </form>
     </div>
@@ -4236,7 +4236,7 @@ function AdminLoginModal({isOpen,onClose,onUnlock}){
     if(e&&e.preventDefault)e.preventDefault();
     if(pin.trim()==='1072'){
       try{playSound('success');}catch(e){}
-      try{addNotification('ðŸ‘‘ ÄÃ£ kÃ­ch hoáº¡t Cháº¿ Ä‘á»™ Quáº£n trá»‹ BCN','success');}catch(e){}
+      try{addNotification('👑 Đã kích hoạt Chế độ Quản trị BCN','success');}catch(e){}
       onUnlock();
       onClose();
       setPin('');
@@ -4248,10 +4248,10 @@ function AdminLoginModal({isOpen,onClose,onUnlock}){
   };
 
   return(
-    <Modal open={isOpen} onClose={onClose} title="ÄÄƒng Nháº­p Quáº£n Trá»‹ BCN">
+    <Modal open={isOpen} onClose={onClose} title="Đăng Nhập Quản Trị BCN">
       <form onSubmit={handleCheck} className="space-y-4">
         <p className="text-xs text-slate-500 leading-relaxed">
-          Ná»™i dung nÃ y Ä‘Æ°á»£c báº£o máº­t ná»™i bá»™. Vui lÃ²ng nháº­p mÃ£ quáº£n trá»‹ Ä‘á»ƒ má»Ÿ khÃ³a.
+          Nội dung này được bảo mật nội bộ. Vui lòng nhập mã quản trị để mở khóa.
         </p>
         <div>
           <input
@@ -4259,15 +4259,15 @@ function AdminLoginModal({isOpen,onClose,onUnlock}){
             maxLength={6}
             value={pin}
             onChange={e=>setPin(e.target.value)}
-            placeholder="Nháº­p mÃ£ quáº£n trá»‹..."
+            placeholder="Nhập mã quản trị..."
             className={`form-input text-center text-xl tracking-widest font-mono font-bold ${err?'border-red-500 bg-red-50 text-red-700':''}`}
             autoFocus
           />
-          {err&&<p className="text-xs text-red-500 font-semibold mt-1.5 text-center">MÃ£ quáº£n trá»‹ khÃ´ng chÃ­nh xÃ¡c!</p>}
+          {err&&<p className="text-xs text-red-500 font-semibold mt-1.5 text-center">Mã quản trị không chính xác!</p>}
         </div>
         <div className="flex gap-2 pt-2">
-          <button type="button" onClick={onClose} className="btn-secondary flex-1">Há»§y</button>
-          <button type="submit" className="btn-primary flex-1 font-bold">XÃ¡c Nháº­n</button>
+          <button type="button" onClick={onClose} className="btn-secondary flex-1">Hủy</button>
+          <button type="submit" className="btn-primary flex-1 font-bold">Xác Nhận</button>
         </div>
       </form>
     </Modal>
@@ -4304,31 +4304,31 @@ function GachaModal({isOpen,onClose}){
     localStorage.setItem('nv_last_gacha_date',todayStr);
     localStorage.setItem('nv_last_gacha_card',randIdx.toString());
     try{playSound('success');}catch(e){}
-    try{triggerMascot('celebrate','âœ¨ Quáº» lÃ nh hÃ´m nay!');}catch(e){}
+    try{triggerMascot('celebrate','✨ Quẻ lành hôm nay!');}catch(e){}
   };
 
   const card=cardIndex!==null?GACHA_CARDS[cardIndex]:null;
 
   return(
-    <Modal open={isOpen} onClose={onClose} title="ðŸŽ´ Gieo Quáº» HÃ´m Nay - NewVision Oracle">
+    <Modal open={isOpen} onClose={onClose} title="🎴 Gieo Quẻ Hôm Nay - NewVision Oracle">
       <div className="flex flex-col items-center justify-center py-4 space-y-4">
         <p className="text-xs text-slate-500 text-center max-w-sm">
-          Má»—i ngÃ y má»™t thÃ´ng Ä‘iá»‡p vÅ© trá»¥ dÃ nh riÃªng cho báº¡n. Cháº¡m vÃ o lÃ¡ bÃ i Ä‘á»ƒ láº­t quáº»!
+          Mỗi ngày một thông điệp vũ trụ dành riêng cho bạn. Chạm vào lá bài để lật quẻ!
         </p>
 
         <div className="perspective-1000 w-64 h-96 cursor-pointer" onClick={drawCard}>
           <div className={`gacha-card-inner relative w-full h-full rounded-2xl shadow-2xl transform-style-3d ${flipped?'rotate-y-180 gacha-glow':''}`}>
             {/* Card Back */}
             <div className="absolute inset-0 backface-hidden rounded-2xl bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-950 border-2 border-amber-400/60 p-5 flex flex-col items-center justify-between text-white select-none">
-              <div className="w-full flex justify-between text-amber-300 text-xs font-mono"><span>âœ¦</span><span>NEWVISION HUP</span><span>âœ¦</span></div>
+              <div className="w-full flex justify-between text-amber-300 text-xs font-mono"><span>✦</span><span>NEWVISION HUP</span><span>✦</span></div>
               <div className="flex flex-col items-center gap-3">
                 <div className="w-20 h-20 rounded-full border-2 border-amber-300/40 flex items-center justify-center bg-indigo-950/60 shadow-[0_0_20px_rgba(251,191,36,0.35)]">
-                  <span className="text-4xl animate-pulse">ðŸ”®</span>
+                  <span className="text-4xl animate-pulse">🔮</span>
                 </div>
-                <p className="text-sm font-bold text-amber-200 tracking-wider">CHáº M Äá»‚ RÃšT QUáºº</p>
-                <p className="text-[10px] text-slate-400">1 quáº» duy nháº¥t má»—i ngÃ y</p>
+                <p className="text-sm font-bold text-amber-200 tracking-wider">CHẠM ĐỂ RÚT QUẺ</p>
+                <p className="text-[10px] text-slate-400">1 quẻ duy nhất mỗi ngày</p>
               </div>
-              <div className="w-full flex justify-between text-amber-300 text-xs font-mono"><span>âœ¦</span><span>HUYá»€N Há»ŒC & TAROT</span><span>âœ¦</span></div>
+              <div className="w-full flex justify-between text-amber-300 text-xs font-mono"><span>✦</span><span>HUYỀN HỌC & TAROT</span><span>✦</span></div>
             </div>
 
             {/* Card Front */}
@@ -4348,7 +4348,7 @@ function GachaModal({isOpen,onClose}){
                   </div>
                   <div className="pt-2 border-t border-amber-200/80 text-center">
                     <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                      â˜… Quáº» ngÃ y {todayStr}
+                      ★ Quẻ ngày {todayStr}
                     </span>
                   </div>
                 </>
@@ -4359,7 +4359,7 @@ function GachaModal({isOpen,onClose}){
 
         {flipped&&(
           <p className="text-xs text-emerald-600 font-bold flex items-center gap-1">
-            <Icon name="check-circle" size={13}/> ÄÃ£ ghi nháº­n quáº» hÃ´m nay cá»§a báº¡n!
+            <Icon name="check-circle" size={13}/> Đã ghi nhận quẻ hôm nay của bạn!
           </p>
         )}
       </div>
@@ -4372,22 +4372,22 @@ function GachaModal({isOpen,onClose}){
 // VIETNAMESE POPULAR BANKS FOR VIETQR
 // ============================================================
 const POPULAR_BANKS = [
-  { code: 'MB', name: 'MB Bank (QuÃ¢n Äá»™i)' },
-  { code: 'VCB', name: 'Vietcombank (Ngoáº¡i ThÆ°Æ¡ng)' },
-  { code: 'TCB', name: 'Techcombank (Ká»¹ ThÆ°Æ¡ng)' },
-  { code: 'VPB', name: 'VPBank (Viá»‡t Nam Thá»‹nh VÆ°á»£ng)' },
-  { code: 'TPB', name: 'TPBank (TiÃªn Phong)' },
-  { code: 'ICB', name: 'VietinBank (CÃ´ng ThÆ°Æ¡ng)' },
-  { code: 'BIDV', name: 'BIDV (Äáº§u TÆ° & PhÃ¡t Triá»ƒn)' },
-  { code: 'ACB', name: 'ACB (Ã ChÃ¢u)' },
-  { code: 'STB', name: 'Sacombank (SÃ i GÃ²n ThÆ°Æ¡ng TÃ­n)' },
-  { code: 'HDB', name: 'HDBank (PhÃ¡t Triá»ƒn TP.HCM)' },
-  { code: 'VIB', name: 'VIB (Quá»‘c Táº¿)' },
-  { code: 'SHB', name: 'SHB (SÃ i GÃ²n - HÃ  Ná»™i)' },
-  { code: 'MSB', name: 'MSB (HÃ ng Háº£i)' },
-  { code: 'OCB', name: 'OCB (PhÆ°Æ¡ng ÄÃ´ng)' },
-  { code: 'LPB', name: 'LPBank (Lá»™c PhÃ¡t)' },
-  { code: 'SEAB', name: 'SeABank (ÄÃ´ng Nam Ã)' }
+  { code: 'MB', name: 'MB Bank (Quân Đội)' },
+  { code: 'VCB', name: 'Vietcombank (Ngoại Thương)' },
+  { code: 'TCB', name: 'Techcombank (Kỹ Thương)' },
+  { code: 'VPB', name: 'VPBank (Việt Nam Thịnh Vượng)' },
+  { code: 'TPB', name: 'TPBank (Tiên Phong)' },
+  { code: 'ICB', name: 'VietinBank (Công Thương)' },
+  { code: 'BIDV', name: 'BIDV (Đầu Tư & Phát Triển)' },
+  { code: 'ACB', name: 'ACB (Á Châu)' },
+  { code: 'STB', name: 'Sacombank (Sài Gòn Thương Tín)' },
+  { code: 'HDB', name: 'HDBank (Phát Triển TP.HCM)' },
+  { code: 'VIB', name: 'VIB (Quốc Tế)' },
+  { code: 'SHB', name: 'SHB (Sài Gòn - Hà Nội)' },
+  { code: 'MSB', name: 'MSB (Hàng Hải)' },
+  { code: 'OCB', name: 'OCB (Phương Đông)' },
+  { code: 'LPB', name: 'LPBank (Lộc Phát)' },
+  { code: 'SEAB', name: 'SeABank (Đông Nam Á)' }
 ];
 
 // ============================================================
@@ -4402,21 +4402,21 @@ function VietQRModal({ isOpen, onClose, penalty }) {
 
   if (!isConfigured) {
     return (
-      <Modal open={isOpen} onClose={onClose} title="QuÃ©t MÃ£ VietQR Ná»™p Quá»¹">
+      <Modal open={isOpen} onClose={onClose} title="Quét Mã VietQR Nộp Quỹ">
         <div className="flex flex-col items-center py-6 px-4 text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
             <Icon name="alert-triangle" size={32} />
           </div>
           <div className="space-y-1.5">
             <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">
-              BCN chÆ°a cáº¥u hÃ¬nh thÃ´ng tin chuyá»ƒn khoáº£n
+              BCN chưa cấu hình thông tin chuyển khoản
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-              Ban Chá»§ Nhiá»‡m chÆ°a thiáº¿t láº­p sá»‘ tÃ i khoáº£n ngÃ¢n hÃ ng Ä‘á»ƒ nháº­n tiá»n ná»™p pháº¡t vÃ o quá»¹ CLB. Vui lÃ²ng liÃªn há»‡ BCN hoáº·c Quáº£n trá»‹ viÃªn má»Ÿ pháº§n cÃ i Ä‘áº·t tÃ i khoáº£n Ä‘á»ƒ cáº¥u hÃ¬nh.
+              Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng để nhận tiền nộp phạt vào quỹ CLB. Vui lòng liên hệ BCN hoặc Quản trị viên mở phần cài đặt tài khoản để cấu hình.
             </p>
           </div>
           <button onClick={onClose} className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl">
-            ÄÃ³ng
+            Đóng
           </button>
         </div>
       </Modal>
@@ -4440,18 +4440,18 @@ function VietQRModal({ isOpen, onClose, penalty }) {
       navigator.clipboard.writeText(text);
       setCopied(true);
       try { playSound('pop'); } catch (e) {}
-      try { addNotification('ÄÃ£ sao chÃ©p thÃ´ng tin chuyá»ƒn khoáº£n!', 'success'); } catch (e) {}
+      try { addNotification('Đã sao chép thông tin chuyển khoản!', 'success'); } catch (e) {}
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {}
   };
 
   return (
-    <Modal open={isOpen} onClose={onClose} title="QuÃ©t MÃ£ VietQR Ná»™p Quá»¹">
+    <Modal open={isOpen} onClose={onClose} title="Quét Mã VietQR Nộp Quỹ">
       <div className="flex flex-col items-center space-y-4 py-2">
         <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
           <img
             src={qrUrl}
-            alt="VietQR Chuyá»ƒn Khoáº£n"
+            alt="VietQR Chuyển Khoản"
             className="w-64 h-auto rounded-xl mx-auto max-h-72 object-contain"
             onError={e => {
               e.target.src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20' + encodeURIComponent(penalty.name || '');
@@ -4461,25 +4461,25 @@ function VietQRModal({ isOpen, onClose, penalty }) {
 
         <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
           <div className="flex justify-between">
-            <span className="text-slate-500">NgÃ¢n hÃ ng:</span>
+            <span className="text-slate-500">Ngân hàng:</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Sá»‘ tÃ i khoáº£n:</span>
+            <span className="text-slate-500">Số tài khoản:</span>
             <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{accNo}</span>
           </div>
           {penaltyAccount.accountName && (
             <div className="flex justify-between">
-              <span className="text-slate-500">Chá»§ tÃ i khoáº£n:</span>
+              <span className="text-slate-500">Chủ tài khoản:</span>
               <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{penaltyAccount.accountName}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-slate-500">Sá»‘ tiá»n ná»™p:</span>
-            <span className="font-bold text-amber-600">{amount.toLocaleString('vi-VN')} Ä‘</span>
+            <span className="text-slate-500">Số tiền nộp:</span>
+            <span className="font-bold text-amber-600">{amount.toLocaleString('vi-VN')} đ</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Ná»™i dung CK:</span>
+            <span className="text-slate-500">Nội dung CK:</span>
             <span className="font-mono font-bold text-emerald-600">NVPHAT {penalty.name}</span>
           </div>
         </div>
@@ -4487,10 +4487,10 @@ function VietQRModal({ isOpen, onClose, penalty }) {
         <div className="flex gap-2 w-full pt-1">
           <button onClick={copyInfo} className="btn-secondary flex-1 py-2 text-xs flex items-center justify-center gap-1.5">
             <Icon name={copied ? 'check' : 'copy'} size={14} />
-            <span>{copied ? 'ÄÃ£ sao chÃ©p' : 'Sao chÃ©p thÃ´ng tin'}</span>
+            <span>{copied ? 'Đã sao chép' : 'Sao chép thông tin'}</span>
           </button>
           <button onClick={onClose} className="btn-primary flex-1 py-2 text-xs font-bold">
-            ÄÃ³ng
+            Đóng
           </button>
         </div>
       </div>
@@ -4499,7 +4499,7 @@ function VietQRModal({ isOpen, onClose, penalty }) {
 }
 
 // ============================================================
-// Ná»˜I QUY & THÆ¯á»žNG PHáº T (PENALTIES & REWARDS MODULE)
+// NỘI QUY & THƯỞNG PHẠT (PENALTIES & REWARDS MODULE)
 // ============================================================
 function PenaltiesPage() {
   const { penalties, setPenalties, adminMode, addNotification, playSound, members, clubRules, setClubRules, penaltyAccount, setPenaltyAccount } = useContext(AppCtx);
@@ -4515,7 +4515,7 @@ function PenaltiesPage() {
   const [bankModal, setBankModal] = useState(false);
   const [bankForm, setBankForm] = useState({
     bank: 'MB',
-    bankName: 'MB Bank (QuÃ¢n Äá»™i)',
+    bankName: 'MB Bank (Quân Đội)',
     accountNo: '',
     accountName: '',
     customQrUrl: ''
@@ -4526,7 +4526,7 @@ function PenaltiesPage() {
     if (penaltyAccount) {
       setBankForm({
         bank: penaltyAccount.bank || 'MB',
-        bankName: penaltyAccount.bankName || 'MB Bank (QuÃ¢n Äá»™i)',
+        bankName: penaltyAccount.bankName || 'MB Bank (Quân Đội)',
         accountNo: penaltyAccount.accountNo || '',
         accountName: penaltyAccount.accountName || '',
         customQrUrl: penaltyAccount.customQrUrl || ''
@@ -4538,12 +4538,12 @@ function PenaltiesPage() {
   const handleSaveBank = async e => {
     if (e && e.preventDefault) e.preventDefault();
     if (!bankForm.accountNo.trim()) {
-      alert('Vui lÃ²ng nháº­p sá»‘ tÃ i khoáº£n ngÃ¢n hÃ ng!');
+      alert('Vui lòng nhập số tài khoản ngân hàng!');
       return;
     }
     setBankSaving(true);
     try {
-      if (!fbDb) throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if (!fbDb) throw new Error('Firebase chưa kết nối!');
       const cleanData = {
         bank: bankForm.bank.trim().toUpperCase(),
         bankName: bankForm.bankName.trim(),
@@ -4556,10 +4556,10 @@ function PenaltiesPage() {
       await fbDb.collection('club_settings').doc('penalty_account').set(cleanData, { merge: true });
       if (setPenaltyAccount) setPenaltyAccount(cleanData);
       try { playSound('success'); } catch (err) {}
-      try { addNotification('âœ… ÄÃ£ lÆ°u cáº¥u hÃ¬nh tÃ i khoáº£n ná»™p pháº¡t lÃªn Firestore!', 'success'); } catch (err) {}
+      try { addNotification('✅ Đã lưu cấu hình tài khoản nộp phạt lên Firestore!', 'success'); } catch (err) {}
       setBankModal(false);
     } catch (err) {
-      alert('Lá»—i lÆ°u tÃ i khoáº£n: ' + err.message);
+      alert('Lỗi lưu tài khoản: ' + err.message);
     } finally {
       setBankSaving(false);
     }
@@ -4577,23 +4577,23 @@ function PenaltiesPage() {
   const handleSaveRules = async () => {
     setRulesSaving(true);
     try {
-      if (!fbDb) throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if (!fbDb) throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('club_settings').doc('rules').set({
         content: rulesDraft,
         updatedAt: new Date().toISOString(),
         updatedBy: 'Admin BCN'
       }, { merge: true });
       try { playSound('success'); } catch (e) {}
-      try { addNotification('âœ… ÄÃ£ cáº­p nháº­t Ná»™i Quy CLB lÃªn Cloud Firestore!', 'success'); } catch (e) {}
+      try { addNotification('✅ Đã cập nhật Nội Quy CLB lên Cloud Firestore!', 'success'); } catch (e) {}
       setEditingRules(false);
     } catch (err) {
-      alert('Lá»—i lÆ°u Firebase: ' + err.message);
+      alert('Lỗi lưu Firebase: ' + err.message);
     } finally {
       setRulesSaving(false);
     }
   };
 
-  const emptyForm = { name: '', ban: 'Ná»™i vá»¥', reason: '', amount: 20000, type: 'phat', status: 'Chá» ná»™p' };
+  const emptyForm = { name: '', ban: 'Nội vụ', reason: '', amount: 20000, type: 'phat', status: 'Chờ nộp' };
   const [form, setForm] = useState(emptyForm);
 
   const openAdd = () => {
@@ -4606,21 +4606,21 @@ function PenaltiesPage() {
     setEditingId(item.id);
     setForm({
       name: item.name || '',
-      ban: item.ban || 'Ná»™i vá»¥',
+      ban: item.ban || 'Nội vụ',
       reason: item.reason || '',
       amount: Math.abs(item.amount || 20000),
       type: item.type || (item.amount < 0 ? 'phat' : 'thuong'),
-      status: item.status || 'Chá» ná»™p'
+      status: item.status || 'Chờ nộp'
     });
     setModal(true);
   };
 
   const handleSave = async e => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!form.name.trim()) { alert('Vui lÃ²ng chá»n hoáº·c nháº­p tÃªn thÃ nh viÃªn!'); return; }
-    if (!form.reason.trim()) { alert('Vui lÃ²ng nháº­p lÃ½ do!'); return; }
+    if (!form.name.trim()) { alert('Vui lòng chọn hoặc nhập tên thành viên!'); return; }
+    if (!form.reason.trim()) { alert('Vui lòng nhập lý do!'); return; }
     try {
-      if (!fbDb) throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if (!fbDb) throw new Error('Firebase chưa kết nối!');
       const amountVal = form.type === 'thuong' ? Math.abs(form.amount) : -Math.abs(form.amount);
 
       if (editingId) {
@@ -4630,13 +4630,13 @@ function PenaltiesPage() {
           reason: form.reason.trim(),
           amount: amountVal,
           type: form.type,
-          status: form.type === 'thuong' ? 'ÄÃ£ trao' : form.status,
+          status: form.type === 'thuong' ? 'Đã trao' : form.status,
           updatedAt: new Date().toISOString()
         };
         await fbDb.collection('penalties').doc(editingId).set(updatedRec, { merge: true });
         setPenalties(prev => prev.map(p => p.id === editingId ? { ...p, ...updatedRec } : p));
         try { playSound('success'); } catch (e) {}
-        try { addNotification(`ÄÃ£ cáº­p nháº­t ${form.type === 'thuong' ? 'khen thÆ°á»Ÿng' : 'vi pháº¡m'}: ${form.name}`, 'success'); } catch (e) {}
+        try { addNotification(`Đã cập nhật ${form.type === 'thuong' ? 'khen thưởng' : 'vi phạm'}: ${form.name}`, 'success'); } catch (e) {}
       } else {
         const id = uid();
         const newRec = {
@@ -4646,64 +4646,64 @@ function PenaltiesPage() {
           reason: form.reason.trim(),
           amount: amountVal,
           type: form.type,
-          status: form.type === 'thuong' ? 'ÄÃ£ trao' : form.status,
+          status: form.type === 'thuong' ? 'Đã trao' : form.status,
           date: new Date().toISOString().slice(0, 10),
           createdAt: new Date().toISOString()
         };
         await fbDb.collection('penalties').doc(id).set(newRec);
         try { playSound('success'); } catch (e) {}
-        try { addNotification(`ÄÃ£ ghi nháº­n ${form.type === 'thuong' ? 'khen thÆ°á»Ÿng' : 'vi pháº¡m'}: ${form.name}`, 'info'); } catch (e) {}
+        try { addNotification(`Đã ghi nhận ${form.type === 'thuong' ? 'khen thưởng' : 'vi phạm'}: ${form.name}`, 'info'); } catch (e) {}
       }
       setModal(false);
       setEditingId(null);
       setForm(emptyForm);
     } catch (err) {
-      alert('Lá»—i lÆ°u Firebase: ' + err.message);
+      alert('Lỗi lưu Firebase: ' + err.message);
     }
   };
 
   const toggleStatus = async item => {
     if (!adminMode) {
-      alert('Chá»‰ Ban Chá»§ Nhiá»‡m má»›i cÃ³ quyá»n duyá»‡t tráº¡ng thÃ¡i ná»™p pháº¡t!');
+      alert('Chỉ Ban Chủ Nhiệm mới có quyền duyệt trạng thái nộp phạt!');
       return;
     }
-    const newStatus = item.status === 'ÄÃ£ ná»™p' ? 'Chá» ná»™p' : 'ÄÃ£ ná»™p';
+    const newStatus = item.status === 'Đã nộp' ? 'Chờ nộp' : 'Đã nộp';
     try {
-      if (!fbDb) throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if (!fbDb) throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('penalties').doc(item.id).set({ status: newStatus }, { merge: true });
       try { playSound('pop'); } catch (e) {}
-      try { addNotification(`ÄÃ£ chuyá»ƒn tráº¡ng thÃ¡i sang "${newStatus}": ${item.name}`, 'success'); } catch (e) {}
+      try { addNotification(`Đã chuyển trạng thái sang "${newStatus}": ${item.name}`, 'success'); } catch (e) {}
     } catch (err) {
-      alert('Lá»—i lÆ°u Firebase: ' + err.message);
+      alert('Lỗi lưu Firebase: ' + err.message);
     }
   };
 
   const handleDelete = async id => {
     if (!adminMode) {
-      alert('Chá»‰ Ban Chá»§ Nhiá»‡m má»›i cÃ³ quyá»n xÃ³a báº£n ghi!');
+      alert('Chỉ Ban Chủ Nhiệm mới có quyền xóa bản ghi!');
       return;
     }
     try {
-      if (!fbDb) throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if (!fbDb) throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('penalties').doc(id).delete();
       setPenalties(prev => prev.filter(p => p.id !== id));
       try { playSound('pop'); } catch (e) {}
-      try { addNotification('ÄÃ£ xÃ³a vÄ©nh viá»…n báº£n ghi khá»i Cloud Firestore', 'info'); } catch (e) {}
+      try { addNotification('Đã xóa vĩnh viễn bản ghi khỏi Cloud Firestore', 'info'); } catch (e) {}
       setConfirmDel(null);
     } catch (err) {
-      alert('Lá»—i xÃ³a Firebase: ' + err.message);
+      alert('Lỗi xóa Firebase: ' + err.message);
     }
   };
 
   const filtered = (penalties || []).filter(item => {
-    if (filterType === 'pending' && item.status !== 'Chá» ná»™p') return false;
-    if (filterType === 'done' && item.status === 'Chá» ná»™p') return false;
+    if (filterType === 'pending' && item.status !== 'Chờ nộp') return false;
+    if (filterType === 'done' && item.status === 'Chờ nộp') return false;
     if (filterBan && item.ban !== filterBan) return false;
     return true;
   });
 
-  const totalPending = (penalties || []).filter(p => p.status === 'Chá» ná»™p').reduce((acc, cur) => acc + Math.abs(cur.amount || 0), 0);
-  const totalCollected = (penalties || []).filter(p => p.status === 'ÄÃ£ ná»™p' && p.amount < 0).reduce((acc, cur) => acc + Math.abs(cur.amount || 0), 0);
+  const totalPending = (penalties || []).filter(p => p.status === 'Chờ nộp').reduce((acc, cur) => acc + Math.abs(cur.amount || 0), 0);
+  const totalCollected = (penalties || []).filter(p => p.status === 'Đã nộp' && p.amount < 0).reduce((acc, cur) => acc + Math.abs(cur.amount || 0), 0);
 
   return (
     <div className="space-y-4 fade-in">
@@ -4712,29 +4712,29 @@ function PenaltiesPage() {
         <div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Icon name="scale" size={20} className="text-orange-600" />
-            Ná»™i Quy & ThÆ°á»Ÿng Pháº¡t CLB
+            Nội Quy & Thưởng Phạt CLB
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">Theo dÃµi vi pháº¡m, ná»™p pháº¡t qua VietQR tá»± Ä‘á»™ng vÃ  vinh danh khen thÆ°á»Ÿng</p>
+          <p className="text-xs text-slate-500 mt-0.5">Theo dõi vi phạm, nộp phạt qua VietQR tự động và vinh danh khen thưởng</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {adminMode && subTab === 'penalties' && (
             <button
               onClick={openBankModal}
               className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
-              title="CÃ i Ä‘áº·t tÃ i khoáº£n ngÃ¢n hÃ ng nháº­n tiá»n pháº¡t ná»™p quá»¹"
+              title="Cài đặt tài khoản ngân hàng nhận tiền phạt nộp quỹ"
             >
               <Icon name="settings" size={14} className="text-orange-600" />
-              <span>âš™ï¸ CÃ i Ä‘áº·t tÃ i khoáº£n ná»™p pháº¡t</span>
+              <span>⚙️ Cài đặt tài khoản nộp phạt</span>
             </button>
           )}
           {subTab === 'penalties' && (
             <button onClick={openAdd} className="btn-primary flex items-center gap-1.5 shadow-sm">
-              <Icon name="plus" size={15} /> Ghi nháº­n má»›i
+              <Icon name="plus" size={15} /> Ghi nhận mới
             </button>
           )}
           {subTab === 'rules' && adminMode && !editingRules && (
             <button onClick={openEditRules} className="btn-primary flex items-center gap-1.5 shadow-sm">
-              <Icon name="pencil" size={15} /> Chá»‰nh sá»­a ná»™i quy
+              <Icon name="pencil" size={15} /> Chỉnh sửa nội quy
             </button>
           )}
         </div>
@@ -4746,13 +4746,13 @@ function PenaltiesPage() {
           onClick={() => setSubTab('penalties')}
           className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${subTab === 'penalties' ? 'bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700'}`}
         >
-          âš–ï¸ ThÆ°á»Ÿng & Pháº¡t
+          ⚖️ Thưởng & Phạt
         </button>
         <button
           onClick={() => setSubTab('rules')}
           className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${subTab === 'rules' ? 'bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700'}`}
         >
-          ðŸ“‹ Ná»™i Quy CLB
+          📋 Nội Quy CLB
         </button>
       </div>
 
@@ -4762,7 +4762,7 @@ function PenaltiesPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-base">
               <Icon name="book-open" size={18} className="text-indigo-500" />
-              Quy Cháº¿ & Ná»™i Quy CLB NewVision HUP
+              Quy Chế & Nội Quy CLB NewVision HUP
             </h2>
             {adminMode && editingRules && (
               <div className="flex items-center gap-2">
@@ -4771,14 +4771,14 @@ function PenaltiesPage() {
                   className="btn-secondary text-xs py-1.5 px-3"
                   disabled={rulesSaving}
                 >
-                  Há»§y
+                  Hủy
                 </button>
                 <button
                   onClick={handleSaveRules}
                   className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
                   disabled={rulesSaving}
                 >
-                  {rulesSaving ? 'Äang lÆ°u...' : 'ðŸ’¾ LÆ°u ná»™i quy'}
+                  {rulesSaving ? 'Đang lưu...' : '💾 Lưu nội quy'}
                 </button>
               </div>
             )}
@@ -4787,13 +4787,13 @@ function PenaltiesPage() {
           {adminMode && editingRules ? (
             <div>
               <p className="text-xs text-slate-500 mb-2 leading-relaxed">
-                Nháº­p ná»™i quy theo tá»«ng dÃ²ng. DÃ¹ng "â€¢" hoáº·c "-" Ä‘áº§u dÃ²ng cho gáº¡ch Ä‘áº§u dÃ²ng. Ná»™i dung sáº½ Ä‘Æ°á»£c lÆ°u lÃªn Cloud vÃ  hiá»ƒn thá»‹ cho toÃ n CLB.
+                Nhập nội quy theo từng dòng. Dùng "•" hoặc "-" đầu dòng cho gạch đầu dòng. Nội dung sẽ được lưu lên Cloud và hiển thị cho toàn CLB.
               </p>
               <textarea
                 value={rulesDraft}
                 onChange={e => setRulesDraft(e.target.value)}
                 className="form-input w-full resize-y min-h-[320px] font-mono text-sm leading-relaxed"
-                placeholder={"â€¢ Äiá»u 1: Táº¥t cáº£ thÃ nh viÃªn pháº£i tham dá»± há»p CLB Ä‘Ãºng giá».\nâ€¢ Äiá»u 2: HoÃ n thÃ nh nhiá»‡m vá»¥ Ä‘Æ°á»£c giao trÆ°á»›c deadline.\nâ€¢ Äiá»u 3: Äi muá»™n dÆ°á»›i 15 phÃºt pháº¡t 10.000Ä‘...\n\n(Nháº­p ná»™i quy cá»§a CLB báº¡n táº¡i Ä‘Ã¢y)"}
+                placeholder={"• Điều 1: Tất cả thành viên phải tham dự họp CLB đúng giờ.\n• Điều 2: Hoàn thành nhiệm vụ được giao trước deadline.\n• Điều 3: Đi muộn dưới 15 phút phạt 10.000đ...\n\n(Nhập nội quy của CLB bạn tại đây)"}
               />
             </div>
           ) : (
@@ -4805,11 +4805,11 @@ function PenaltiesPage() {
               ) : (
                 <div className="text-center py-12 text-slate-400">
                   <Icon name="book-open" size={36} className="mx-auto mb-3 text-slate-300" />
-                  <p className="font-semibold text-sm">ChÆ°a cÃ³ ná»™i quy CLB</p>
+                  <p className="font-semibold text-sm">Chưa có nội quy CLB</p>
                   {adminMode ? (
-                    <p className="text-xs mt-1">Báº¥m "Chá»‰nh sá»­a ná»™i quy" á»Ÿ trÃªn Ä‘á»ƒ soáº¡n tháº£o vÃ  lÆ°u lÃªn Cloud.</p>
+                    <p className="text-xs mt-1">Bấm "Chỉnh sửa nội quy" ở trên để soạn thảo và lưu lên Cloud.</p>
                   ) : (
-                    <p className="text-xs mt-1">Ná»™i quy CLB chÆ°a Ä‘Æ°á»£c thiáº¿t láº­p bá»Ÿi Ban Chá»§ Nhiá»‡m.</p>
+                    <p className="text-xs mt-1">Nội quy CLB chưa được thiết lập bởi Ban Chủ Nhiệm.</p>
                   )}
                 </div>
               )}
@@ -4818,7 +4818,7 @@ function PenaltiesPage() {
 
           {!adminMode && clubRules && (
             <p className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Icon name="info" size={11} /> Chá»‰ Ban Chá»§ Nhiá»‡m cÃ³ thá»ƒ chá»‰nh sá»­a ná»™i quy. Ná»™i quy luÃ´n Ä‘á»“ng bá»™ realtime tá»« Cloud Firestore.
+              <Icon name="info" size={11} /> Chỉ Ban Chủ Nhiệm có thể chỉnh sửa nội quy. Nội quy luôn đồng bộ realtime từ Cloud Firestore.
             </p>
           )}
         </div>
@@ -4830,16 +4830,16 @@ function PenaltiesPage() {
           {/* KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="card p-3 border-l-4 border-amber-500">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">Tiá»n pháº¡t chá» ná»™p</span>
-              <p className="text-lg font-black text-amber-600 mt-1">{totalPending.toLocaleString('vi-VN')} Ä‘</p>
+              <span className="text-[11px] font-semibold text-slate-500 uppercase">Tiền phạt chờ nộp</span>
+              <p className="text-lg font-black text-amber-600 mt-1">{totalPending.toLocaleString('vi-VN')} đ</p>
             </div>
             <div className="card p-3 border-l-4 border-emerald-500">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">ÄÃ£ thu vÃ o quá»¹</span>
-              <p className="text-lg font-black text-emerald-600 mt-1">{totalCollected.toLocaleString('vi-VN')} Ä‘</p>
+              <span className="text-[11px] font-semibold text-slate-500 uppercase">Đã thu vào quỹ</span>
+              <p className="text-lg font-black text-emerald-600 mt-1">{totalCollected.toLocaleString('vi-VN')} đ</p>
             </div>
             <div className="card p-3 border-l-4 border-indigo-500 col-span-2 sm:col-span-1">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">Tá»•ng sá»‘ lÆ°á»£t ghi nháº­n</span>
-              <p className="text-lg font-black text-indigo-600 mt-1">{(penalties || []).length} lÆ°á»£t</p>
+              <span className="text-[11px] font-semibold text-slate-500 uppercase">Tổng số lượt ghi nhận</span>
+              <p className="text-lg font-black text-indigo-600 mt-1">{(penalties || []).length} lượt</p>
             </div>
           </div>
 
@@ -4850,19 +4850,19 @@ function PenaltiesPage() {
                 onClick={() => setFilterType('all')}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType === 'all' ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}`}
               >
-                Táº¥t cáº£ ({(penalties || []).length})
+                Tất cả ({(penalties || []).length})
               </button>
               <button
                 onClick={() => setFilterType('pending')}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType === 'pending' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600'}`}
               >
-                Chá» ná»™p ({(penalties || []).filter(p => p.status === 'Chá» ná»™p').length})
+                Chờ nộp ({(penalties || []).filter(p => p.status === 'Chờ nộp').length})
               </button>
               <button
                 onClick={() => setFilterType('done')}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType === 'done' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}`}
               >
-                ÄÃ£ ná»™p / Trao ({(penalties || []).filter(p => p.status !== 'Chá» ná»™p').length})
+                Đã nộp / Trao ({(penalties || []).filter(p => p.status !== 'Chờ nộp').length})
               </button>
             </div>
 
@@ -4871,8 +4871,8 @@ function PenaltiesPage() {
               onChange={e => setFilterBan(e.target.value)}
               className="form-input text-xs py-1 px-2.5 max-w-[140px]"
             >
-              <option value="">Táº¥t cáº£ ban</option>
-              {['Ná»™i vá»¥', 'Truyá»n thÃ´ng', 'Sá»± kiá»‡n', 'Äá»‘i ngoáº¡i'].map(b => (
+              <option value="">Tất cả ban</option>
+              {['Nội vụ', 'Truyền thông', 'Sự kiện', 'Đối ngoại'].map(b => (
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
@@ -4883,12 +4883,12 @@ function PenaltiesPage() {
             {filtered.length === 0 && (
               <div className="card py-12 text-center text-slate-400">
                 <Icon name="check-circle-2" size={36} className="mx-auto mb-2 text-slate-300" />
-                <p className="font-semibold text-sm">KhÃ´ng cÃ³ dá»¯ liá»‡u thÆ°á»Ÿng pháº¡t phÃ¹ há»£p</p>
+                <p className="font-semibold text-sm">Không có dữ liệu thưởng phạt phù hợp</p>
               </div>
             )}
             {filtered.map(item => {
               const isPenalty = (item.amount || 0) < 0 || item.type === 'phat';
-              const isPending = item.status === 'Chá» ná»™p';
+              const isPending = item.status === 'Chờ nộp';
               return (
                 <div key={item.id} className="card p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-sm transition">
                   <div className="flex-1 min-w-0">
@@ -4896,7 +4896,7 @@ function PenaltiesPage() {
                       <span className="font-bold text-slate-800 dark:text-slate-100 text-sm">{item.name}</span>
                       {item.ban && <span className="status-badge tag-gray text-[10px]">{item.ban}</span>}
                       <span className={`status-badge text-[10px] ${isPending ? 'tag-yellow' : 'tag-green'}`}>
-                        {item.status || 'Chá» ná»™p'}
+                        {item.status || 'Chờ nộp'}
                       </span>
                       <span className="text-[11px] text-slate-400">{item.date}</span>
                     </div>
@@ -4906,7 +4906,7 @@ function PenaltiesPage() {
                   <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                     <div className="text-right">
                       <p className={`font-mono font-bold text-sm ${isPenalty ? 'text-red-500' : 'text-emerald-600'}`}>
-                        {isPenalty ? `-${Math.abs(item.amount || 0).toLocaleString('vi-VN')} Ä‘` : `+${Math.abs(item.amount || 0).toLocaleString('vi-VN')} Ä‘`}
+                        {isPenalty ? `-${Math.abs(item.amount || 0).toLocaleString('vi-VN')} đ` : `+${Math.abs(item.amount || 0).toLocaleString('vi-VN')} đ`}
                       </p>
                     </div>
 
@@ -4915,9 +4915,9 @@ function PenaltiesPage() {
                         <button
                           onClick={() => setQrPenalty(item)}
                           className="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 font-bold text-xs flex items-center gap-1 border border-orange-200 transition"
-                          title="Má»Ÿ mÃ£ QR ná»™p pháº¡t"
+                          title="Mở mã QR nộp phạt"
                         >
-                          <Icon name="qr-code" size={13} /> Ná»™p pháº¡t
+                          <Icon name="qr-code" size={13} /> Nộp phạt
                         </button>
                       )}
 
@@ -4925,13 +4925,13 @@ function PenaltiesPage() {
                         <button
                           onClick={() => toggleStatus(item)}
                           className={`px-2 py-1 rounded-lg text-xs font-semibold transition border ${
-                            item.status === 'ÄÃ£ ná»™p'
+                            item.status === 'Đã nộp'
                               ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-300'
                               : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-300'
                           }`}
-                          title="Chuyá»ƒn tráº¡ng thÃ¡i ná»™p"
+                          title="Chuyển trạng thái nộp"
                         >
-                          {item.status === 'ÄÃ£ ná»™p' ? 'ChÆ°a ná»™p' : 'ÄÃ£ ná»™p âœ“'}
+                          {item.status === 'Đã nộp' ? 'Chưa nộp' : 'Đã nộp ✓'}
                         </button>
                       )}
 
@@ -4939,7 +4939,7 @@ function PenaltiesPage() {
                         <button
                           onClick={() => openEdit(item)}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition"
-                          title="Chá»‰nh sá»­a báº£n ghi"
+                          title="Chỉnh sửa bản ghi"
                         >
                           <Icon name="pencil" size={14} />
                         </button>
@@ -4949,7 +4949,7 @@ function PenaltiesPage() {
                         <button
                           onClick={() => setConfirmDel(item.id)}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
-                          title="XÃ³a báº£n ghi"
+                          title="Xóa bản ghi"
                         >
                           <Icon name="trash-2" size={14} />
                         </button>
@@ -4962,31 +4962,31 @@ function PenaltiesPage() {
           </div>
 
           {/* Add / Edit Modal */}
-          <Modal open={modal} onClose={() => { setModal(false); setEditingId(null); }} title={editingId ? "Chá»‰nh Sá»­a Báº£n Ghi ThÆ°á»Ÿng / Pháº¡t" : "Ghi Nháº­n ThÆ°á»Ÿng / Pháº¡t Má»›i"}>
+          <Modal open={modal} onClose={() => { setModal(false); setEditingId(null); }} title={editingId ? "Chỉnh Sửa Bản Ghi Thưởng / Phạt" : "Ghi Nhận Thưởng / Phạt Mới"}>
             <form onSubmit={handleSave} className="space-y-3.5">
               <div>
-                <label className="form-label">Loáº¡i ghi nháº­n</label>
+                <label className="form-label">Loại ghi nhận</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setForm(p => ({ ...p, type: 'phat', status: 'Chá» ná»™p' }))}
+                    onClick={() => setForm(p => ({ ...p, type: 'phat', status: 'Chờ nộp' }))}
                     className={`py-2 rounded-xl text-xs font-bold border transition ${form.type === 'phat' ? 'bg-red-50 border-red-500 text-red-600' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
                   >
-                    âš ï¸ Vi pháº¡m ná»™i quy (Pháº¡t)
+                    ⚠️ Vi phạm nội quy (Phạt)
                   </button>
                   <button
                     type="button"
-                    onClick={() => setForm(p => ({ ...p, type: 'thuong', status: 'ÄÃ£ trao' }))}
+                    onClick={() => setForm(p => ({ ...p, type: 'thuong', status: 'Đã trao' }))}
                     className={`py-2 rounded-xl text-xs font-bold border transition ${form.type === 'thuong' ? 'bg-emerald-50 border-emerald-500 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
                   >
-                    ðŸ† TuyÃªn dÆ°Æ¡ng (ThÆ°á»Ÿng)
+                    🏆 Tuyên dương (Thưởng)
                   </button>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="form-label">ThÃ nh viÃªn <span className="text-red-500">*</span></label>
+                  <label className="form-label">Thành viên <span className="text-red-500">*</span></label>
                   <select
                     value={form.name}
                     onChange={e => {
@@ -4996,16 +4996,16 @@ function PenaltiesPage() {
                     }}
                     className="form-input"
                   >
-                    <option value="">-- Chá»n thÃ nh viÃªn --</option>
+                    <option value="">-- Chọn thành viên --</option>
                     {members.map(m => (
-                      <option key={m.id} value={m.name}>{m.name} ({m.ban || 'ThÃ nh viÃªn'})</option>
+                      <option key={m.id} value={m.name}>{m.name} ({m.ban || 'Thành viên'})</option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="form-label">Ban</label>
                   <select value={form.ban} onChange={e => setForm(p => ({ ...p, ban: e.target.value }))} className="form-input">
-                    {['Ná»™i vá»¥', 'Truyá»n thÃ´ng', 'Sá»± kiá»‡n', 'Äá»‘i ngoáº¡i', 'ToÃ n CLB'].map(b => (
+                    {['Nội vụ', 'Truyền thông', 'Sự kiện', 'Đối ngoại', 'Toàn CLB'].map(b => (
                       <option key={b} value={b}>{b}</option>
                     ))}
                   </select>
@@ -5014,7 +5014,7 @@ function PenaltiesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="form-label">Sá»‘ tiá»n (VNÄ) <span className="text-red-500">*</span></label>
+                  <label className="form-label">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
                   <input
                     type="number"
                     step="5000"
@@ -5025,41 +5025,41 @@ function PenaltiesPage() {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Tráº¡ng thÃ¡i</label>
+                  <label className="form-label">Trạng thái</label>
                   <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))} className="form-input">
-                    <option value="Chá» ná»™p">Chá» ná»™p</option>
-                    <option value="ÄÃ£ ná»™p">ÄÃ£ ná»™p</option>
-                    <option value="ÄÃ£ trao">ÄÃ£ trao</option>
+                    <option value="Chờ nộp">Chờ nộp</option>
+                    <option value="Đã nộp">Đã nộp</option>
+                    <option value="Đã trao">Đã trao</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="form-label">LÃ½ do vi pháº¡m / Khen thÆ°á»Ÿng <span className="text-red-500">*</span></label>
+                <label className="form-label">Lý do vi phạm / Khen thưởng <span className="text-red-500">*</span></label>
                 <textarea
                   value={form.reason}
                   onChange={e => setForm(p => ({ ...p, reason: e.target.value }))}
                   className="form-input resize-none min-h-[70px]"
-                  placeholder="VD: Äi muá»™n há»p Ä‘á»‹nh ká»³ 15 phÃºt, HoÃ n thÃ nh xuáº¥t sáº¯c nhiá»‡m vá»¥..."
+                  placeholder="VD: Đi muộn họp định kỳ 15 phút, Hoàn thành xuất sắc nhiệm vụ..."
                 />
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => { setModal(false); setEditingId(null); }} className="btn-secondary flex-1">Há»§y</button>
-                <button type="submit" className="btn-primary flex-1 font-bold">{editingId ? "LÆ°u thay Ä‘á»•i" : "LÆ°u ghi nháº­n"}</button>
+                <button type="button" onClick={() => { setModal(false); setEditingId(null); }} className="btn-secondary flex-1">Hủy</button>
+                <button type="submit" className="btn-primary flex-1 font-bold">{editingId ? "Lưu thay đổi" : "Lưu ghi nhận"}</button>
               </div>
             </form>
           </Modal>
 
-          {/* Modal CÃ i Ä‘áº·t tÃ i khoáº£n nháº­n ná»™p pháº¡t */}
-          <Modal open={bankModal} onClose={() => setBankModal(false)} title="âš™ï¸ CÃ i Äáº·t TÃ i Khoáº£n Nháº­n Ná»™p Pháº¡t">
+          {/* Modal Cài đặt tài khoản nhận nộp phạt */}
+          <Modal open={bankModal} onClose={() => setBankModal(false)} title="⚙️ Cài Đặt Tài Khoản Nhận Nộp Phạt">
             <form onSubmit={handleSaveBank} className="space-y-4">
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Cáº¥u hÃ¬nh thÃ´ng tin tÃ i khoáº£n ngÃ¢n hÃ ng cá»§a Ban Chá»§ Nhiá»‡m / Thá»§ quá»¹ Ä‘á»ƒ tá»± Ä‘á»™ng sinh mÃ£ VietQR khi thÃ nh viÃªn báº¥m "Ná»™p pháº¡t".
+                Cấu hình thông tin tài khoản ngân hàng của Ban Chủ Nhiệm / Thủ quỹ để tự động sinh mã VietQR khi thành viên bấm "Nộp phạt".
               </p>
 
               <div>
-                <label className="form-label">NgÃ¢n hÃ ng thá»¥ hÆ°á»Ÿng <span className="text-red-500">*</span></label>
+                <label className="form-label">Ngân hàng thụ hưởng <span className="text-red-500">*</span></label>
                 <select
                   value={bankForm.bank}
                   onChange={e => {
@@ -5077,41 +5077,41 @@ function PenaltiesPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="form-label">Sá»‘ tÃ i khoáº£n <span className="text-red-500">*</span></label>
+                  <label className="form-label">Số tài khoản <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={bankForm.accountNo}
                     onChange={e => setBankForm(p => ({ ...p, accountNo: e.target.value }))}
                     className="form-input font-mono font-bold"
-                    placeholder="VÃ­ dá»¥: 123456789..."
+                    placeholder="Ví dụ: 123456789..."
                     required
                   />
                 </div>
                 <div>
-                  <label className="form-label">TÃªn chá»§ tÃ i khoáº£n</label>
+                  <label className="form-label">Tên chủ tài khoản</label>
                   <input
                     type="text"
                     value={bankForm.accountName}
                     onChange={e => setBankForm(p => ({ ...p, accountName: e.target.value.toUpperCase() }))}
                     className="form-input uppercase"
-                    placeholder="VÃ­ dá»¥: NGUYEN VAN A"
+                    placeholder="Ví dụ: NGUYEN VAN A"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="form-label">
-                  Link áº£nh QR tá»± táº£i lÃªn <span className="text-slate-400 font-normal">(TÃ¹y chá»n)</span>
+                  Link ảnh QR tự tải lên <span className="text-slate-400 font-normal">(Tùy chọn)</span>
                 </label>
                 <input
                   type="url"
                   value={bankForm.customQrUrl}
                   onChange={e => setBankForm(p => ({ ...p, customQrUrl: e.target.value }))}
                   className="form-input text-xs"
-                  placeholder="https://... (náº¿u muá»‘n dÃ¹ng áº£nh QR riÃªng thay vÃ¬ táº¡o tá»± Ä‘á»™ng qua VietQR)"
+                  placeholder="https://... (nếu muốn dùng ảnh QR riêng thay vì tạo tự động qua VietQR)"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">
-                  Máº·c Ä‘á»‹nh há»‡ thá»‘ng tá»± Ä‘á»™ng táº¡o mÃ£ VietQR chuáº©n ngÃ¢n hÃ ng tá»« MÃ£ NH vÃ  Sá»‘ tÃ i khoáº£n á»Ÿ trÃªn.
+                  Mặc định hệ thống tự động tạo mã VietQR chuẩn ngân hàng từ Mã NH và Số tài khoản ở trên.
                 </p>
               </div>
 
@@ -5141,14 +5141,14 @@ function PenaltiesPage() {
                   className="btn-secondary flex-1"
                   disabled={bankSaving}
                 >
-                  Há»§y
+                  Hủy
                 </button>
                 <button
                   type="submit"
                   className="btn-primary flex-1 font-bold"
                   disabled={bankSaving}
                 >
-                  {bankSaving ? 'Äang lÆ°u...' : 'ðŸ’¾ LÆ°u cáº¥u hÃ¬nh'}
+                  {bankSaving ? 'Đang lưu...' : '💾 Lưu cấu hình'}
                 </button>
               </div>
             </form>
@@ -5157,7 +5157,7 @@ function PenaltiesPage() {
       )}
 
       <VietQRModal isOpen={!!qrPenalty} onClose={() => setQrPenalty(null)} penalty={qrPenalty} />
-      <ConfirmDialog open={!!confirmDel} onClose={() => setConfirmDel(null)} onConfirm={() => handleDelete(confirmDel)} message="XÃ³a báº£n ghi thÆ°á»Ÿng/pháº¡t nÃ y?" />
+      <ConfirmDialog open={!!confirmDel} onClose={() => setConfirmDel(null)} onConfirm={() => handleDelete(confirmDel)} message="Xóa bản ghi thưởng/phạt này?" />
     </div>
   );
 }
@@ -5172,8 +5172,8 @@ function ResourcesPage(){
   const[filterBan,setFilterBan]=useState('');
   const[filterType,setFilterType]=useState('');
   const emptyLink={title:'',url:'',ban:'',type:LINK_TYPES[0],note:''};
-  const emptyInv={name:'',quantity:1,status:'Tá»‘t',keeper:'',location:'',note:''};
-  const emptyExp={name:'',amount:'',person:'',ban:'',status:'Dá»± trÃ¹',note:''};
+  const emptyInv={name:'',quantity:1,status:'Tốt',keeper:'',location:'',note:''};
+  const emptyExp={name:'',amount:'',person:'',ban:'',status:'Dự trù',note:''};
   const[linkForm,setLinkForm]=useState(emptyLink);
   const[invForm,setInvForm]=useState(emptyInv);
   const[expForm,setExpForm]=useState(emptyExp);
@@ -5196,9 +5196,9 @@ function ResourcesPage(){
 
   const handleSave=async(forceSave=false)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       if(tab==='links'){
-        if(!linkForm.title.trim()||!linkForm.url.trim()){alert('Vui lÃ²ng nháº­p tÃªn vÃ  URL!');return}
+        if(!linkForm.title.trim()||!linkForm.url.trim()){alert('Vui lòng nhập tên và URL!');return}
         if(!forceSave){
           const dup = await checkDuplicateLinkAsync(linkForm.url, editing, { studyResources, resources, events });
           if(dup){
@@ -5215,58 +5215,58 @@ function ResourcesPage(){
         if(editing){
           await fbDb.collection('resources').doc(editing).set(linkForm,{merge:true});
           try{playSound('success');}catch(e){}
-          try{addNotification(`ÄÃ£ cáº­p nháº­t link: ${linkForm.title}`,'success');}catch(e){}
+          try{addNotification(`Đã cập nhật link: ${linkForm.title}`,'success');}catch(e){}
         }else{
           const id=uid();
           await fbDb.collection('resources').doc(id).set({...linkForm,id,createdAt:new Date().toISOString()});
           try{playSound('success');}catch(e){}
-          try{addNotification(`ÄÃ£ thÃªm link má»›i: ${linkForm.title}`,'success');}catch(e){}
+          try{addNotification(`Đã thêm link mới: ${linkForm.title}`,'success');}catch(e){}
         }
       }else if(tab==='inventory'){
-        if(!invForm.name.trim()){alert('Vui lÃ²ng nháº­p tÃªn Ä‘á»“ váº­t!');return}
+        if(!invForm.name.trim()){alert('Vui lòng nhập tên đồ vật!');return}
         if(editing){
           await fbDb.collection('inventory').doc(editing).set(invForm,{merge:true});
           try{playSound('success');}catch(e){}
-          try{addNotification(`ÄÃ£ cáº­p nháº­t váº­t dá»¥ng: ${invForm.name}`,'success');}catch(e){}
+          try{addNotification(`Đã cập nhật vật dụng: ${invForm.name}`,'success');}catch(e){}
         }else{
           const id=uid();
           await fbDb.collection('inventory').doc(id).set({...invForm,id,createdAt:new Date().toISOString()});
           try{playSound('success');}catch(e){}
-          try{addNotification(`ÄÃ£ thÃªm váº­t dá»¥ng má»›i: ${invForm.name}`,'success');}catch(e){}
+          try{addNotification(`Đã thêm vật dụng mới: ${invForm.name}`,'success');}catch(e){}
         }
       }else if(tab==='expenses'){
-        if(!expForm.name.trim()){alert('Vui lÃ²ng nháº­p tÃªn khoáº£n chi!');return}
+        if(!expForm.name.trim()){alert('Vui lòng nhập tên khoản chi!');return}
         if(editing){
           await fbDb.collection('expenses').doc(editing).set(expForm,{merge:true});
           try{playSound('success');}catch(e){}
-          try{addNotification(`ÄÃ£ cáº­p nháº­t khoáº£n chi: ${expForm.name}`,'success');}catch(e){}
+          try{addNotification(`Đã cập nhật khoản chi: ${expForm.name}`,'success');}catch(e){}
         }else{
           const id=uid();
           await fbDb.collection('expenses').doc(id).set({...expForm,id,createdAt:new Date().toISOString()});
           try{playSound('success');}catch(e){}
-          try{addNotification(`ÄÃ£ thÃªm khoáº£n chi má»›i: ${expForm.name}`,'success');}catch(e){}
-          if(expForm.status==='ÄÃ£ chi - Chá» hoÃ n tiá»n'){
-            try{addNotification(`ðŸ’° Khoáº£n chi chá» hoÃ n tiá»n: ${expForm.name} â€“ ${fmtVND(expForm.amount)}`,'warning');}catch(e){}
+          try{addNotification(`Đã thêm khoản chi mới: ${expForm.name}`,'success');}catch(e){}
+          if(expForm.status==='Đã chi - Chờ hoàn tiền'){
+            try{addNotification(`💰 Khoản chi chờ hoàn tiền: ${expForm.name} – ${fmtVND(expForm.amount)}`,'warning');}catch(e){}
           }
         }
       }
       handleClose();
     }catch(err){
-      console.error('Lá»—i lÆ°u tÃ i nguyÃªn/quá»¹/tÃ i sáº£n:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu tài nguyên/quỹ/tài sản:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const handleDeleteItem=async()=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const colName=tab==='links'?'resources':tab==='inventory'?'inventory':'expenses';
       await fbDb.collection(colName).doc(confirmDel).delete();
       try{playSound('pop');}catch(e){}
-      try{addNotification('ÄÃ£ xÃ³a má»¥c thÃ nh cÃ´ng','info');}catch(e){}
+      try{addNotification('Đã xóa mục thành công','info');}catch(e){}
     }catch(err){
-      console.error('Lá»—i xÃ³a má»¥c:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa mục:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
@@ -5275,17 +5275,17 @@ function ResourcesPage(){
   if(filterType)filteredResources=filteredResources.filter(r=>r.type===filterType);
 
   const totalExp=expenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
-  const pendingReim=expenses.filter(e=>e.status==='ÄÃ£ chi - Chá» hoÃ n tiá»n').reduce((s,e)=>s+(Number(e.amount)||0),0);
-  const modalTitle=tab==='links'?(editing?'Chá»‰nh sá»­a link':'ThÃªm link tÃ i liá»‡u'):tab==='inventory'?(editing?'Chá»‰nh sá»­a váº­t dá»¥ng':'ThÃªm váº­t dá»¥ng'):(editing?'Chá»‰nh sá»­a khoáº£n chi':'ThÃªm khoáº£n chi má»›i');
+  const pendingReim=expenses.filter(e=>e.status==='Đã chi - Chờ hoàn tiền').reduce((s,e)=>s+(Number(e.amount)||0),0);
+  const modalTitle=tab==='links'?(editing?'Chỉnh sửa link':'Thêm link tài liệu'):tab==='inventory'?(editing?'Chỉnh sửa vật dụng':'Thêm vật dụng'):(editing?'Chỉnh sửa khoản chi':'Thêm khoản chi mới');
 
   return(
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-bold text-slate-800">Kho TÃ i NguyÃªn & Quá»¹ Ná»™i Vá»¥</h1><p className="text-xs text-slate-500 mt-0.5">Link tÃ i liá»‡u, váº­t dá»¥ng CLB vÃ  chi tiÃªu sá»± kiá»‡n</p></div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>ThÃªm má»›i</button>
+        <div><h1 className="text-xl font-bold text-slate-800">Kho Tài Nguyên & Quỹ Nội Vụ</h1><p className="text-xs text-slate-500 mt-0.5">Link tài liệu, vật dụng CLB và chi tiêu sự kiện</p></div>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>Thêm mới</button>
       </div>
       <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
-        {[['links','ðŸ”— Kho Link'],['inventory','ðŸ“¦ Váº­t Dá»¥ng'],['expenses','ðŸ’° Chi TiÃªu']].map(([v,l])=>(
+        {[['links','🔗 Kho Link'],['inventory','📦 Vật Dụng'],['expenses','💰 Chi Tiêu']].map(([v,l])=>(
           <button key={v} onClick={()=>setTab(v)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${tab===v?'bg-white shadow text-slate-800':'text-slate-500 hover:text-slate-700'}`}>{l}</button>
         ))}
       </div>
@@ -5294,19 +5294,19 @@ function ResourcesPage(){
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2 items-center">
             <select value={filterBan} onChange={e=>setFilterBan(e.target.value)} className="form-input text-sm w-auto">
-              <option value="">Táº¥t cáº£ ban</option>
+              <option value="">Tất cả ban</option>
               {BANS.map(b=><option key={b}>{b}</option>)}
             </select>
             <select value={filterType} onChange={e=>setFilterType(e.target.value)} className="form-input text-sm w-auto">
-              <option value="">Táº¥t cáº£ loáº¡i</option>
+              <option value="">Tất cả loại</option>
               {LINK_TYPES.map(t=><option key={t}>{t}</option>)}
             </select>
-            {(filterBan||filterType)&&<button onClick={()=>{setFilterBan('');setFilterType('')}} className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"><Icon name="x-circle" size={13}/>XÃ³a lá»c</button>}
+            {(filterBan||filterType)&&<button onClick={()=>{setFilterBan('');setFilterType('')}} className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"><Icon name="x-circle" size={13}/>Xóa lọc</button>}
           </div>
-          {filteredResources.length===0&&<div className="card py-14 text-center"><Icon name="folder-open" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">ChÆ°a cÃ³ link tÃ i liá»‡u nÃ o</p><p className="text-sm text-slate-300 mt-1">LÆ°u trá»¯ link Google Drive, Canva, Forms, Docs...</p></div>}
+          {filteredResources.length===0&&<div className="card py-14 text-center"><Icon name="folder-open" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có link tài liệu nào</p><p className="text-sm text-slate-300 mt-1">Lưu trữ link Google Drive, Canva, Forms, Docs...</p></div>}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredResources.map(r=>{
-              const cfg=LINK_TYPE_CFG[r.type]||LINK_TYPE_CFG['BiÃªn báº£n & HÃ nh chÃ­nh'];
+              const cfg=LINK_TYPE_CFG[r.type]||LINK_TYPE_CFG['Biên bản & Hành chính'];
               return(
                 <div key={r.id} className={`card p-4 fade-in border-l-4 ${cfg.border}`}>
                   <div className="flex items-start gap-3">
@@ -5335,7 +5335,7 @@ function ResourcesPage(){
 
       {tab==='inventory'&&(
         <div className="space-y-3">
-          {inventory.length===0&&<div className="card py-14 text-center"><Icon name="box" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">ChÆ°a cÃ³ váº­t dá»¥ng nÃ o</p><p className="text-sm text-slate-300 mt-1">Quáº£n lÃ½ loa, mic, standee, dÃ¢y nguá»“n...</p></div>}
+          {inventory.length===0&&<div className="card py-14 text-center"><Icon name="box" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có vật dụng nào</p><p className="text-sm text-slate-300 mt-1">Quản lý loa, mic, standee, dây nguồn...</p></div>}
           {inventory.map(item=>(
             <div key={item.id} className="card p-4 fade-in">
               <div className="flex items-start justify-between gap-3">
@@ -5344,11 +5344,11 @@ function ResourcesPage(){
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-bold text-slate-800 text-sm">{item.name}</p>
-                      <span className={`status-badge text-xs ${item.status==='Tá»‘t'?'tag-green':item.status==='Há»ng/Máº¥t phá»¥ kiá»‡n'?'tag-red':'tag-yellow'}`}>{item.status}</span>
+                      <span className={`status-badge text-xs ${item.status==='Tốt'?'tag-green':item.status==='Hỏng/Mất phụ kiện'?'tag-red':'tag-yellow'}`}>{item.status}</span>
                       {item.quantity&&<span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">SL: {item.quantity}</span>}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-1 text-xs text-slate-400">
-                      {item.keeper&&<span className="flex items-center gap-1"><Icon name="user" size={11}/>NgÆ°á»i giá»¯: {item.keeper}</span>}
+                      {item.keeper&&<span className="flex items-center gap-1"><Icon name="user" size={11}/>Người giữ: {item.keeper}</span>}
                       {item.location&&<span className="flex items-center gap-1"><Icon name="map-pin" size={11}/>{item.location}</span>}
                     </div>
                     {item.note&&<p className="text-xs text-slate-400 mt-1 italic">{item.note}</p>}
@@ -5369,16 +5369,16 @@ function ResourcesPage(){
           {expenses.length>0&&(
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl p-3 text-white" style={{background:'linear-gradient(135deg,#4f46e5,#2563eb)'}}>
-                <p className="text-xs opacity-80 mb-1">Tá»•ng chi tiÃªu</p>
+                <p className="text-xs opacity-80 mb-1">Tổng chi tiêu</p>
                 <p className="text-xl font-black">{fmtVND(totalExp)}</p>
               </div>
               <div className="rounded-2xl p-3 text-white" style={{background:'linear-gradient(135deg,#f59e0b,#ea580c)'}}>
-                <p className="text-xs opacity-80 mb-1">Chá» hoÃ n tiá»n</p>
+                <p className="text-xs opacity-80 mb-1">Chờ hoàn tiền</p>
                 <p className="text-xl font-black">{fmtVND(pendingReim)}</p>
               </div>
             </div>
           )}
-          {expenses.length===0&&<div className="card py-14 text-center"><Icon name="wallet" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">ChÆ°a cÃ³ khoáº£n chi nÃ o</p><p className="text-sm text-slate-300 mt-1">Ghi láº¡i dá»± trÃ¹ vÃ  chi tiÃªu cá»§a Ban Ná»™i Vá»¥</p></div>}
+          {expenses.length===0&&<div className="card py-14 text-center"><Icon name="wallet" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có khoản chi nào</p><p className="text-sm text-slate-300 mt-1">Ghi lại dự trù và chi tiêu của Ban Nội Vụ</p></div>}
           <div className="space-y-2">
             {expenses.map(exp=>(
               <div key={exp.id} className="card p-3.5 fade-in">
@@ -5391,7 +5391,7 @@ function ResourcesPage(){
                     <p className="font-bold text-slate-800 text-sm">{exp.name}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-slate-500">
                       {exp.amount&&<span className="text-base font-black text-slate-800">{fmtVND(exp.amount)}</span>}
-                      {exp.person&&<span className="flex items-center gap-1 mt-0.5"><Icon name="user" size={11}/>á»¨ng tiá»n: <b className="text-slate-700">{exp.person}</b></span>}
+                      {exp.person&&<span className="flex items-center gap-1 mt-0.5"><Icon name="user" size={11}/>Ứng tiền: <b className="text-slate-700">{exp.person}</b></span>}
                     </div>
                     {exp.note&&<p className="text-xs text-slate-400 mt-1">{exp.note}</p>}
                   </div>
@@ -5409,77 +5409,77 @@ function ResourcesPage(){
       <Modal open={modal} onClose={handleClose} title={modalTitle}>
         {tab==='links'&&(
           <div className="space-y-4">
-            <div><label className="form-label">TÃªn tÃ i liá»‡u <span className="text-red-500">*</span></label><input value={linkForm.title} onChange={e=>setLinkForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="VD: Káº¿ hoáº¡ch Talkshow thÃ¡ng 11..."/></div>
-            <div><label className="form-label">ÄÆ°á»ng dáº«n (URL) <span className="text-red-500">*</span></label><input value={linkForm.url} onChange={e=>setLinkForm(p=>({...p,url:e.target.value}))} className="form-input" placeholder="https://docs.google.com/..."/></div>
+            <div><label className="form-label">Tên tài liệu <span className="text-red-500">*</span></label><input value={linkForm.title} onChange={e=>setLinkForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="VD: Kế hoạch Talkshow tháng 11..."/></div>
+            <div><label className="form-label">Đường dẫn (URL) <span className="text-red-500">*</span></label><input value={linkForm.url} onChange={e=>setLinkForm(p=>({...p,url:e.target.value}))} className="form-input" placeholder="https://docs.google.com/..."/></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="form-label">Loáº¡i tÃ i liá»‡u</label><select value={linkForm.type} onChange={e=>setLinkForm(p=>({...p,type:e.target.value}))} className="form-input">{LINK_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
-              <div><label className="form-label">Ban phá»¥ trÃ¡ch</label><select value={linkForm.ban} onChange={e=>setLinkForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chá»n ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
+              <div><label className="form-label">Loại tài liệu</label><select value={linkForm.type} onChange={e=>setLinkForm(p=>({...p,type:e.target.value}))} className="form-input">{LINK_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+              <div><label className="form-label">Ban phụ trách</label><select value={linkForm.ban} onChange={e=>setLinkForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
             </div>
-            <div><label className="form-label">Ghi chÃº</label><input value={linkForm.note} onChange={e=>setLinkForm(p=>({...p,note:e.target.value}))} className="form-input" placeholder="MÃ´ táº£ ngáº¯n vá» tÃ i liá»‡u..."/></div>
-            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Há»§y</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'LÆ°u':'ThÃªm link'}</button></div>
+            <div><label className="form-label">Ghi chú</label><input value={linkForm.note} onChange={e=>setLinkForm(p=>({...p,note:e.target.value}))} className="form-input" placeholder="Mô tả ngắn về tài liệu..."/></div>
+            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu':'Thêm link'}</button></div>
           </div>
         )}
         {tab==='inventory'&&(
           <div className="space-y-4">
-            <div><label className="form-label">TÃªn Ä‘á»“ váº­t <span className="text-red-500">*</span></label><input value={invForm.name} onChange={e=>setInvForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="VD: Loa di Ä‘á»™ng JBL..."/></div>
+            <div><label className="form-label">Tên đồ vật <span className="text-red-500">*</span></label><input value={invForm.name} onChange={e=>setInvForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="VD: Loa di động JBL..."/></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="form-label">Sá»‘ lÆ°á»£ng</label><input type="number" min="1" value={invForm.quantity} onChange={e=>setInvForm(p=>({...p,quantity:e.target.value}))} className="form-input"/></div>
-              <div><label className="form-label">TÃ¬nh tráº¡ng</label><select value={invForm.status} onChange={e=>setInvForm(p=>({...p,status:e.target.value}))} className="form-input">{INVENTORY_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label className="form-label">Số lượng</label><input type="number" min="1" value={invForm.quantity} onChange={e=>setInvForm(p=>({...p,quantity:e.target.value}))} className="form-input"/></div>
+              <div><label className="form-label">Tình trạng</label><select value={invForm.status} onChange={e=>setInvForm(p=>({...p,status:e.target.value}))} className="form-input">{INVENTORY_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="form-label">NgÆ°á»i Ä‘ang giá»¯</label><input value={invForm.keeper} onChange={e=>setInvForm(p=>({...p,keeper:e.target.value}))} className="form-input" placeholder="TÃªn ngÆ°á»i giá»¯"/></div>
-              <div><label className="form-label">Vá»‹ trÃ­ lÆ°u trá»¯</label><input value={invForm.location} onChange={e=>setInvForm(p=>({...p,location:e.target.value}))} className="form-input" placeholder="Tá»§ phÃ²ng BCN, nhÃ ..."/></div>
+              <div><label className="form-label">Người đang giữ</label><input value={invForm.keeper} onChange={e=>setInvForm(p=>({...p,keeper:e.target.value}))} className="form-input" placeholder="Tên người giữ"/></div>
+              <div><label className="form-label">Vị trí lưu trữ</label><input value={invForm.location} onChange={e=>setInvForm(p=>({...p,location:e.target.value}))} className="form-input" placeholder="Tủ phòng BCN, nhà..."/></div>
             </div>
-            <div><label className="form-label">Ghi chÃº</label><textarea value={invForm.note} onChange={e=>setInvForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="ThÃªm ghi chÃº..."/></div>
-            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Há»§y</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'LÆ°u':'ThÃªm váº­t dá»¥ng'}</button></div>
+            <div><label className="form-label">Ghi chú</label><textarea value={invForm.note} onChange={e=>setInvForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="Thêm ghi chú..."/></div>
+            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu':'Thêm vật dụng'}</button></div>
           </div>
         )}
         {tab==='expenses'&&(
           <div className="space-y-4">
-            <div><label className="form-label">TÃªn khoáº£n chi <span className="text-red-500">*</span></label><input value={expForm.name} onChange={e=>setExpForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="VD: In áº¥n backdrop sá»± kiá»‡n..."/></div>
+            <div><label className="form-label">Tên khoản chi <span className="text-red-500">*</span></label><input value={expForm.name} onChange={e=>setExpForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="VD: In ấn backdrop sự kiện..."/></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="form-label">Sá»‘ tiá»n (VNÄ)</label><input type="number" value={expForm.amount} onChange={e=>setExpForm(p=>({...p,amount:e.target.value}))} className="form-input" placeholder="500000"/></div>
-              <div><label className="form-label">NgÆ°á»i á»©ng tiá»n</label><input value={expForm.person} onChange={e=>setExpForm(p=>({...p,person:e.target.value}))} className="form-input" placeholder="TÃªn ngÆ°á»i á»©ng tiá»n"/></div>
+              <div><label className="form-label">Số tiền (VNĐ)</label><input type="number" value={expForm.amount} onChange={e=>setExpForm(p=>({...p,amount:e.target.value}))} className="form-input" placeholder="500000"/></div>
+              <div><label className="form-label">Người ứng tiền</label><input value={expForm.person} onChange={e=>setExpForm(p=>({...p,person:e.target.value}))} className="form-input" placeholder="Tên người ứng tiền"/></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="form-label">Ban phá»¥ trÃ¡ch</label><select value={expForm.ban} onChange={e=>setExpForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chá»n ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
-              <div><label className="form-label">Tráº¡ng thÃ¡i</label><select value={expForm.status} onChange={e=>setExpForm(p=>({...p,status:e.target.value}))} className="form-input">{EXPENSE_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label className="form-label">Ban phụ trách</label><select value={expForm.ban} onChange={e=>setExpForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
+              <div><label className="form-label">Trạng thái</label><select value={expForm.status} onChange={e=>setExpForm(p=>({...p,status:e.target.value}))} className="form-input">{EXPENSE_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
             </div>
-            <div><label className="form-label">Ghi chÃº</label><textarea value={expForm.note} onChange={e=>setExpForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="MÃ´ táº£ chi tiáº¿t, link hÃ³a Ä‘Æ¡n..."/></div>
-            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Há»§y</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'LÆ°u':'ThÃªm khoáº£n chi'}</button></div>
+            <div><label className="form-label">Ghi chú</label><textarea value={expForm.note} onChange={e=>setExpForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="Mô tả chi tiết, link hóa đơn..."/></div>
+            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu':'Thêm khoản chi'}</button></div>
           </div>
         )}
       </Modal>
 
-      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={handleDeleteItem} message="Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a má»¥c nÃ y?"/>
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={handleDeleteItem} message="Bạn có chắc muốn xóa mục này?"/>
       <DuplicateLinkDialog open={!!dupWarning} creator={dupWarning?.creator} onCancel={()=>setDupWarning(null)} onConfirm={dupWarning?.onConfirm}/>
     </div>
   );
 }
 
 // ============================================================
-// GÃ“C Há»ŒC Táº¬P NVC (STUDY HUB MODULE)
+// GÓC HỌC TẬP NVC (STUDY HUB MODULE)
 // ============================================================
 const STUDY_BLOCKS = [
-  'Táº¥t cáº£',
-  'Äáº¡i cÆ°Æ¡ng',
-  'CÆ¡ sá»Ÿ ngÃ nh',
-  'ChuyÃªn ngÃ nh DÆ°á»£c'
+  'Tất cả',
+  'Đại cương',
+  'Cơ sở ngành',
+  'Chuyên ngành Dược'
 ];
 
 const STUDY_CATEGORIES = [
-  'Táº¥t cáº£',
-  'Äá» thi & ÄÃ¡p Ã¡n',
-  'Slide bÃ i giáº£ng',
-  'GiÃ¡o trÃ¬nh/SÃ¡ch',
-  'TÃ³m táº¯t lÃ½ thuyáº¿t'
+  'Tất cả',
+  'Đề thi & Đáp án',
+  'Slide bài giảng',
+  'Giáo trình/Sách',
+  'Tóm tắt lý thuyết'
 ];
 
 function StudyHubPage(){
   const{studyResources,setStudyResources,addNotification,playSound,adminMode,userIdentity,resources,events}=useContext(AppCtx);
   const[dupWarning,setDupWarning]=useState(null);
-  const[selectedBlock,setSelectedBlock]=useState('Táº¥t cáº£');
-  const[selectedCat,setSelectedCat]=useState('Táº¥t cáº£');
+  const[selectedBlock,setSelectedBlock]=useState('Tất cả');
+  const[selectedCat,setSelectedCat]=useState('Tất cả');
   const[searchQuery,setSearchQuery]=useState('');
   const[modalOpen,setModalOpen]=useState(false);
   const[editingId,setEditingId]=useState(null);
@@ -5488,8 +5488,8 @@ function StudyHubPage(){
 
   const emptyForm={
     title:'',
-    block:'CÆ¡ sá»Ÿ ngÃ nh',
-    category:'Äá» thi & ÄÃ¡p Ã¡n',
+    block:'Cơ sở ngành',
+    category:'Đề thi & Đáp án',
     url:'',
     contributor:'',
     note:'',
@@ -5507,8 +5507,8 @@ function StudyHubPage(){
     setEditingId(item.id);
     setFormData({
       title:item.title||'',
-      block:item.block||'CÆ¡ sá»Ÿ ngÃ nh',
-      category:item.category||'Äá» thi & ÄÃ¡p Ã¡n',
+      block:item.block||'Cơ sở ngành',
+      category:item.category||'Đề thi & Đáp án',
       url:item.url||'',
       contributor:item.contributor||'',
       note:item.note||'',
@@ -5520,11 +5520,11 @@ function StudyHubPage(){
   const handleSave=async(e,forceSave=false)=>{
     if(e&&e.preventDefault)e.preventDefault();
     if(!formData.title.trim()){
-      alert('Vui lÃ²ng nháº­p tÃªn tÃ i liá»‡u / mÃ´n há»c!');
+      alert('Vui lòng nhập tên tài liệu / môn học!');
       return;
     }
     if(!formData.url.trim()){
-      alert('Vui lÃ²ng nháº­p link tÃ i liá»‡u (Drive/Docs/Sheets)!');
+      alert('Vui lòng nhập link tài liệu (Drive/Docs/Sheets)!');
       return;
     }
 
@@ -5543,14 +5543,14 @@ function StudyHubPage(){
     }
 
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       if(editingId){
         await fbDb.collection('study_resources').doc(editingId).set({
           ...formData,
           updatedAt:new Date().toISOString()
         },{merge:true});
         try{playSound('success');}catch(e){}
-        try{addNotification(`ÄÃ£ cáº­p nháº­t tÃ i liá»‡u: ${formData.title}`,'success');}catch(e){}
+        try{addNotification(`Đã cập nhật tài liệu: ${formData.title}`,'success');}catch(e){}
       }else{
         const id=uid();
         await fbDb.collection('study_resources').doc(id).set({
@@ -5559,42 +5559,42 @@ function StudyHubPage(){
           createdAt:new Date().toISOString()
         });
         try{playSound('success');}catch(e){}
-        try{addNotification(`ÄÃ£ Ä‘Ã³ng gÃ³p tÃ i liá»‡u má»›i: ${formData.title}`,'success');}catch(e){}
+        try{addNotification(`Đã đóng góp tài liệu mới: ${formData.title}`,'success');}catch(e){}
       }
       setModalOpen(false);
       setEditingId(null);
     }catch(err){
-      console.error('Lá»—i lÆ°u tÃ i liá»‡u há»c táº­p:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi lưu tài liệu học tập:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const handleDelete=async()=>{
     if(!confirmDeleteId)return;
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('study_resources').doc(confirmDeleteId).delete();
       try{playSound('pop');}catch(e){}
-      try{addNotification('ÄÃ£ xÃ³a tÃ i liá»‡u khá»i GÃ³c Há»c Táº­p','info');}catch(e){}
+      try{addNotification('Đã xóa tài liệu khỏi Góc Học Tập','info');}catch(e){}
       setConfirmDeleteId(null);
     }catch(err){
-      console.error('Lá»—i xÃ³a tÃ i liá»‡u:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi xóa tài liệu:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const handleTogglePin=async(item)=>{
     try{
-      if(!fbDb)throw new Error('Firebase chÆ°a káº¿t ná»‘i!');
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
       const newPinned=!item.pinned;
       await fbDb.collection('study_resources').doc(item.id).set({
         pinned:newPinned
       },{merge:true});
       try{playSound('pop');}catch(e){}
-      try{addNotification(newPinned?`ÄÃ£ ghim tÃ i liá»‡u trá»ng tÃ¢m: ${item.title}`:`ÄÃ£ bá» ghim: ${item.title}`,'info');}catch(e){}
+      try{addNotification(newPinned?`Đã ghim tài liệu trọng tâm: ${item.title}`:`Đã bỏ ghim: ${item.title}`,'info');}catch(e){}
     }catch(err){
-      console.error('Lá»—i ghim tÃ i liá»‡u:',err);
-      alert('Lá»—i lÆ°u Firebase: '+err.message);
+      console.error('Lỗi ghim tài liệu:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
@@ -5613,18 +5613,18 @@ function StudyHubPage(){
       }
       setCopiedId(item.id);
       try{playSound('pop');}catch(e){}
-      try{addNotification('ÄÃ£ sao chÃ©p link tÃ i liá»‡u vÃ o bá»™ nhá»› táº¡m!','info');}catch(e){}
+      try{addNotification('Đã sao chép link tài liệu vào bộ nhớ tạm!','info');}catch(e){}
       setTimeout(()=>setCopiedId(null),2000);
     }catch(err){
-      console.warn('Lá»—i copy clipboard:',err);
+      console.warn('Lỗi copy clipboard:',err);
     }
   };
 
   // Filtered resources
   const filteredList=useMemo(()=>{
     return(studyResources||[]).filter(item=>{
-      const matchBlock=selectedBlock==='Táº¥t cáº£'||item.block===selectedBlock;
-      const matchCat=selectedCat==='Táº¥t cáº£'||item.category===selectedCat;
+      const matchBlock=selectedBlock==='Tất cả'||item.block===selectedBlock;
+      const matchCat=selectedCat==='Tất cả'||item.category===selectedCat;
       const q=searchQuery.toLowerCase().trim();
       const matchSearch=!q||
         (item.title&&item.title.toLowerCase().includes(q))||
@@ -5641,19 +5641,19 @@ function StudyHubPage(){
 
   const getCatBadge=(cat)=>{
     switch(cat){
-      case 'Äá» thi & ÄÃ¡p Ã¡n':return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800';
-      case 'Slide bÃ i giáº£ng':return 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800';
-      case 'GiÃ¡o trÃ¬nh/SÃ¡ch':return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800';
-      case 'TÃ³m táº¯t lÃ½ thuyáº¿t':return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800';
+      case 'Đề thi & Đáp án':return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800';
+      case 'Slide bài giảng':return 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800';
+      case 'Giáo trình/Sách':return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800';
+      case 'Tóm tắt lý thuyết':return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800';
       default:return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
     }
   };
 
   const getBlockBadge=(block)=>{
     switch(block){
-      case 'Äáº¡i cÆ°Æ¡ng':return 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300';
-      case 'CÆ¡ sá»Ÿ ngÃ nh':return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300';
-      case 'ChuyÃªn ngÃ nh DÆ°á»£c':return 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300';
+      case 'Đại cương':return 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300';
+      case 'Cơ sở ngành':return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300';
+      case 'Chuyên ngành Dược':return 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300';
       default:return 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300';
     }
   };
@@ -5672,7 +5672,7 @@ function StudyHubPage(){
           <div className="flex flex-wrap items-center gap-1.5">
             {item.pinned&&(
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white shadow-xs">
-                <Icon name="flame" size={12}/> Hot Ã´n thi
+                <Icon name="flame" size={12}/> Hot ôn thi
               </span>
             )}
             <span className={`inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-md border ${getCatBadge(item.category)}`}>
@@ -5687,7 +5687,7 @@ function StudyHubPage(){
             {adminMode && (
               <button
                 onClick={()=>handleTogglePin(item)}
-                title={item.pinned?'Bá» ghim tÃ i liá»‡u':'Ghim tÃ i liá»‡u hot Ã´n thi'}
+                title={item.pinned?'Bỏ ghim tài liệu':'Ghim tài liệu hot ôn thi'}
                 className={`p-1.5 rounded-lg transition ${
                   item.pinned
                     ? 'text-orange-600 bg-orange-100 dark:bg-orange-950/50 hover:bg-orange-200'
@@ -5700,7 +5700,7 @@ function StudyHubPage(){
             {(adminMode || (userIdentity && item.contributor && item.contributor.toLowerCase().includes(userIdentity.toLowerCase())) || (!item.contributor)) && (
               <button
                 onClick={()=>openEdit(item)}
-                title="Chá»‰nh sá»­a tÃ i liá»‡u"
+                title="Chỉnh sửa tài liệu"
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
               >
                 <Icon name="pencil" size={15}/>
@@ -5709,7 +5709,7 @@ function StudyHubPage(){
             {adminMode && (
               <button
                 onClick={()=>setConfirmDeleteId(item.id)}
-                title="XÃ³a tÃ i liá»‡u"
+                title="Xóa tài liệu"
                 className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
               >
                 <Icon name="trash-2" size={15}/>
@@ -5732,10 +5732,10 @@ function StudyHubPage(){
           <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
             <Icon name="user" size={11} className="text-slate-600 dark:text-slate-300"/>
           </div>
-          <span className="truncate font-medium">{item.contributor||'ThÃ nh viÃªn NVC'}</span>
+          <span className="truncate font-medium">{item.contributor||'Thành viên NVC'}</span>
           {item.createdAt&&(
             <>
-              <span className="text-slate-300 dark:text-slate-600">â€¢</span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
               <span className="text-[11px] text-slate-400 flex-shrink-0">
                 {new Date(item.createdAt).toLocaleDateString('vi-VN')}
               </span>
@@ -5752,7 +5752,7 @@ function StudyHubPage(){
           className="btn-primary flex items-center justify-center gap-1.5 py-2 px-3 text-xs sm:text-sm rounded-xl font-semibold shadow-xs"
         >
           <Icon name="external-link" size={14}/>
-          <span>Má»Ÿ Drive</span>
+          <span>Mở Drive</span>
         </a>
         <button
           onClick={()=>handleCopyLink(item)}
@@ -5763,7 +5763,7 @@ function StudyHubPage(){
           }`}
         >
           <Icon name={copiedId===item.id?"check":"copy"} size={14}/>
-          <span>{copiedId===item.id?"ÄÃ£ chÃ©p":"Sao chÃ©p link"}</span>
+          <span>{copiedId===item.id?"Đã chép":"Sao chép link"}</span>
         </button>
       </div>
     </div>
@@ -5776,11 +5776,11 @@ function StudyHubPage(){
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-xs text-xs font-bold mb-2">
-              <Icon name="graduation-cap" size={14}/> GÃ³c Há»c Táº­p & Tri Thá»©c NVC
+              <Icon name="graduation-cap" size={14}/> Góc Học Tập & Tri Thức NVC
             </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight">Kho Äá» Thi, BÃ i Giáº£ng & TÃ i Liá»‡u DÆ°á»£c</h1>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight">Kho Đề Thi, Bài Giảng & Tài Liệu Dược</h1>
             <p className="text-xs sm:text-sm text-orange-100 mt-1 max-w-xl leading-relaxed">
-              NgÃ¢n hÃ ng tÃ i liá»‡u Ã´n thi mÃ´n há»c, Ä‘á» thi cÃ³ Ä‘Ã¡p Ã¡n, tÃ³m táº¯t lÃ½ thuyáº¿t vÃ  slide bÃ i giáº£ng dÃ nh riÃªng cho cÃ¡c tháº¿ há»‡ thÃ nh viÃªn NewVision HUP.
+              Ngân hàng tài liệu ôn thi môn học, đề thi có đáp án, tóm tắt lý thuyết và slide bài giảng dành riêng cho các thế hệ thành viên NewVision HUP.
             </p>
           </div>
           <button
@@ -5788,7 +5788,7 @@ function StudyHubPage(){
             className="flex items-center justify-center gap-2 bg-white text-orange-600 hover:bg-orange-50 px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition active:scale-95 flex-shrink-0"
           >
             <Icon name="plus" size={17} className="text-orange-600"/>
-            <span>ÄÃ³ng gÃ³p tÃ i liá»‡u</span>
+            <span>Đóng góp tài liệu</span>
           </button>
         </div>
         <div className="absolute -right-6 -bottom-8 opacity-15 pointer-events-none text-white">
@@ -5804,7 +5804,7 @@ function StudyHubPage(){
             type="text"
             value={searchQuery}
             onChange={e=>setSearchQuery(e.target.value)}
-            placeholder="TÃ¬m theo tÃªn mÃ´n há»c, ngÆ°á»i chia sáº», ghi chÃº tÃ i liá»‡u (VD: DÆ°á»£c lÃ½, HÃ³a DÆ°á»£c, Giáº£i pháº«u...)..."
+            placeholder="Tìm theo tên môn học, người chia sẻ, ghi chú tài liệu (VD: Dược lý, Hóa Dược, Giải phẫu...)..."
             className="form-input text-sm pl-9 pr-9"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -5817,10 +5817,10 @@ function StudyHubPage(){
           )}
         </div>
 
-        {/* Khá»‘i / KhÃ³a Filter Chips */}
+        {/* Khối / Khóa Filter Chips */}
         <div>
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">
-            <Icon name="layers" size={13}/> Khá»‘i / KhÃ³a:
+            <Icon name="layers" size={13}/> Khối / Khóa:
           </div>
           <div className="chip-bar">
             {STUDY_BLOCKS.map(b=>(
@@ -5839,10 +5839,10 @@ function StudyHubPage(){
           </div>
         </div>
 
-        {/* PhÃ¢n loáº¡i tÃ i liá»‡u Filter Chips */}
+        {/* Phân loại tài liệu Filter Chips */}
         <div>
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">
-            <Icon name="filter" size={13}/> PhÃ¢n loáº¡i tÃ i liá»‡u:
+            <Icon name="filter" size={13}/> Phân loại tài liệu:
           </div>
           <div className="chip-bar">
             {STUDY_CATEGORIES.map(c=>(
@@ -5862,7 +5862,7 @@ function StudyHubPage(){
         </div>
       </div>
 
-      {/* Pinned Section: TÃ i Liá»‡u Ã”n Thi Trá»ng TÃ¢m */}
+      {/* Pinned Section: Tài Liệu Ôn Thi Trọng Tâm */}
       {pinnedList.length>0&&(
         <section>
           <div className="flex items-center justify-between mb-3.5">
@@ -5871,7 +5871,7 @@ function StudyHubPage(){
                 <Icon name="flame" size={16}/>
               </span>
               <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-                TÃ i Liá»‡u Ã”n Thi Trá»ng TÃ¢m (Hot)
+                Tài Liệu Ôn Thi Trọng Tâm (Hot)
               </h2>
               <span className="text-xs bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 font-bold px-2 py-0.5 rounded-full">
                 {pinnedList.length}
@@ -5884,7 +5884,7 @@ function StudyHubPage(){
         </section>
       )}
 
-      {/* Regular Section: Táº¥t cáº£ tÃ i liá»‡u */}
+      {/* Regular Section: Tất cả tài liệu */}
       <section>
         <div className="flex items-center justify-between mb-3.5">
           <div className="flex items-center gap-2">
@@ -5892,7 +5892,7 @@ function StudyHubPage(){
               <Icon name="folder-open" size={15}/>
             </span>
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-              Táº¥t cáº£ tÃ i liá»‡u mÃ´n há»c ({regularList.length})
+              Tất cả tài liệu môn học ({regularList.length})
             </h2>
           </div>
         </div>
@@ -5903,13 +5903,13 @@ function StudyHubPage(){
               <Icon name="book-open" size={28}/>
             </div>
             <h3 className="font-bold text-slate-700 dark:text-slate-200 text-base mb-1">
-              {searchQuery||selectedBlock!=='Táº¥t cáº£'||selectedCat!=='Táº¥t cáº£'?'KhÃ´ng cÃ³ tÃ i liá»‡u nÃ o phÃ¹ há»£p bá»™ lá»c':'ChÆ°a cÃ³ tÃ i liá»‡u nÃ o'}
+              {searchQuery||selectedBlock!=='Tất cả'||selectedCat!=='Tất cả'?'Không có tài liệu nào phù hợp bộ lọc':'Chưa có tài liệu nào'}
             </h3>
             <p className="text-xs text-slate-400 max-w-sm mb-4">
-              HÃ£y trá»Ÿ thÃ nh ngÆ°á»i Ä‘áº§u tiÃªn Ä‘Ã³ng gÃ³p Ä‘á» thi, slide hoáº·c tÃ i liá»‡u há»c táº­p bá»• Ã­ch cho cÃ¡c tháº¿ há»‡ thÃ nh viÃªn NVC!
+              Hãy trở thành người đầu tiên đóng góp đề thi, slide hoặc tài liệu học tập bổ ích cho các thế hệ thành viên NVC!
             </p>
             <button onClick={openAdd} className="btn-primary flex items-center gap-2 text-xs sm:text-sm py-2 px-4 rounded-xl">
-              <Icon name="plus" size={16}/> ÄÃ³ng gÃ³p tÃ i liá»‡u má»›i
+              <Icon name="plus" size={16}/> Đóng góp tài liệu mới
             </button>
           </div>
         ):(
@@ -5919,7 +5919,7 @@ function StudyHubPage(){
         )}
       </section>
 
-      {/* Modal Form: ThÃªm má»›i / Chá»‰nh sá»­a */}
+      {/* Modal Form: Thêm mới / Chỉnh sửa */}
       {modalOpen&&(
         <div className="modal-backdrop" onClick={e=>{if(e.target===e.currentTarget)setModalOpen(false);}}>
           <div className="modal-box p-5 sm:p-6">
@@ -5930,9 +5930,9 @@ function StudyHubPage(){
                 </div>
                 <div>
                   <h3 className="font-bold text-base text-slate-800 dark:text-slate-100">
-                    {editingId?'Chá»‰nh sá»­a tÃ i liá»‡u há»c táº­p':'ÄÃ³ng gÃ³p tÃ i liá»‡u há»c táº­p má»›i'}
+                    {editingId?'Chỉnh sửa tài liệu học tập':'Đóng góp tài liệu học tập mới'}
                   </h3>
-                  <p className="text-[11px] text-slate-400">Chia sáº» tri thá»©c DÆ°á»£c HÃ  Ná»™i cho cá»™ng Ä‘á»“ng NewVision HUP</p>
+                  <p className="text-[11px] text-slate-400">Chia sẻ tri thức Dược Hà Nội cho cộng đồng NewVision HUP</p>
                 </div>
               </div>
               <button onClick={()=>setModalOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600">
@@ -5942,11 +5942,11 @@ function StudyHubPage(){
 
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="form-label">TÃªn tÃ i liá»‡u / MÃ´n há»c <span className="text-red-500">*</span></label>
+                <label className="form-label">Tên tài liệu / Môn học <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   required
-                  placeholder="VD: Tá»•ng há»£p Äá» thi DÆ°á»£c lÃ½ 1 K78-K79 cÃ³ giáº£i thÃ­ch chi tiáº¿t"
+                  placeholder="VD: Tổng hợp Đề thi Dược lý 1 K78-K79 có giải thích chi tiết"
                   value={formData.title}
                   onChange={e=>setFormData({...formData,title:e.target.value})}
                   className="form-input text-sm"
@@ -5955,32 +5955,32 @@ function StudyHubPage(){
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="form-label">Khá»‘i / KhÃ³a Ä‘Ã o táº¡o <span className="text-red-500">*</span></label>
+                  <label className="form-label">Khối / Khóa đào tạo <span className="text-red-500">*</span></label>
                   <select
                     value={formData.block}
                     onChange={e=>setFormData({...formData,block:e.target.value})}
                     className="form-input text-sm"
                   >
-                    <option value="Äáº¡i cÆ°Æ¡ng">Äáº¡i cÆ°Æ¡ng (NÄƒm 1)</option>
-                    <option value="CÆ¡ sá»Ÿ ngÃ nh">CÆ¡ sá»Ÿ ngÃ nh (NÄƒm 2 - 3)</option>
-                    <option value="ChuyÃªn ngÃ nh DÆ°á»£c">ChuyÃªn ngÃ nh DÆ°á»£c (NÄƒm 4 - 5)</option>
-                    <option value="K79">KhÃ³a K79</option>
-                    <option value="K80">KhÃ³a K80</option>
-                    <option value="K81">KhÃ³a K81</option>
+                    <option value="Đại cương">Đại cương (Năm 1)</option>
+                    <option value="Cơ sở ngành">Cơ sở ngành (Năm 2 - 3)</option>
+                    <option value="Chuyên ngành Dược">Chuyên ngành Dược (Năm 4 - 5)</option>
+                    <option value="K79">Khóa K79</option>
+                    <option value="K80">Khóa K80</option>
+                    <option value="K81">Khóa K81</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="form-label">PhÃ¢n loáº¡i tÃ i liá»‡u <span className="text-red-500">*</span></label>
+                  <label className="form-label">Phân loại tài liệu <span className="text-red-500">*</span></label>
                   <select
                     value={formData.category}
                     onChange={e=>setFormData({...formData,category:e.target.value})}
                     className="form-input text-sm"
                   >
-                    <option value="Äá» thi & ÄÃ¡p Ã¡n">Äá» thi & ÄÃ¡p Ã¡n</option>
-                    <option value="Slide bÃ i giáº£ng">Slide bÃ i giáº£ng</option>
-                    <option value="GiÃ¡o trÃ¬nh/SÃ¡ch">GiÃ¡o trÃ¬nh / SÃ¡ch tham kháº£o</option>
-                    <option value="TÃ³m táº¯t lÃ½ thuyáº¿t">TÃ³m táº¯t lÃ½ thuyáº¿t / Mindmap</option>
+                    <option value="Đề thi & Đáp án">Đề thi & Đáp án</option>
+                    <option value="Slide bài giảng">Slide bài giảng</option>
+                    <option value="Giáo trình/Sách">Giáo trình / Sách tham khảo</option>
+                    <option value="Tóm tắt lý thuyết">Tóm tắt lý thuyết / Mindmap</option>
                   </select>
                 </div>
               </div>
@@ -6000,14 +6000,14 @@ function StudyHubPage(){
                     <Icon name="link" size={15}/>
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Äáº£m báº£o link Drive Ä‘Ã£ má»Ÿ quyá»n "Báº¥t ká»³ ai cÃ³ Ä‘Æ°á»ng liÃªn káº¿t Ä‘á»u xem Ä‘Æ°á»£c".</p>
+                <p className="text-[11px] text-slate-400 mt-1">Đảm bảo link Drive đã mở quyền "Bất kỳ ai có đường liên kết đều xem được".</p>
               </div>
 
               <div>
-                <label className="form-label">NgÆ°á»i Ä‘Ã³ng gÃ³p (TÃªn / Lá»›p / KhÃ³a)</label>
+                <label className="form-label">Người đóng góp (Tên / Lớp / Khóa)</label>
                 <input
                   type="text"
-                  placeholder="VD: Nguyá»…n VÄƒn A - Lá»›p A2K78"
+                  placeholder="VD: Nguyễn Văn A - Lớp A2K78"
                   value={formData.contributor}
                   onChange={e=>setFormData({...formData,contributor:e.target.value})}
                   className="form-input text-sm"
@@ -6015,10 +6015,10 @@ function StudyHubPage(){
               </div>
 
               <div>
-                <label className="form-label">Ghi chÃº Ã´n thi / HÆ°á»›ng dáº«n sá»­ dá»¥ng</label>
+                <label className="form-label">Ghi chú ôn thi / Hướng dẫn sử dụng</label>
                 <textarea
                   rows="2"
-                  placeholder="VD: TÃ i liá»‡u gá»“m 5 Ä‘á» thi cÃ¡c nÄƒm gáº§n Ä‘Ã¢y, trá»ng tÃ¢m pháº§n khÃ¡ng sinh..."
+                  placeholder="VD: Tài liệu gồm 5 đề thi các năm gần đây, trọng tâm phần kháng sinh..."
                   value={formData.note}
                   onChange={e=>setFormData({...formData,note:e.target.value})}
                   className="form-input text-sm"
@@ -6035,7 +6035,7 @@ function StudyHubPage(){
                 />
                 <label htmlFor="pinnedStudyResource" className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-1.5">
                   <span className="text-orange-500"><Icon name="flame" size={15}/></span>
-                  Ghim ná»•i báº­t vÃ o má»¥c "TÃ i liá»‡u Ã´n thi trá»ng tÃ¢m (Hot)"
+                  Ghim nổi bật vào mục "Tài liệu ôn thi trọng tâm (Hot)"
                 </label>
               </div>
 
@@ -6045,14 +6045,14 @@ function StudyHubPage(){
                   onClick={()=>setModalOpen(false)}
                   className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl"
                 >
-                  Há»§y bá»
+                  Hủy bỏ
                 </button>
                 <button
                   type="submit"
                   className="btn-primary text-xs sm:text-sm py-2.5 px-5 rounded-xl font-semibold flex items-center gap-2 shadow-md"
                 >
                   <Icon name="check" size={16}/>
-                  <span>{editingId?'LÆ°u thay Ä‘á»•i':'ÄÄƒng tÃ i liá»‡u'}</span>
+                  <span>{editingId?'Lưu thay đổi':'Đăng tài liệu'}</span>
                 </button>
               </div>
             </form>
@@ -6068,16 +6068,16 @@ function StudyHubPage(){
               <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50 text-red-600 flex items-center justify-center mx-auto mb-3">
                 <Icon name="trash-2" size={24}/>
               </div>
-              <h3 className="font-bold text-base text-slate-800 dark:text-slate-100 mb-1">XÃ¡c nháº­n xÃ³a tÃ i liá»‡u?</h3>
+              <h3 className="font-bold text-base text-slate-800 dark:text-slate-100 mb-1">Xác nhận xóa tài liệu?</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
-                TÃ i liá»‡u nÃ y sáº½ bá»‹ xÃ³a vÄ©nh viá»…n khá»i Cloud Firestore cá»§a toÃ n bá»™ cÃ¢u láº¡c bá»™.
+                Tài liệu này sẽ bị xóa vĩnh viễn khỏi Cloud Firestore của toàn bộ câu lạc bộ.
               </p>
               <div className="flex items-center justify-center gap-3">
                 <button onClick={()=>setConfirmDeleteId(null)} className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex-1">
-                  KhÃ´ng xÃ³a
+                  Không xóa
                 </button>
                 <button onClick={handleDelete} className="btn-danger text-xs sm:text-sm py-2 px-4 rounded-xl flex-1">
-                  XÃ¡c nháº­n xÃ³a
+                  Xác nhận xóa
                 </button>
               </div>
             </div>
@@ -6101,19 +6101,19 @@ function NotificationsPage(){
   return(
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-bold text-slate-800">Lá»‹ch Sá»­ Hoáº¡t Äá»™ng</h1><p className="text-xs text-slate-500 mt-0.5">{unreadCount} thÃ´ng bÃ¡o chÆ°a Ä‘á»c</p></div>
-        {unreadCount>0&&<button onClick={markAllRead} className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1.5"><Icon name="check-check" size={15}/>ÄÃ¡nh dáº¥u táº¥t cáº£</button>}
+        <div><h1 className="text-xl font-bold text-slate-800">Lịch Sử Hoạt Động</h1><p className="text-xs text-slate-500 mt-0.5">{unreadCount} thông báo chưa đọc</p></div>
+        {unreadCount>0&&<button onClick={markAllRead} className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1.5"><Icon name="check-check" size={15}/>Đánh dấu tất cả</button>}
       </div>
       <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
-        {[['all','Táº¥t cáº£'],['unread','ChÆ°a Ä‘á»c']].map(([v,l])=>(
+        {[['all','Tất cả'],['unread','Chưa đọc']].map(([v,l])=>(
           <button key={v} onClick={()=>setFilter(v)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${filter===v?'bg-white shadow text-slate-800':'text-slate-500 hover:text-slate-700'}`}>{l}{v==='unread'&&unreadCount>0?` (${unreadCount})`:''}</button>
         ))}
       </div>
       {filtered.length===0?(
         <div className="card py-20 text-center">
           <Icon name="bell-off" size={48} className="text-slate-200 mx-auto mb-4"/>
-          <p className="text-slate-400 font-medium text-lg">KhÃ´ng cÃ³ thÃ´ng bÃ¡o</p>
-          <p className="text-sm text-slate-300 mt-1">{filter==='unread'?'Báº¡n Ä‘Ã£ Ä‘á»c táº¥t cáº£!':'ChÆ°a cÃ³ hoáº¡t Ä‘á»™ng nÃ o'}</p>
+          <p className="text-slate-400 font-medium text-lg">Không có thông báo</p>
+          <p className="text-sm text-slate-300 mt-1">{filter==='unread'?'Bạn đã đọc tất cả!':'Chưa có hoạt động nào'}</p>
         </div>
       ):(
         <div className="card overflow-hidden divide-y divide-slate-50">
@@ -6122,9 +6122,9 @@ function NotificationsPage(){
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${typeColors[n.type]||typeColors.info}`}><Icon name={typeIcons[n.type]||'info'} size={17}/></div>
               <div className="flex-1 min-w-0">
                 <p className={`text-sm leading-snug ${!n.read?'font-semibold text-slate-800':'text-slate-600'}`}>{n.message}</p>
-                <p className="text-xs text-slate-400 mt-1">{relTime(n.timestamp)} Â· {new Date(n.timestamp).toLocaleString('vi-VN')}</p>
+                <p className="text-xs text-slate-400 mt-1">{relTime(n.timestamp)} · {new Date(n.timestamp).toLocaleString('vi-VN')}</p>
               </div>
-              {!n.read&&<div className="flex items-start gap-2 flex-shrink-0"><div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5"/><button onClick={()=>markRead(n.id)} className="text-xs text-blue-500 hover:text-blue-700 font-medium whitespace-nowrap">ÄÃ¡nh dáº¥u Ä‘Ã£ Ä‘á»c</button></div>}
+              {!n.read&&<div className="flex items-start gap-2 flex-shrink-0"><div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5"/><button onClick={()=>markRead(n.id)} className="text-xs text-blue-500 hover:text-blue-700 font-medium whitespace-nowrap">Đánh dấu đã đọc</button></div>}
             </div>
           ))}
         </div>
@@ -6144,10 +6144,10 @@ function FAB({setActiveTab}){
     document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);
   },[]);
   const actions=[
-    {label:'Táº¡o sá»± kiá»‡n má»›i',icon:'calendar-plus',color:'bg-blue-500 text-white',tab:'events'},
-    {label:'Ghi nháº­n váº¥n Ä‘á»',icon:'file-plus',color:'bg-amber-500 text-white',tab:'decisions'},
-    {label:'GÃ³c há»c táº­p NVC',icon:'book-open',color:'bg-emerald-500 text-white',tab:'study'},
-    {label:'ThÃªm link tÃ i liá»‡u',icon:'link',color:'bg-purple-500 text-white',tab:'resources'},
+    {label:'Tạo sự kiện mới',icon:'calendar-plus',color:'bg-blue-500 text-white',tab:'events'},
+    {label:'Ghi nhận vấn đề',icon:'file-plus',color:'bg-amber-500 text-white',tab:'decisions'},
+    {label:'Góc học tập NVC',icon:'book-open',color:'bg-emerald-500 text-white',tab:'study'},
+    {label:'Thêm link tài liệu',icon:'link',color:'bg-purple-500 text-white',tab:'resources'},
   ];
   return(
     <div ref={ref} className="fab-container md:hidden fixed bottom-20 left-4 z-[70]">
@@ -6171,22 +6171,22 @@ function FAB({setActiveTab}){
 // MAIN APP
 // ============================================================
 const NAV_ITEMS=[
-  {id:'dashboard',label:'Tá»•ng quan',icon:'layout-dashboard'},
-  {id:'events',label:'Sá»± kiá»‡n',icon:'calendar-days'},
-  {id:'study',label:'GÃ³c há»c táº­p',icon:'book-open'},
-  {id:'members',label:'ThÃ nh viÃªn',icon:'users'},
-  {id:'penalties',label:'ThÆ°á»Ÿng & Pháº¡t',icon:'scale'},
-  {id:'decisions',label:'Quyáº¿t Ä‘á»‹nh',icon:'file-check-2'},
-  {id:'resources',label:'TÃ i nguyÃªn',icon:'folder-open',isLocked:true},
-  {id:'bcn',label:'PhÃ²ng BCN',icon:'shield',isBcn:true,isLocked:true},
+  {id:'dashboard',label:'Tổng quan',icon:'layout-dashboard'},
+  {id:'events',label:'Sự kiện',icon:'calendar-days'},
+  {id:'study',label:'Góc học tập',icon:'book-open'},
+  {id:'members',label:'Thành viên',icon:'users'},
+  {id:'penalties',label:'Thưởng & Phạt',icon:'scale'},
+  {id:'decisions',label:'Quyết định',icon:'file-check-2'},
+  {id:'resources',label:'Tài nguyên',icon:'folder-open',isLocked:true},
+  {id:'bcn',label:'Phòng BCN',icon:'shield',isBcn:true,isLocked:true},
 ];
 
 const MOBILE_NAV_ITEMS=[
-  {id:'dashboard',label:'Tá»•ng quan',icon:'layout-dashboard'},
-  {id:'events',label:'Sá»± kiá»‡n',icon:'calendar-days'},
-  {id:'study',label:'Há»c táº­p',icon:'book-open'},
-  {id:'members',label:'ThÃ nh viÃªn',icon:'users'},
-  {id:'penalties',label:'ThÆ°á»Ÿng pháº¡t',icon:'scale'},
+  {id:'dashboard',label:'Tổng quan',icon:'layout-dashboard'},
+  {id:'events',label:'Sự kiện',icon:'calendar-days'},
+  {id:'study',label:'Học tập',icon:'book-open'},
+  {id:'members',label:'Thành viên',icon:'users'},
+  {id:'penalties',label:'Thưởng phạt',icon:'scale'},
 ];
 
 function App(){
@@ -6236,7 +6236,7 @@ function App(){
               <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-md theme-brand-bg" style={{background:'var(--brand-gradient)'}}><Icon name="eye" size={15} className="text-white"/></div>
               <div>
                 <span className="font-extrabold text-slate-800 text-base tracking-tight">NewVision HUP</span>
-                <span className="hidden sm:block text-[10px] text-slate-400 leading-none">CLB Ká»¹ nÄƒng má»m â€“ ÄH DÆ°á»£c HN</span>
+                <span className="hidden sm:block text-[10px] text-slate-400 leading-none">CLB Kỹ năng mềm – ĐH Dược HN</span>
               </div>
             </div>
           </div>
@@ -6244,7 +6244,7 @@ function App(){
             {/* User Identity Selector */}
             <div className="hidden lg:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl px-2.5 py-1 text-xs border border-slate-200 dark:border-slate-700">
               <span className="text-slate-400 font-medium flex items-center gap-1 flex-shrink-0">
-                <Icon name="user" size={13}/> TÃ´i lÃ :
+                <Icon name="user" size={13}/> Tôi là:
               </span>
               <select
                 value={userIdentity}
@@ -6252,11 +6252,11 @@ function App(){
                   const val=e.target.value;
                   setUserIdentity(val);
                   localStorage.setItem('nv_user_identity',val);
-                  if(val)try{addNotification(`ðŸ‘¤ ÄÃ£ nháº­n diá»‡n danh tÃ­nh: ${val}`,'info');}catch(err){}
+                  if(val)try{addNotification(`👤 Đã nhận diện danh tính: ${val}`,'info');}catch(err){}
                 }}
                 className="bg-transparent font-semibold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer max-w-[130px] truncate"
               >
-                <option value="">-- Chá»n tÃªn báº¡n --</option>
+                <option value="">-- Chọn tên bạn --</option>
                 {members.map(m=>(
                   <option key={m.id} value={m.name}>{m.name}</option>
                 ))}
@@ -6266,11 +6266,11 @@ function App(){
             {/* Gacha Daily Button */}
             <button
               onClick={()=>setGachaOpen(true)}
-              title="Gieo quáº» / Bá»‘c quáº» huyá»n há»c hÃ´m nay"
+              title="Gieo quẻ / Bốc quẻ huyền học hôm nay"
               className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-xs shadow-xs hover:brightness-105 transition active:scale-95 flex-shrink-0"
             >
-              <span>ðŸŽ´</span>
-              <span className="hidden sm:inline">Quáº» HÃ´m Nay</span>
+              <span>🎴</span>
+              <span className="hidden sm:inline">Quẻ Hôm Nay</span>
             </button>
 
             {/* Admin Mode Pill */}
@@ -6278,19 +6278,19 @@ function App(){
               <button
                 onClick={()=>{
                   setAdminMode(false);
-                  try{addNotification('ÄÃ£ Ä‘Äƒng xuáº¥t cháº¿ Ä‘á»™ Quáº£n trá»‹ BCN','info');}catch(err){}
+                  try{addNotification('Đã đăng xuất chế độ Quản trị BCN','info');}catch(err){}
                 }}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition"
-                title="Báº¥m Ä‘á»ƒ Ä‘Äƒng xuáº¥t cháº¿ Ä‘á»™ Quáº£n trá»‹ BCN"
+                title="Bấm để đăng xuất chế độ Quản trị BCN"
               >
-                <span>ðŸ‘‘</span>
-                <span className="hidden sm:inline">Quáº£n trá»‹ [ÄÄƒng xuáº¥t]</span>
+                <span>👑</span>
+                <span className="hidden sm:inline">Quản trị [Đăng xuất]</span>
               </button>
             ) : (
               <button
                 onClick={()=>setAdminLoginOpen(true)}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition"
-                title="ÄÄƒng nháº­p Quáº£n trá»‹ BCN"
+                title="Đăng nhập Quản trị BCN"
               >
                 <Icon name="key" size={13}/>
                 <span className="hidden sm:inline">BCN</span>
@@ -6301,9 +6301,9 @@ function App(){
             <button
               onClick={()=>setSettingsOpen(true)}
               title={
-                cloudStatus==='connected' ? `Firebase Firestore Realtime Ä‘ang hoáº¡t Ä‘á»™ng (Äá»“ng bá»™: ${lastSynced ? lastSynced.toLocaleTimeString('vi-VN') : 'vá»«a xong'})` :
-                cloudStatus==='syncing' ? 'Äang Ä‘á»“ng bá»™ dá»¯ liá»‡u lÃªn Firebase Cloud...' :
-                'Cháº¿ Ä‘á»™ Ngoáº¡i tuyáº¿n / LÆ°u cá»¥c bá»™ LocalStorage (Báº¥m Ä‘á»ƒ má»Ÿ cÃ i Ä‘áº·t)'
+                cloudStatus==='connected' ? `Firebase Firestore Realtime đang hoạt động (Đồng bộ: ${lastSynced ? lastSynced.toLocaleTimeString('vi-VN') : 'vừa xong'})` :
+                cloudStatus==='syncing' ? 'Đang đồng bộ dữ liệu lên Firebase Cloud...' :
+                'Chế độ Ngoại tuyến / Lưu cục bộ LocalStorage (Bấm để mở cài đặt)'
               }
               className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition ${
                 cloudStatus==='connected' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400' :
@@ -6317,21 +6317,21 @@ function App(){
                 'bg-slate-400'
               }`}/>
               <span className="text-[11px]">
-                {cloudStatus==='connected' ? 'Cloud Live' : cloudStatus==='syncing' ? 'Äang sync...' : 'Offline'}
+                {cloudStatus==='connected' ? 'Cloud Live' : cloudStatus==='syncing' ? 'Đang sync...' : 'Offline'}
               </span>
             </button>
 
             <button onClick={()=>setCmdOpen(true)} className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition text-slate-500 text-sm border border-slate-200 bg-white">
-              <Icon name="search" size={14}/><span className="text-xs text-slate-400">TÃ¬m kiáº¿m...</span><kbd className="text-[10px] bg-slate-100 text-slate-300 rounded px-1">Ctrl K</kbd>
+              <Icon name="search" size={14}/><span className="text-xs text-slate-400">Tìm kiếm...</span><kbd className="text-[10px] bg-slate-100 text-slate-300 rounded px-1">Ctrl K</kbd>
             </button>
             <button onClick={()=>setCmdOpen(true)} className="sm:hidden p-2 rounded-xl hover:bg-slate-100 transition"><Icon name="search" size={20} className="text-slate-600"/></button>
-            <button onClick={()=>setSoundEnabled(o=>!o)} title={soundEnabled?'Táº¯t Ã¢m thanh':'Báº­t Ã¢m thanh'} className="p-2 rounded-xl hover:bg-slate-100 transition">
+            <button onClick={()=>setSoundEnabled(o=>!o)} title={soundEnabled?'Tắt âm thanh':'Bật âm thanh'} className="p-2 rounded-xl hover:bg-slate-100 transition">
               <Icon name={soundEnabled?'volume-2':'volume-x'} size={18} className="text-slate-500"/>
             </button>
-            <button onClick={()=>setDarkMode(o=>!o)} title="Chuyá»ƒn sÃ¡ng/tá»‘i" className="p-2 rounded-xl hover:bg-slate-100 transition">
+            <button onClick={()=>setDarkMode(o=>!o)} title="Chuyển sáng/tối" className="p-2 rounded-xl hover:bg-slate-100 transition">
               <Icon name={darkMode?'sun':'moon'} size={18} className="text-slate-500"/>
             </button>
-            <button onClick={()=>setSettingsOpen(true)} title="CÃ i Ä‘áº·t giao diá»‡n & há»‡ thá»‘ng" className="p-2 rounded-xl hover:bg-slate-100 transition text-slate-600 hover:text-slate-800">
+            <button onClick={()=>setSettingsOpen(true)} title="Cài đặt giao diện & hệ thống" className="p-2 rounded-xl hover:bg-slate-100 transition text-slate-600 hover:text-slate-800">
               <Icon name="settings" size={18}/>
             </button>
             <NotificationBell/>
@@ -6353,25 +6353,25 @@ function App(){
               </div>
               {item.isBcn&&(
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${bcnUnlocked?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-800'}`}>
-                  {bcnUnlocked?'Má»ž':'PIN'}
+                  {bcnUnlocked?'MỞ':'PIN'}
                 </span>
               )}
               {item.isLocked && !adminMode && (
                 <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-400 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                  <Icon name="lock" size={10}/>KhÃ³a
+                  <Icon name="lock" size={10}/>Khóa
                 </span>
               )}
             </button>
           ))}
           <button onClick={()=>setActiveTab('notifications')} className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 w-full text-left ${activeTab==='notifications'?'active':''}`}>
             <Icon name="bell" size={18} className={activeTab==='notifications'?'text-primary':'text-slate-400'}/>
-            <span>ThÃ´ng bÃ¡o</span>
+            <span>Thông báo</span>
             {unreadCount>0&&<span className="ml-auto bg-red-500 text-white text-[11px] font-bold rounded-full px-1.5 py-0.5 leading-none">{unreadCount}</span>}
           </button>
           <div className="mt-auto pt-4 border-t border-slate-100 px-2">
             <div className="flex items-center gap-2 text-[10px] text-slate-400">
               <div className="w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0 theme-brand-bg" style={{background:'var(--brand-gradient)'}}><Icon name="eye" size={10} className="text-white"/></div>
-              <div><p className="font-bold text-slate-600 dark:text-slate-300 text-[11px]">NewVision HUP v2.5</p><p>ÄH DÆ°á»£c HN â€¢ Cloud Firestore âœ“</p></div>
+              <div><p className="font-bold text-slate-600 dark:text-slate-300 text-[11px]">NewVision HUP v2.5</p><p>ĐH Dược HN • Cloud Firestore ✓</p></div>
             </div>
           </div>
         </aside>
@@ -6383,14 +6383,14 @@ function App(){
               <div className="flex items-center justify-between mb-4 px-2">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center theme-brand-bg" style={{background:'var(--brand-gradient)'}}><Icon name="eye" size={15} className="text-white"/></div>
-                  <div><span className="font-extrabold text-slate-800">NewVision HUP</span><p className="text-[10px] text-slate-400">CLB Ká»¹ nÄƒng má»m â€“ ÄH DÆ°á»£c HN</p></div>
+                  <div><span className="font-extrabold text-slate-800">NewVision HUP</span><p className="text-[10px] text-slate-400">CLB Kỹ năng mềm – ĐH Dược HN</p></div>
                 </div>
                 <button onClick={()=>setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100"><Icon name="x" size={18} className="text-slate-500"/></button>
               </div>
 
               {/* Mobile Identity Selector */}
               <div className="mb-2 px-2 py-1.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                <span className="text-slate-400 font-semibold block mb-1">ðŸ‘¤ Báº¡n lÃ :</span>
+                <span className="text-slate-400 font-semibold block mb-1">👤 Bạn là:</span>
                 <select
                   value={userIdentity}
                   onChange={e=>{
@@ -6400,21 +6400,21 @@ function App(){
                   }}
                   className="w-full bg-white border border-slate-200 rounded-lg p-1 font-semibold text-slate-700"
                 >
-                  <option value="">-- Chá»n tÃªn báº¡n --</option>
+                  <option value="">-- Chọn tên bạn --</option>
                   {members.map(m=>(
                     <option key={m.id} value={m.name}>{m.name}</option>
                   ))}
                 </select>
               </div>
 
-              {[...NAV_ITEMS,{id:'notifications',label:'ThÃ´ng bÃ¡o',icon:'bell'}].map(item=>(
+              {[...NAV_ITEMS,{id:'notifications',label:'Thông báo',icon:'bell'}].map(item=>(
                 <button key={item.id} onClick={()=>{setActiveTab(item.id);setSidebarOpen(false)}} className={`sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left ${activeTab===item.id?'active':'text-slate-600'}`}>
                   <div className="flex items-center gap-3">
                     <Icon name={item.icon} size={18} className={activeTab===item.id?'text-primary':item.isBcn?'text-amber-500':'text-slate-400'}/>
                     <span className={item.isBcn?'font-bold text-amber-700':''}>{item.label}</span>
                   </div>
-                  {item.isBcn&&<span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-full">{bcnUnlocked?'Má»ž':'PIN'}</span>}
-                  {item.isLocked&&!adminMode&&<span className="text-[10px] text-slate-400 font-bold">KhÃ³a</span>}
+                  {item.isBcn&&<span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-full">{bcnUnlocked?'MỞ':'PIN'}</span>}
+                  {item.isLocked&&!adminMode&&<span className="text-[10px] text-slate-400 font-bold">Khóa</span>}
                   {item.id==='notifications'&&unreadCount>0&&<span className="ml-auto bg-red-500 text-white text-[11px] font-bold rounded-full px-1.5 py-0.5">{unreadCount}</span>}
                 </button>
               ))}
