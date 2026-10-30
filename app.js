@@ -323,8 +323,6 @@ function AppProvider({children}){
   const[userIdentity,setUserIdentity]=useLocalStorage('nv_user_identity','');
   const[clubRules,setClubRules]=useState('');
   const[penaltyAccount,setPenaltyAccount]=useState(null);
-  const[qrAccounts,setQrAccounts]=useState({});
-  const[clubFunds,setClubFunds]=useState([]);
   const[loadedTabs,setLoadedTabs]=useState(()=>new Set(['dashboard']));
   const activeUnsubsRef=useRef({});
   const loadTab=useCallback(tab=>{
@@ -336,7 +334,7 @@ function AppProvider({children}){
       return next;
     });
   },[]);
-  const[darkMode,setDarkMode]=useLocalStorage('nv_dark',true);
+  const[darkMode,setDarkMode]=useLocalStorage('nv_dark',false);
   const[soundEnabled,setSoundEnabled]=useLocalStorage('nv_sound',true);
   const[toasts,setToasts]=useState([]);
   const[mascotState,setMascotState]=useState('idle');
@@ -541,25 +539,6 @@ function AppProvider({children}){
           activeUnsubsRef.current['penalty_account']=unsubBank;
         }catch(e){}
       }
-      if(!activeUnsubsRef.current['club_qr_accounts']){
-        try{
-          const unsubQr=fbDb.collection('club_qr_accounts').onSnapshot(snap=>{
-            const accs={};
-            snap.docs.forEach(d=>{
-              const data=d.data()||{};
-              accs[d.id]=data;
-              if(data.unit) accs[data.unit]=data;
-            });
-            setQrAccounts(accs);
-            if(accs['all']||accs['clb_common']){
-              setPenaltyAccount(accs['all']||accs['clb_common']);
-            }
-            setCloudStatus('connected');
-            setLastSynced(new Date());
-          },err=>console.warn('club_qr_accounts sync error:',err));
-          activeUnsubsRef.current['club_qr_accounts']=unsubQr;
-        }catch(e){}
-      }
       if(!activeUnsubsRef.current['club_rules']){
         try{
           const unsubRules=fbDb.collection('club_settings').doc('rules').onSnapshot(d=>{
@@ -577,7 +556,6 @@ function AppProvider({children}){
       listenCol('resources',setResources,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
       listenCol('inventory',setInventory,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
       listenCol('expenses',setExpenses,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-      listenCol('club_funds',setClubFunds,list=>list.sort((a,b)=>(b.date||b.createdAt||'').localeCompare(a.date||a.createdAt||'')));
     }
     if(loadedTabs.has('bcn')){
       listenCol('bcnPlans',setBcnPlans,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
@@ -730,7 +708,7 @@ function AppProvider({children}){
       notifications,addNotification,markRead,markAllRead,unreadCount,
       resources,setResources,studyResources,setStudyResources,penalties,setPenalties,inventory,setInventory,expenses,setExpenses,
       sessions,setSessions,assignTasks,setAssignTasks,
-      adminMode,setAdminMode,userIdentity,setUserIdentity,clubRules,setClubRules,penaltyAccount,setPenaltyAccount,qrAccounts,setQrAccounts,clubFunds,setClubFunds,
+      adminMode,setAdminMode,userIdentity,setUserIdentity,clubRules,setClubRules,penaltyAccount,setPenaltyAccount,
       darkMode,setDarkMode,soundEnabled,setSoundEnabled,
       theme,setTheme,mascotType,setMascotType,catEnabled,setCatEnabled,
       bcnPin,setBcnPin,bcnUnlocked,setBcnUnlocked,bcnNotes,setBcnNotes,bcnPlans,setBcnPlans,
@@ -1942,7 +1920,7 @@ function BcnRoomPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('📝 Đã lưu ghi chú BCN cho thành viên!','success');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu ghi chú BCN:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -1954,7 +1932,7 @@ function BcnRoomPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification(`Đã cập nhật đánh giá thành viên thành: ${newEval}`,'info');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu đánh giá thành viên:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -1967,7 +1945,7 @@ function BcnRoomPage(){
       triggerCat('celebrate');
       try{addNotification(`✅ Đã duyệt quyết toán cho ${exp.person||'thành viên'}: ${fmtVND(exp.amount)}`,'success');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi duyệt quyết toán:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -1982,7 +1960,7 @@ function BcnRoomPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification(`⚠️ Đã yêu cầu giải trình khoản chi "${exp.name}"`,'warning');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi từ chối quyết toán:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2007,7 +1985,7 @@ function BcnRoomPage(){
       try{playSound('success');}catch(e){}
       try{addNotification('🎯 Đã lưu kế hoạch tác chiến mật!','success');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu kế hoạch BCN:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2020,7 +1998,7 @@ function BcnRoomPage(){
       await fbDb.collection('bcnPlans').doc(planId).set({milestones:updatedMilestones},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi cập nhật mốc tiến độ:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2031,7 +2009,7 @@ function BcnRoomPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('Đã xóa kế hoạch BCN','info');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa kế hoạch:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2549,7 +2527,7 @@ function Dashboard({setActiveTab}){
       setShowCLForm(false);
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi thêm checklist:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2563,7 +2541,7 @@ function Dashboard({setActiveTab}){
       await fbDb.collection('quickChecklist').doc(id).set({done:newDone},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi cập nhật checklist:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2577,7 +2555,7 @@ function Dashboard({setActiveTab}){
       await batch.commit();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi reset checklist:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2587,7 +2565,7 @@ function Dashboard({setActiveTab}){
       await fbDb.collection('quickChecklist').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa checklist:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2605,7 +2583,7 @@ function Dashboard({setActiveTab}){
       setShowLinkForm(false);
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi thêm quick link:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2615,16 +2593,16 @@ function Dashboard({setActiveTab}){
       await fbDb.collection('quickLinks').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa quick link:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
   const stats=[
-    {label:'Việc đang chạy',value:activeTasks.length,icon:'list-todo',gradient:'from-orange-500 to-amber-600',customClass:'stat-card-orange',onClick:()=>setActiveTab('events')},
-    {label:'Việc quá hạn',value:overdueTasks.length,icon:'alarm-clock',gradient:'from-red-500 to-red-700',customClass:'stat-card-red',onClick:()=>setActiveTab('events')},
-    {label:'Quyết định chờ chốt',value:pendingDecisions.length,icon:'file-question',gradient:'from-yellow-400 to-amber-500',customClass:'stat-card-yellow',onClick:()=>setActiveTab('decisions')},
-    {label:'Tổng thành viên/CTV',value:members.length,icon:'users',gradient:'from-emerald-500 to-teal-700',customClass:'stat-card-green',onClick:()=>setActiveTab('members')},
+    {label:'Việc đang chạy',value:activeTasks.length,icon:'list-todo',gradient:'from-blue-600 to-blue-800',onClick:()=>setActiveTab('events')},
+    {label:'Việc quá hạn',value:overdueTasks.length,icon:'alarm-clock',gradient:'from-red-500 to-red-700',onClick:()=>setActiveTab('events')},
+    {label:'Quyết định chờ chốt',value:pendingDecisions.length,icon:'file-question',gradient:'from-amber-500 to-orange-600',onClick:()=>setActiveTab('decisions')},
+    {label:'Tổng thành viên/CTV',value:members.length,icon:'users',gradient:'from-emerald-500 to-teal-700',onClick:()=>setActiveTab('members')},
   ];
 
   return(
@@ -2635,7 +2613,7 @@ function Dashboard({setActiveTab}){
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((s,i)=>(
-          <button key={i} onClick={s.onClick} className={`bg-gradient-to-br ${s.gradient} ${s.customClass||""} text-white rounded-2xl p-4 text-left hover:opacity-90 transition-all shadow-md`}>
+          <button key={i} onClick={s.onClick} className={`bg-gradient-to-br ${s.gradient} text-white rounded-2xl p-4 text-left hover:opacity-90 transition-opacity shadow-md`}>
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3"><Icon name={s.icon} size={20} className="text-white"/></div>
             <div className="text-3xl font-bold leading-none">{s.value}</div>
             <div className="text-xs font-medium opacity-80 mt-1">{s.label}</div>
@@ -2834,7 +2812,7 @@ function DecisionsPage(){
       }
       handleClose();
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu quyết định:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2850,7 +2828,7 @@ function DecisionsPage(){
         triggerMascot('gavel','⚖️ Đã chốt chính thức!');
       }
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi đổi trạng thái:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2868,7 +2846,7 @@ function DecisionsPage(){
       setPollInput(p=>({...p,[dId]:''}));
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi thêm phương án:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2882,7 +2860,7 @@ function DecisionsPage(){
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi bỏ phiếu:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2902,7 +2880,7 @@ function DecisionsPage(){
       await fbDb.collection('decisions').doc(dId).set({poll:updatedPoll},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa phương án:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -2913,7 +2891,7 @@ function DecisionsPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('Đã xóa vấn đề','info');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa quyết định:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3300,7 +3278,7 @@ function EventDetail({event,onBack}){
       }
       handleTaskClose();
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu công việc sự kiện:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3326,7 +3304,7 @@ function EventDetail({event,onBack}){
         try{addNotification(`🔄 Mở lại: "${task.title}"`,'warning');}catch(e){}
       }
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi đổi trạng thái công việc:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3343,7 +3321,7 @@ function EventDetail({event,onBack}){
         try{playSound('pop');}catch(e){}
       }catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa công việc:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3352,7 +3330,7 @@ function EventDetail({event,onBack}){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('events').doc(updEv.id).set(updEv,{merge:true});
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu Live Event:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3551,7 +3529,7 @@ function EventsPage(){
       }
       handleClose();
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu sự kiện:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3562,7 +3540,7 @@ function EventsPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('Đã xóa sự kiện','info');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa sự kiện:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3812,7 +3790,7 @@ function MembersPage(){
       }
       handleClose();
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu thành viên:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3830,7 +3808,7 @@ function MembersPage(){
       await fbDb.collection('members').doc(mId).set({attendance:{...curAtt,[sId]:val}},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu điểm danh:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3842,7 +3820,7 @@ function MembersPage(){
       await fbDb.collection('members').doc(mId).set({taskStatus:{...curStat,[tId]:val}},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu bài tập:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3851,7 +3829,7 @@ function MembersPage(){
       if(!fbDb)throw new Error('Firebase chưa kết nối!');
       await fbDb.collection('members').doc(mId).set({note},{merge:true});
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu ghi chú:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3861,7 +3839,7 @@ function MembersPage(){
       await fbDb.collection('members').doc(mId).set({eval:val},{merge:true});
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu đánh giá:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3874,7 +3852,7 @@ function MembersPage(){
       setNewSession('');
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi thêm buổi sinh hoạt:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3884,7 +3862,7 @@ function MembersPage(){
       await fbDb.collection('sessions').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa buổi sinh hoạt:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3897,7 +3875,7 @@ function MembersPage(){
       setNewATask('');
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi thêm nhiệm vụ:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3907,7 +3885,7 @@ function MembersPage(){
       await fbDb.collection('assignTasks').doc(id).delete();
       try{playSound('pop');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa nhiệm vụ:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -3918,7 +3896,7 @@ function MembersPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification('Đã xóa thành viên','info');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa thành viên:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -4392,7 +4370,6 @@ function GachaModal({isOpen,onClose}){
 // ============================================================
 // ============================================================
 // ============================================================
-// ============================================================
 // VIETNAMESE POPULAR BANKS & E-WALLETS (VIETQR / NAPAS STANDARDS)
 // ============================================================
 const POPULAR_BANKS = [
@@ -4432,39 +4409,6 @@ const getVietQrBankCode = (bankCode) => {
     return found.code;
   }
   return upper;
-};
-
-// Đơn vị và mapping tài liệu Firestore club_qr_accounts
-const QR_DOC_KEYS = {
-  'all': 'clb_common',
-  'Toàn CLB': 'clb_common',
-  'Toàn CLB (Quỹ chung)': 'clb_common',
-  'Nội vụ': 'ban_noivu',
-  'Ban Nội Vụ': 'ban_noivu',
-  'Sự kiện': 'ban_sukien',
-  'Ban Sự Kiện': 'ban_sukien',
-  'Truyền thông': 'ban_truyenthong',
-  'Ban Truyền Thông': 'ban_truyenthong',
-  'Đối ngoại': 'ban_doingoai',
-  'Ban Đối Ngoại': 'ban_doingoai'
-};
-
-const QR_UNITS = [
-  { id: 'all', docKey: 'clb_common', label: 'Toàn CLB (Quỹ chung)', short: 'CLB' },
-  { id: 'Nội vụ', docKey: 'ban_noivu', label: 'Ban Nội Vụ', short: 'NOIVU' },
-  { id: 'Sự kiện', docKey: 'ban_sukien', label: 'Ban Sự Kiện', short: 'SUKIEN' },
-  { id: 'Truyền thông', docKey: 'ban_truyenthong', label: 'Ban Truyền Thông', short: 'TRUYENTHONG' },
-  { id: 'Đối ngoại', docKey: 'ban_doingoai', label: 'Ban Đối Ngoại', short: 'DOINGOAI' }
-];
-
-const removeVietnameseTones = (str) => {
-  if (!str) return '';
-  return str
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd').replace(/Đ/g, 'D')
-    .replace(/[^a-zA-Z0-9 ]/g, '')
-    .trim();
 };
 
 // Hàm nén ảnh mã QR sang Base64 nhỏ gọn (max 600px, quality 0.85, an toàn Firestore < 1MB)
@@ -4516,33 +4460,16 @@ const compressQrImageFile = (file) => {
 };
 
 // ============================================================
-// VIETQR & PAYMENT QR MODAL (HỖ TRỢ QR TỪNG BAN & QUỸ CHUNG)
+// VIETQR & PAYMENT QR MODAL
 // ============================================================
 function VietQRModal({ isOpen, onClose, penalty }) {
-  const { playSound, addNotification, penaltyAccount, qrAccounts = {} } = useContext(AppCtx);
+  const { playSound, addNotification, penaltyAccount } = useContext(AppCtx);
   const [copied, setCopied] = useState(false);
   if (!isOpen || !penalty) return null;
 
-  // Kiểm tra Ban của bản ghi phạt để lấy đúng tài khoản QR
-  const ban = (penalty.ban || '').trim();
-  const banDocKey = QR_DOC_KEYS[ban] || ban;
-  const banAcc = (qrAccounts && (qrAccounts[banDocKey] || qrAccounts[ban]));
-  const commonAcc = (qrAccounts && (qrAccounts['clb_common'] || qrAccounts['all'])) || penaltyAccount;
-
-  let activeAccount = null;
-  let unitScopeLabel = '';
-
-  if (banAcc && (banAcc.accountNo?.trim() || banAcc.customQrUrl?.trim())) {
-    activeAccount = banAcc;
-    unitScopeLabel = `Ban ${ban}`;
-  } else if (commonAcc && (commonAcc.accountNo?.trim() || commonAcc.customQrUrl?.trim())) {
-    activeAccount = commonAcc;
-    unitScopeLabel = ban ? `Quỹ chung CLB (Ban ${ban} chưa có QR riêng)` : 'Quỹ chung CLB';
-  }
-
-  const hasCustomQr = !!(activeAccount && activeAccount.customQrUrl && activeAccount.customQrUrl.trim());
-  const hasBankAcc = !!(activeAccount && activeAccount.accountNo && activeAccount.accountNo.trim());
-  const isConfigured = !!activeAccount && (hasCustomQr || hasBankAcc);
+  const hasCustomQr = !!(penaltyAccount && penaltyAccount.customQrUrl && penaltyAccount.customQrUrl.trim());
+  const hasBankAcc = !!(penaltyAccount && penaltyAccount.accountNo && penaltyAccount.accountNo.trim());
+  const isConfigured = hasCustomQr || hasBankAcc;
 
   if (!isConfigured) {
     return (
@@ -4556,7 +4483,7 @@ function VietQRModal({ isOpen, onClose, penalty }) {
               BCN chưa cấu hình thông tin chuyển khoản
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-              Chưa có thông tin tài khoản cho {ban ? `Ban ${ban}` : 'CLB'} và Quỹ chung CLB cũng chưa được thiết lập. Vui lòng liên hệ BCN hoặc Quản trị viên mở phần cài đặt tài khoản để cấu hình.
+              Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng hoặc tải ảnh mã QR để nhận tiền nộp phạt vào quỹ CLB. Vui lòng liên hệ BCN hoặc Quản trị viên mở phần cài đặt tài khoản để cấu hình.
             </p>
           </div>
           <button onClick={onClose} className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl">
@@ -4568,25 +4495,20 @@ function VietQRModal({ isOpen, onClose, penalty }) {
   }
 
   const amount = Math.abs(penalty.amount || 20000);
-  const rawBank = activeAccount.bank ? activeAccount.bank.trim().toUpperCase() : 'MB';
-  const bankDisplay = activeAccount.bankName || rawBank;
-  const accNo = activeAccount.accountNo ? activeAccount.accountNo.trim() : '';
+  const rawBank = penaltyAccount.bank ? penaltyAccount.bank.trim().toUpperCase() : 'MB';
+  const bankDisplay = penaltyAccount.bankName || rawBank;
+  const accNo = penaltyAccount.accountNo ? penaltyAccount.accountNo.trim() : '';
   const qrIdentifier = getVietQrBankCode(rawBank);
-
-  // Nội dung chuyển khoản tự sinh chuẩn: NVPHAT [TEN_BAN] [TEN_TV]
-  const banTag = removeVietnameseTones(penalty.ban || 'CLB').toUpperCase().replace(/\s+/g, '');
-  const nameTag = removeVietnameseTones(penalty.name || '').toUpperCase();
-  const transferContent = `NVPHAT ${banTag} ${nameTag}`.trim();
 
   // Ưu tiên ảnh QR tải lên nếu có, ngược lại tự động tạo mã VietQR chuẩn
   const qrUrl = hasCustomQr
-    ? activeAccount.customQrUrl.trim()
-    : `https://img.vietqr.io/image/${qrIdentifier}-${accNo}-compact.png?amount=${amount}&addInfo=${encodeURIComponent(transferContent)}`;
+    ? penaltyAccount.customQrUrl.trim()
+    : `https://img.vietqr.io/image/${qrIdentifier}-${accNo}-compact.png?amount=${amount}&addInfo=NVPHAT%20${encodeURIComponent(penalty.name || '')}`;
 
   const copyInfo = () => {
-    const namePart = activeAccount.accountName ? ` - Chu TK: ${activeAccount.accountName}` : '';
+    const namePart = penaltyAccount.accountName ? ` - Chu TK: ${penaltyAccount.accountName}` : '';
     const accPart = accNo ? ` - STK: ${accNo}` : '';
-    const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: ${transferContent}`;
+    const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: NVPHAT ${penalty.name}`;
     try {
       navigator.clipboard.writeText(text);
       setCopied(true);
@@ -4597,37 +4519,27 @@ function VietQRModal({ isOpen, onClose, penalty }) {
   };
 
   return (
-    <Modal open={isOpen} onClose={onClose} title="Quét Mã QR Nộp Quỹ">
-      <div className="flex flex-col items-center space-y-3.5 py-1">
-        {/* Đơn vị nhận badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-          <Icon name="credit-card" size={13} />
-          <span>Tài khoản nhận: {unitScopeLabel}</span>
-        </div>
-
-        <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200 w-full max-w-xs text-center">
+    <Modal open={isOpen} onClose={onClose} title={hasCustomQr ? "Quét Mã QR Nộp Quỹ" : "Quét Mã VietQR Nộp Quỹ"}>
+      <div className="flex flex-col items-center space-y-4 py-2">
+        <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
           <img
             src={qrUrl}
             alt="Mã QR Chuyển Khoản"
-            className="w-56 h-auto rounded-xl mx-auto max-h-64 object-contain"
+            className="w-64 h-auto rounded-xl mx-auto max-h-72 object-contain"
             onError={e => {
-              e.target.src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(transferContent);
+              e.target.src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20' + encodeURIComponent(penalty.name || '');
             }}
           />
           {hasCustomQr && (
             <div className="mt-2 text-center">
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                <Icon name="check-circle" size={12} /> Ảnh QR do Trưởng ban/BCN tải lên
+                <Icon name="check-circle" size={12} /> Ảnh QR chính thức do BCN tải lên
               </span>
             </div>
           )}
         </div>
 
         <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
-          <div className="flex justify-between">
-            <span className="text-slate-500">Đơn vị nhận:</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200">{unitScopeLabel}</span>
-          </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Ngân hàng / Ví:</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
@@ -4638,24 +4550,24 @@ function VietQRModal({ isOpen, onClose, penalty }) {
               <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{accNo}</span>
             </div>
           )}
-          {activeAccount.accountName && (
+          {penaltyAccount.accountName && (
             <div className="flex justify-between">
               <span className="text-slate-500">Chủ tài khoản / ví:</span>
-              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{activeAccount.accountName}</span>
+              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{penaltyAccount.accountName}</span>
             </div>
           )}
           <div className="flex justify-between">
             <span className="text-slate-500">Số tiền nộp:</span>
             <span className="font-bold text-amber-600">{amount.toLocaleString('vi-VN')} đ</span>
           </div>
-          <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-700">
-            <span className="text-slate-500 font-semibold">Nội dung CK:</span>
-            <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs">{transferContent}</span>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Nội dung CK:</span>
+            <span className="font-mono font-bold text-emerald-600">NVPHAT {penalty.name}</span>
           </div>
         </div>
 
         <div className="flex gap-2 w-full pt-1">
-          <button onClick={copyInfo} className="btn-secondary flex-1 py-2 text-xs flex items-center justify-center gap-1.5 font-bold">
+          <button onClick={copyInfo} className="btn-secondary flex-1 py-2 text-xs flex items-center justify-center gap-1.5">
             <Icon name={copied ? 'check' : 'copy'} size={14} />
             <span>{copied ? 'Đã sao chép' : 'Sao chép thông tin'}</span>
           </button>
@@ -4668,12 +4580,11 @@ function VietQRModal({ isOpen, onClose, penalty }) {
   );
 }
 
-
 // ============================================================
 // NỘI QUY & THƯỞNG PHẠT (PENALTIES & REWARDS MODULE)
 // ============================================================
 function PenaltiesPage() {
-  const { penalties, setPenalties, adminMode, addNotification, playSound, members, clubRules, setClubRules, penaltyAccount, setPenaltyAccount, qrAccounts = {}, setQrAccounts } = useContext(AppCtx);
+  const { penalties, setPenalties, adminMode, addNotification, playSound, members, clubRules, setClubRules, penaltyAccount, setPenaltyAccount } = useContext(AppCtx);
   const [subTab, setSubTab] = useState('penalties'); // 'penalties' | 'rules'
   const [modal, setModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -4682,8 +4593,7 @@ function PenaltiesPage() {
   const [filterBan, setFilterBan] = useState('');
   const [confirmDel, setConfirmDel] = useState(null);
 
-      // Bank settings state (Hỗ trợ từng Ban & Toàn CLB)
-  const [selectedUnit, setSelectedUnit] = useState('all');
+    // Bank settings state
   const [bankModal, setBankModal] = useState(false);
   const [bankForm, setBankForm] = useState({
     bank: 'MB',
@@ -4695,31 +4605,16 @@ function PenaltiesPage() {
   const [bankSaving, setBankSaving] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
 
-  const loadUnitIntoForm = (unitId) => {
-    setSelectedUnit(unitId);
-    const docKey = QR_DOC_KEYS[unitId] || unitId;
-    const acc = (qrAccounts && (qrAccounts[docKey] || qrAccounts[unitId])) || (unitId === 'all' ? penaltyAccount : null);
-    if (acc) {
+  const openBankModal = () => {
+    if (penaltyAccount) {
       setBankForm({
-        bank: acc.bank || 'MB',
-        bankName: acc.bankName || 'MB Bank (Quân Đội)',
-        accountNo: acc.accountNo || '',
-        accountName: acc.accountName || '',
-        customQrUrl: acc.customQrUrl || ''
-      });
-    } else {
-      setBankForm({
-        bank: 'MB',
-        bankName: 'MB Bank (Quân Đội)',
-        accountNo: '',
-        accountName: '',
-        customQrUrl: ''
+        bank: penaltyAccount.bank || 'MB',
+        bankName: penaltyAccount.bankName || 'MB Bank (Quân Đội)',
+        accountNo: penaltyAccount.accountNo || '',
+        accountName: penaltyAccount.accountName || '',
+        customQrUrl: penaltyAccount.customQrUrl || ''
       });
     }
-  };
-
-  const openBankModal = () => {
-    loadUnitIntoForm('all');
     setBankModal(true);
   };
 
@@ -4755,14 +4650,7 @@ function PenaltiesPage() {
     setBankSaving(true);
     try {
       if (!fbDb) throw new Error('Firebase chưa kết nối!');
-      const unitDocKey = QR_DOC_KEYS[selectedUnit] || selectedUnit;
-      const unitObj = QR_UNITS.find(u => u.id === selectedUnit);
-      const unitLabel = unitObj ? unitObj.label : selectedUnit;
-
       const cleanData = {
-        unit: selectedUnit,
-        unitDocKey,
-        unitLabel,
         bank: bankForm.bank.trim().toUpperCase(),
         bankName: bankForm.bankName.trim(),
         accountNo: bankForm.accountNo.trim(),
@@ -4771,20 +4659,10 @@ function PenaltiesPage() {
         updatedAt: new Date().toISOString(),
         updatedBy: 'Admin BCN'
       };
-
-      await fbDb.collection('club_qr_accounts').doc(unitDocKey).set(cleanData, { merge: true });
-
-      if (selectedUnit === 'all' || selectedUnit === 'Toàn CLB') {
-        await fbDb.collection('club_settings').doc('penalty_account').set(cleanData, { merge: true });
-        if (setPenaltyAccount) setPenaltyAccount(cleanData);
-      }
-
-      if (setQrAccounts) {
-        setQrAccounts(prev => ({ ...prev, [unitDocKey]: cleanData, [selectedUnit]: cleanData }));
-      }
-
+      await fbDb.collection('club_settings').doc('penalty_account').set(cleanData, { merge: true });
+      if (setPenaltyAccount) setPenaltyAccount(cleanData);
       try { playSound('success'); } catch (err) {}
-      try { addNotification(✅ Đã lưu cấu hình tài khoản nộp phạt cho !, 'success'); } catch (err) {}
+      try { addNotification('✅ Đã lưu cấu hình tài khoản nộp phạt lên Firestore!', 'success'); } catch (err) {}
       setBankModal(false);
     } catch (err) {
       alert('Lỗi lưu tài khoản: ' + err.message);
@@ -4793,7 +4671,7 @@ function PenaltiesPage() {
     }
   };
 
-  // Club rules editing state
+// Club rules editing state
   const [editingRules, setEditingRules] = useState(false);
   const [rulesDraft, setRulesDraft] = useState('');
   const [rulesSaving, setRulesSaving] = useState(false);
@@ -5279,31 +5157,12 @@ function PenaltiesPage() {
             </form>
           </Modal>
 
-                              {/* Modal Cài đặt tài khoản nhận nộp phạt */}
+                    {/* Modal Cài đặt tài khoản nhận nộp phạt */}
           <Modal open={bankModal} onClose={() => setBankModal(false)} title="⚙️ Cài Đặt Tài Khoản Nhận Nộp Phạt">
             <form onSubmit={handleSaveBank} className="space-y-4">
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Cấu hình tài khoản ngân hàng / ví điện tử hoặc tải ảnh QR riêng cho <b>từng Ban</b> hoặc <b>Toàn CLB (Quỹ chung)</b>. Khi thành viên nộp phạt, hệ thống sẽ tự động hiển thị đúng QR của Ban đó.
+                Cấu hình thông tin tài khoản ngân hàng hoặc ví điện tử của Ban Chủ Nhiệm / Thủ quỹ để tự động sinh mã VietQR hoặc sử dụng ảnh QR riêng khi thành viên nộp phạt.
               </p>
-
-              {/* Selector for target unit */}
-              <div>
-                <label className="form-label font-bold text-indigo-700 dark:text-indigo-400">
-                  Đơn vị áp dụng tài khoản <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedUnit}
-                  onChange={e => loadUnitIntoForm(e.target.value)}
-                  className="form-input border-indigo-300 dark:border-indigo-700 bg-indigo-50/40 dark:bg-indigo-950/20 font-bold"
-                >
-                  {QR_UNITS.map(u => (
-                    <option key={u.id} value={u.id}>{u.label}</option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  💡 Chọn đơn vị để xem và chỉnh sửa thông tin tài khoản / QR riêng của đơn vị đó.
-                </p>
-              </div>
 
               <div>
                 <label className="form-label">Ngân hàng / Ví điện tử thụ hưởng <span className="text-red-500">*</span></label>
@@ -5399,10 +5258,10 @@ function PenaltiesPage() {
                     />
                     <div className="text-xs space-y-1 min-w-0">
                       <p className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <Icon name="check-circle" size={13} /> Đã có ảnh QR riêng cho {QR_UNITS.find(u => u.id === selectedUnit)?.label}
+                        <Icon name="check-circle" size={13} /> Đã có ảnh QR tải từ thiết bị
                       </p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                        Hệ thống sẽ <strong>ưu tiên hiển thị ảnh QR này</strong> thay cho mã tự sinh khi thành viên nộp phạt cho đơn vị này.
+                        Hệ thống sẽ <strong>ưu tiên hiển thị ảnh QR này</strong> thay cho mã tự sinh khi thành viên bấm "Nộp phạt".
                       </p>
                     </div>
                   </div>
@@ -5417,7 +5276,7 @@ function PenaltiesPage() {
               {!bankForm.customQrUrl && bankForm.accountNo && bankForm.bank && (
                 <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-3">
                   <img
-                    src={https://img.vietqr.io/image/--compact.png?amount=20000&addInfo=XEMTRUOC}
+                    src={`https://img.vietqr.io/image/${getVietQrBankCode(bankForm.bank)}-${bankForm.accountNo}-compact.png?amount=20000&addInfo=XEMTRUOC`}
                     alt="Preview QR"
                     className="w-14 h-14 rounded-lg border bg-white object-contain flex-shrink-0"
                     onError={e => { e.target.style.display = 'none'; }}
@@ -5447,7 +5306,7 @@ function PenaltiesPage() {
                   className="btn-primary flex-1 font-bold"
                   disabled={bankSaving || uploadingQr}
                 >
-                  {bankSaving ? 'Đang lưu...' : '💾 Lưu cấu hình ' + (QR_UNITS.find(u => u.id === selectedUnit)?.short || '')}
+                  {bankSaving ? 'Đang lưu...' : '💾 Lưu cấu hình'}
                 </button>
               </div>
             </form>
@@ -5461,371 +5320,169 @@ function PenaltiesPage() {
   );
 }
 // ============================================================
-// ============================================================
-// TÀI NGUYÊN & QUỸ CLB (RESOURCES, INVENTORY & CLUB FUNDS)
-// ============================================================
-const FUND_BANS = ['Quỹ CLB', 'Ban Nội Vụ', 'Ban Sự Kiện', 'Ban Truyền Thông', 'Ban Đối Ngoại'];
+function ResourcesPage(){
+  const{resources,setResources,inventory,setInventory,expenses,setExpenses,addNotification,studyResources,events}=useContext(AppCtx);
+  const[dupWarning,setDupWarning]=useState(null);
+  const[tab,setTab]=useState('links');
+  const[modal,setModal]=useState(false);
+  const[editing,setEditing]=useState(null);
+  const[confirmDel,setConfirmDel]=useState(null);
+  const[filterBan,setFilterBan]=useState('');
+  const[filterType,setFilterType]=useState('');
+  const emptyLink={title:'',url:'',ban:'',type:LINK_TYPES[0],note:''};
+  const emptyInv={name:'',quantity:1,status:'Tốt',keeper:'',location:'',note:''};
+  const emptyExp={name:'',amount:'',person:'',ban:'',status:'Dự trù',note:''};
+  const[linkForm,setLinkForm]=useState(emptyLink);
+  const[invForm,setInvForm]=useState(emptyInv);
+  const[expForm,setExpForm]=useState(emptyExp);
 
-function ResourcesPage() {
-  const {
-    resources, setResources,
-    inventory, setInventory,
-    clubFunds = [], setClubFunds,
-    addNotification, playSound,
-    studyResources, events, adminMode
-  } = useContext(AppCtx);
-
-  const [tab, setTab] = useState('links'); // 'links' | 'inventory' | 'funds'
-  const [dupWarning, setDupWarning] = useState(null);
-
-  // --- TAB 1: KHO LINK ---
-  const [filterBan, setFilterBan] = useState('');
-  const [filterType, setFilterType] = useState('');
-  const emptyLink = { title: '', url: '', ban: '', type: LINK_TYPES[0], note: '' };
-  const [linkForm, setLinkForm] = useState(emptyLink);
-  const [linkModal, setLinkModal] = useState(false);
-  const [editingLink, setEditingLink] = useState(null);
-  const [confirmDelLink, setConfirmDelLink] = useState(null);
-
-  // --- TAB 2: VẬT DỤNG ---
-  const emptyInv = { name: '', quantity: 1, status: 'Tốt', keeper: '', location: '', note: '' };
-  const [invForm, setInvForm] = useState(emptyInv);
-  const [invModal, setInvModal] = useState(false);
-  const [editingInv, setEditingInv] = useState(null);
-  const [confirmDelInv, setConfirmDelInv] = useState(null);
-
-  // --- TAB 3: SỔ QUỸ CLB & CÁC BAN ---
-  const emptyFund = {
-    date: new Date().toISOString().slice(0, 10),
-    ban: 'Quỹ CLB',
-    content: '',
-    type: 'thu', // 'thu' | 'chi'
-    amount: '',
-    person: '',
-    note: ''
+  const openAdd=()=>{
+    setEditing(null);
+    if(tab==='links')setLinkForm(emptyLink);
+    if(tab==='inventory')setInvForm(emptyInv);
+    if(tab==='expenses')setExpForm(emptyExp);
+    setModal(true);
   };
-  const [fundForm, setFundForm] = useState(emptyFund);
-  const [fundModal, setFundModal] = useState(false);
-  const [editingFund, setEditingFund] = useState(null);
-  const [confirmDelFund, setConfirmDelFund] = useState(null);
-  const [fundBanFilter, setFundBanFilter] = useState('Tất cả');
-  const [fundSearch, setFundSearch] = useState('');
-  const [fundSaving, setFundSaving] = useState(false);
-
-  // Open modals
-  const openAddLink = () => { setEditingLink(null); setLinkForm(emptyLink); setLinkModal(true); };
-  const openEditLink = item => { setEditingLink(item.id); setLinkForm({ ...item }); setLinkModal(true); };
-
-  const openAddInv = () => { setEditingInv(null); setInvForm(emptyInv); setInvModal(true); };
-  const openEditInv = item => { setEditingInv(item.id); setInvForm({ ...item }); setInvModal(true); };
-
-  const openAddFund = () => { setEditingFund(null); setFundForm(emptyFund); setFundModal(true); };
-  const openEditFund = item => {
-    setEditingFund(item.id);
-    setFundForm({
-      ...item,
-      amount: Math.abs(Number(item.amount) || 0),
-      date: item.date || (item.createdAt ? item.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10))
-    });
-    setFundModal(true);
+  const openEdit=item=>{
+    setEditing(item.id);
+    if(tab==='links')setLinkForm({...item});
+    if(tab==='inventory')setInvForm({...item});
+    if(tab==='expenses')setExpForm({...item});
+    setModal(true);
   };
+  const handleClose=()=>{setModal(false);setEditing(null)};
 
-  // --- LINK HANDLERS ---
-  const handleSaveLink = async (forceSave = false) => {
-    try {
-      if (!fbDb) throw new Error('Firebase chưa kết nối!');
-      if (!linkForm.title.trim() || !linkForm.url.trim()) { alert('Vui lòng nhập tên và URL!'); return; }
-      if (!forceSave) {
-        const dup = await checkDuplicateLinkAsync(linkForm.url, editingLink, { studyResources, resources, events });
-        if (dup) {
-          setDupWarning({
-            creator: dup.creator,
-            onConfirm: () => {
-              setDupWarning(null);
-              handleSaveLink(true);
-            }
-          });
-          return;
+  const handleSave=async(forceSave=false)=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      if(tab==='links'){
+        if(!linkForm.title.trim()||!linkForm.url.trim()){alert('Vui lòng nhập tên và URL!');return}
+        if(!forceSave){
+          const dup = await checkDuplicateLinkAsync(linkForm.url, editing, { studyResources, resources, events });
+          if(dup){
+            setDupWarning({
+              creator: dup.creator,
+              onConfirm: ()=>{
+                setDupWarning(null);
+                handleSave(true);
+              }
+            });
+            return;
+          }
+        }
+        if(editing){
+          await fbDb.collection('resources').doc(editing).set(linkForm,{merge:true});
+          try{playSound('success');}catch(e){}
+          try{addNotification(`Đã cập nhật link: ${linkForm.title}`,'success');}catch(e){}
+        }else{
+          const id=uid();
+          await fbDb.collection('resources').doc(id).set({...linkForm,id,createdAt:new Date().toISOString()});
+          try{playSound('success');}catch(e){}
+          try{addNotification(`Đã thêm link mới: ${linkForm.title}`,'success');}catch(e){}
+        }
+      }else if(tab==='inventory'){
+        if(!invForm.name.trim()){alert('Vui lòng nhập tên đồ vật!');return}
+        if(editing){
+          await fbDb.collection('inventory').doc(editing).set(invForm,{merge:true});
+          try{playSound('success');}catch(e){}
+          try{addNotification(`Đã cập nhật vật dụng: ${invForm.name}`,'success');}catch(e){}
+        }else{
+          const id=uid();
+          await fbDb.collection('inventory').doc(id).set({...invForm,id,createdAt:new Date().toISOString()});
+          try{playSound('success');}catch(e){}
+          try{addNotification(`Đã thêm vật dụng mới: ${invForm.name}`,'success');}catch(e){}
+        }
+      }else if(tab==='expenses'){
+        if(!expForm.name.trim()){alert('Vui lòng nhập tên khoản chi!');return}
+        if(editing){
+          await fbDb.collection('expenses').doc(editing).set(expForm,{merge:true});
+          try{playSound('success');}catch(e){}
+          try{addNotification(`Đã cập nhật khoản chi: ${expForm.name}`,'success');}catch(e){}
+        }else{
+          const id=uid();
+          await fbDb.collection('expenses').doc(id).set({...expForm,id,createdAt:new Date().toISOString()});
+          try{playSound('success');}catch(e){}
+          try{addNotification(`Đã thêm khoản chi mới: ${expForm.name}`,'success');}catch(e){}
+          if(expForm.status==='Đã chi - Chờ hoàn tiền'){
+            try{addNotification(`💰 Khoản chi chờ hoàn tiền: ${expForm.name} – ${fmtVND(expForm.amount)}`,'warning');}catch(e){}
+          }
         }
       }
-      if (editingLink) {
-        await fbDb.collection('resources').doc(editingLink).set(linkForm, { merge: true });
-        try { playSound('success'); } catch (e) {}
-        try { addNotification(`Đã cập nhật link: ${linkForm.title}`, 'success'); } catch (e) {}
-      } else {
-        const id = uid();
-        await fbDb.collection('resources').doc(id).set({ ...linkForm, id, createdAt: new Date().toISOString() });
-        try { playSound('success'); } catch (e) {}
-        try { addNotification(`Đã thêm link mới: ${linkForm.title}`, 'success'); } catch (e) {}
-      }
-      setLinkModal(false);
-      setEditingLink(null);
-    } catch (err) {
-      console.error('[NewVision HUP] Init Error', err);
-      alert('Lỗi lưu Firebase: ' + err.message);
+      handleClose();
+    }catch(err){
+      console.error('Lỗi lưu tài nguyên/quỹ/tài sản:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
-  const handleDeleteLink = async () => {
-    try {
-      if (!fbDb) throw new Error('Firebase chưa kết nối!');
-      await fbDb.collection('resources').doc(confirmDelLink).delete();
-      try { playSound('pop'); } catch (e) {}
-      try { addNotification('Đã xóa link tài liệu', 'info'); } catch (e) {}
-      setConfirmDelLink(null);
-    } catch (err) {
-      alert('Lỗi xóa: ' + err.message);
+  const handleDeleteItem=async()=>{
+    try{
+      if(!fbDb)throw new Error('Firebase chưa kết nối!');
+      const colName=tab==='links'?'resources':tab==='inventory'?'inventory':'expenses';
+      await fbDb.collection(colName).doc(confirmDel).delete();
+      try{playSound('pop');}catch(e){}
+      try{addNotification('Đã xóa mục thành công','info');}catch(e){}
+    }catch(err){
+      console.error('Lỗi xóa mục:',err);
+      alert('Lỗi lưu Firebase: '+err.message);
     }
   };
 
-  // --- INVENTORY HANDLERS ---
-  const handleSaveInv = async () => {
-    try {
-      if (!fbDb) throw new Error('Firebase chưa kết nối!');
-      if (!invForm.name.trim()) { alert('Vui lòng nhập tên đồ vật!'); return; }
-      if (editingInv) {
-        await fbDb.collection('inventory').doc(editingInv).set(invForm, { merge: true });
-        try { playSound('success'); } catch (e) {}
-        try { addNotification(`Đã cập nhật vật dụng: ${invForm.name}`, 'success'); } catch (e) {}
-      } else {
-        const id = uid();
-        await fbDb.collection('inventory').doc(id).set({ ...invForm, id, createdAt: new Date().toISOString() });
-        try { playSound('success'); } catch (e) {}
-        try { addNotification(`Đã thêm vật dụng: ${invForm.name}`, 'success'); } catch (e) {}
-      }
-      setInvModal(false);
-      setEditingInv(null);
-    } catch (err) {
-      alert('Lỗi lưu vật dụng: ' + err.message);
-    }
-  };
+  let filteredResources=resources;
+  if(filterBan)filteredResources=filteredResources.filter(r=>r.ban===filterBan);
+  if(filterType)filteredResources=filteredResources.filter(r=>r.type===filterType);
 
-  const handleDeleteInv = async () => {
-    try {
-      if (!fbDb) throw new Error('Firebase chưa kết nối!');
-      await fbDb.collection('inventory').doc(confirmDelInv).delete();
-      try { playSound('pop'); } catch (e) {}
-      try { addNotification('Đã xóa vật dụng', 'info'); } catch (e) {}
-      setConfirmDelInv(null);
-    } catch (err) {
-      alert('Lỗi xóa: ' + err.message);
-    }
-  };
+  const totalExp=expenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
+  const pendingReim=expenses.filter(e=>e.status==='Đã chi - Chờ hoàn tiền').reduce((s,e)=>s+(Number(e.amount)||0),0);
+  const modalTitle=tab==='links'?(editing?'Chỉnh sửa link':'Thêm link tài liệu'):tab==='inventory'?(editing?'Chỉnh sửa vật dụng':'Thêm vật dụng'):(editing?'Chỉnh sửa khoản chi':'Thêm khoản chi mới');
 
-  // --- FUND HANDLERS ---
-  const handleSaveFund = async e => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!fundForm.content.trim()) { alert('Vui lòng nhập nội dung thu/chi!'); return; }
-    const numAmount = Number(fundForm.amount);
-    if (!numAmount || numAmount <= 0) { alert('Vui lòng nhập số tiền hợp lệ (> 0)!'); return; }
-
-    setFundSaving(true);
-    try {
-      if (!fbDb) throw new Error('Firebase chưa kết nối!');
-      const finalAmount = fundForm.type === 'thu' ? Math.abs(numAmount) : -Math.abs(numAmount);
-      const cleanFund = {
-        date: fundForm.date || new Date().toISOString().slice(0, 10),
-        ban: fundForm.ban || 'Quỹ CLB',
-        content: fundForm.content.trim(),
-        type: fundForm.type, // 'thu' | 'chi'
-        amount: finalAmount,
-        person: fundForm.person.trim(),
-        note: (fundForm.note || '').trim(),
-        updatedAt: new Date().toISOString()
-      };
-
-      if (editingFund) {
-        await fbDb.collection('club_funds').doc(editingFund).set(cleanFund, { merge: true });
-        try { playSound('success'); } catch (err) {}
-        try { addNotification(`✅ Đã cập nhật khoản ${cleanFund.type === 'thu' ? 'thu' : 'chi'}: ${cleanFund.content}`, 'success'); } catch (err) {}
-      } else {
-        const id = uid();
-        await fbDb.collection('club_funds').doc(id).set({ ...cleanFund, id, createdAt: new Date().toISOString() });
-        try { playSound('success'); } catch (err) {}
-        try { addNotification(`✅ Đã ghi nhận khoản ${cleanFund.type === 'thu' ? 'thu' : 'chi'} mới: ${cleanFund.content}`, 'success'); } catch (err) {}
-      }
-      setFundModal(false);
-      setEditingFund(null);
-    } catch (err) {
-      console.error('[NewVision HUP] Init Error', err);
-      alert('Lỗi lưu sổ quỹ: ' + err.message);
-    } finally {
-      setFundSaving(false);
-    }
-  };
-
-  const handleDeleteFund = async () => {
-    try {
-      if (!fbDb) throw new Error('Firebase chưa kết nối!');
-      await fbDb.collection('club_funds').doc(confirmDelFund).delete();
-      try { playSound('pop'); } catch (err) {}
-      try { addNotification('Đã xóa bản ghi thu/chi thành công', 'info'); } catch (err) {}
-      setConfirmDelFund(null);
-    } catch (err) {
-      alert('Lỗi xóa bản ghi: ' + err.message);
-    }
-  };
-
-  // --- FILTERED DATA & CALCULATIONS ---
-  let filteredResources = resources;
-  if (filterBan) filteredResources = filteredResources.filter(r => r.ban === filterBan);
-  if (filterType) filteredResources = filteredResources.filter(r => r.type === filterType);
-
-  // Sổ quỹ filtering & metrics
-  const displayFunds = useMemo(() => {
-    let list = clubFunds || [];
-    if (fundBanFilter && fundBanFilter !== 'Tất cả') {
-      list = list.filter(f => f.ban === fundBanFilter);
-    }
-    if (fundSearch.trim()) {
-      const q = fundSearch.trim().toLowerCase();
-      list = list.filter(f =>
-        (f.content || '').toLowerCase().includes(q) ||
-        (f.person || '').toLowerCase().includes(q) ||
-        (f.note || '').toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [clubFunds, fundBanFilter, fundSearch]);
-
-  const totalIncome = useMemo(() => {
-    return displayFunds
-      .filter(f => f.type === 'thu' || (Number(f.amount) > 0 && f.type !== 'chi'))
-      .reduce((s, f) => s + Math.abs(Number(f.amount) || 0), 0);
-  }, [displayFunds]);
-
-  const totalExpense = useMemo(() => {
-    return displayFunds
-      .filter(f => f.type === 'chi' || Number(f.amount) < 0)
-      .reduce((s, f) => s + Math.abs(Number(f.amount) || 0), 0);
-  }, [displayFunds]);
-
-  const totalBalance = totalIncome - totalExpense;
-
-  return (
+  return(
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Icon name="folder-open" size={22} className="text-indigo-600 dark:text-indigo-400" />
-            Tài Nguyên & Quỹ CLB
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Kho link tài liệu, quản lý tài sản vật dụng và sổ theo dõi thu chi quỹ CLB & các ban
-          </p>
-        </div>
-
-        {/* Action Button based on active tab */}
-        {tab === 'links' && (
-          <button onClick={openAddLink} className="btn-primary flex items-center gap-1.5 font-bold">
-            <Icon name="plus" size={15} /> Thêm link tài liệu
-          </button>
-        )}
-        {tab === 'inventory' && (
-          <button onClick={openAddInv} className="btn-primary flex items-center gap-1.5 font-bold">
-            <Icon name="plus" size={15} /> Thêm vật dụng
-          </button>
-        )}
-        {tab === 'funds' && (
-          <button onClick={openAddFund} className="btn-primary flex items-center gap-1.5 font-bold bg-emerald-600 hover:bg-emerald-700">
-            <Icon name="plus-circle" size={16} /> + Thêm khoản thu/chi
-          </button>
-        )}
+      <div className="flex items-center justify-between">
+        <div><h1 className="text-xl font-bold text-slate-800">Kho Tài Nguyên & Quỹ Nội Vụ</h1><p className="text-xs text-slate-500 mt-0.5">Link tài liệu, vật dụng CLB và chi tiêu sự kiện</p></div>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>Thêm mới</button>
       </div>
-
-      {/* Sub Tabs */}
-      <div className="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl w-fit">
-        {[
-          ['links', '🔗 Kho Link'],
-          ['inventory', '📦 Vật Dụng'],
-          ['funds', '💰 Sổ Quỹ CLB & Các Ban']
-        ].map(([v, l]) => (
-          <button
-            key={v}
-            onClick={() => setTab(v)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              tab === v
-                ? 'bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-slate-100'
-                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-            }`}
-          >
-            {l}
-          </button>
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+        {[['links','🔗 Kho Link'],['inventory','📦 Vật Dụng'],['expenses','💰 Chi Tiêu']].map(([v,l])=>(
+          <button key={v} onClick={()=>setTab(v)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${tab===v?'bg-white shadow text-slate-800':'text-slate-500 hover:text-slate-700'}`}>{l}</button>
         ))}
       </div>
 
-      {/* ============================================================ */}
-      {/* TAB 1: KHO LINK */}
-      {/* ============================================================ */}
-      {tab === 'links' && (
+      {tab==='links'&&(
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2 items-center">
-            <select
-              value={filterBan}
-              onChange={e => setFilterBan(e.target.value)}
-              className="form-input text-xs w-auto py-1.5"
-            >
+            <select value={filterBan} onChange={e=>setFilterBan(e.target.value)} className="form-input text-sm w-auto">
               <option value="">Tất cả ban</option>
-              {BANS.map(b => <option key={b}>{b}</option>)}
+              {BANS.map(b=><option key={b}>{b}</option>)}
             </select>
-            <select
-              value={filterType}
-              onChange={e => setFilterType(e.target.value)}
-              className="form-input text-xs w-auto py-1.5"
-            >
+            <select value={filterType} onChange={e=>setFilterType(e.target.value)} className="form-input text-sm w-auto">
               <option value="">Tất cả loại</option>
-              {LINK_TYPES.map(t => <option key={t}>{t}</option>)}
+              {LINK_TYPES.map(t=><option key={t}>{t}</option>)}
             </select>
-            {(filterBan || filterType) && (
-              <button
-                onClick={() => { setFilterBan(''); setFilterType(''); }}
-                className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
-              >
-                <Icon name="x-circle" size={13} /> Xóa lọc
-              </button>
-            )}
+            {(filterBan||filterType)&&<button onClick={()=>{setFilterBan('');setFilterType('')}} className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"><Icon name="x-circle" size={13}/>Xóa lọc</button>}
           </div>
-
-          {filteredResources.length === 0 && (
-            <div className="card py-14 text-center">
-              <Icon name="folder-open" size={40} className="text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-400 font-medium">Chưa có link tài liệu nào</p>
-              <p className="text-xs text-slate-300 mt-1">Lưu trữ link Google Drive, Canva, Forms, Docs...</p>
-            </div>
-          )}
-
+          {filteredResources.length===0&&<div className="card py-14 text-center"><Icon name="folder-open" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có link tài liệu nào</p><p className="text-sm text-slate-300 mt-1">Lưu trữ link Google Drive, Canva, Forms, Docs...</p></div>}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredResources.map(r => {
-              const cfg = LINK_TYPE_CFG[r.type] || LINK_TYPE_CFG['Biên bản & Hành chính'];
-              return (
+            {filteredResources.map(r=>{
+              const cfg=LINK_TYPE_CFG[r.type]||LINK_TYPE_CFG['Biên bản & Hành chính'];
+              return(
                 <div key={r.id} className={`card p-4 fade-in border-l-4 ${cfg.border}`}>
                   <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 ${cfg.bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                      <Icon name={cfg.icon} size={18} className={cfg.text} />
-                    </div>
+                    <div className={`w-10 h-10 ${cfg.bg} rounded-xl flex items-center justify-center flex-shrink-0`}><Icon name={cfg.icon} size={18} className={cfg.text}/></div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate">{r.title}</p>
-                      <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline truncate block">
-                        {r.url}
-                      </a>
+                      <p className="font-bold text-slate-800 text-sm truncate">{r.title}</p>
+                      <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline truncate block">{r.url}</a>
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        <span className={`status-badge text-[11px] ${cfg.bg} ${cfg.text}`} style={{ border: 'none' }}>{r.type}</span>
-                        {r.ban && <span className="status-badge tag-gray text-[11px]">{r.ban}</span>}
+                        <span className={`status-badge text-[11px] ${cfg.bg} ${cfg.text}`} style={{border:'none'}}>{r.type}</span>
+                        {r.ban&&<span className="status-badge tag-gray text-[11px]">{r.ban}</span>}
                       </div>
-                      {r.note && <p className="text-xs text-slate-400 mt-1 truncate">{r.note}</p>}
+                      {r.note&&<p className="text-xs text-slate-400 mt-1 truncate">{r.note}</p>}
                     </div>
                   </div>
-                  <div className="flex gap-1 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 justify-end">
-                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-500">
-                      <Icon name="external-link" size={14} />
-                    </a>
-                    <button onClick={() => openEditLink(r)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                      <Icon name="pencil" size={14} />
-                    </button>
-                    <button onClick={() => setConfirmDelLink(r.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-400">
-                      <Icon name="trash-2" size={14} />
-                    </button>
+                  <div className="flex gap-1 mt-3 pt-2.5 border-t border-slate-100 justify-end">
+                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500"><Icon name="external-link" size={14}/></a>
+                    <button onClick={()=>openEdit(r)} className="p-1.5 rounded-lg hover:bg-slate-100"><Icon name="pencil" size={14} className="text-slate-400"/></button>
+                    <button onClick={()=>setConfirmDel(r.id)} className="p-1.5 rounded-lg hover:bg-red-50"><Icon name="trash-2" size={14} className="text-red-400"/></button>
                   </div>
                 </div>
               );
@@ -5834,48 +5491,71 @@ function ResourcesPage() {
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* TAB 2: VẬT DỤNG */}
-      {/* ============================================================ */}
-      {tab === 'inventory' && (
+      {tab==='inventory'&&(
         <div className="space-y-3">
-          {inventory.length === 0 && (
-            <div className="card py-14 text-center">
-              <Icon name="box" size={40} className="text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-400 font-medium">Chưa có vật dụng nào</p>
-              <p className="text-xs text-slate-300 mt-1">Quản lý loa, mic, standee, dây nguồn...</p>
+          {inventory.length===0&&<div className="card py-14 text-center"><Icon name="box" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có vật dụng nào</p><p className="text-sm text-slate-300 mt-1">Quản lý loa, mic, standee, dây nguồn...</p></div>}
+          {inventory.map(item=>(
+            <div key={item.id} className="card p-4 fade-in">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0"><Icon name="box" size={18} className="text-teal-600"/></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-slate-800 text-sm">{item.name}</p>
+                      <span className={`status-badge text-xs ${item.status==='Tốt'?'tag-green':item.status==='Hỏng/Mất phụ kiện'?'tag-red':'tag-yellow'}`}>{item.status}</span>
+                      {item.quantity&&<span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">SL: {item.quantity}</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-1 text-xs text-slate-400">
+                      {item.keeper&&<span className="flex items-center gap-1"><Icon name="user" size={11}/>Người giữ: {item.keeper}</span>}
+                      {item.location&&<span className="flex items-center gap-1"><Icon name="map-pin" size={11}/>{item.location}</span>}
+                    </div>
+                    {item.note&&<p className="text-xs text-slate-400 mt-1 italic">{item.note}</p>}
+                  </div>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <button onClick={()=>openEdit(item)} className="p-2 rounded-lg hover:bg-slate-100"><Icon name="pencil" size={14} className="text-slate-400"/></button>
+                  <button onClick={()=>setConfirmDel(item.id)} className="p-2 rounded-lg hover:bg-red-50"><Icon name="trash-2" size={14} className="text-red-400"/></button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==='expenses'&&(
+        <div className="space-y-3">
+          {expenses.length>0&&(
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl p-3 text-white" style={{background:'linear-gradient(135deg,#4f46e5,#2563eb)'}}>
+                <p className="text-xs opacity-80 mb-1">Tổng chi tiêu</p>
+                <p className="text-xl font-black">{fmtVND(totalExp)}</p>
+              </div>
+              <div className="rounded-2xl p-3 text-white" style={{background:'linear-gradient(135deg,#f59e0b,#ea580c)'}}>
+                <p className="text-xs opacity-80 mb-1">Chờ hoàn tiền</p>
+                <p className="text-xl font-black">{fmtVND(pendingReim)}</p>
+              </div>
             </div>
           )}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {inventory.map(item => (
-              <div key={item.id} className="card p-4 fade-in">
+          {expenses.length===0&&<div className="card py-14 text-center"><Icon name="wallet" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có khoản chi nào</p><p className="text-sm text-slate-300 mt-1">Ghi lại dự trù và chi tiêu của Ban Nội Vụ</p></div>}
+          <div className="space-y-2">
+            {expenses.map(exp=>(
+              <div key={exp.id} className="card p-3.5 fade-in">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 bg-teal-50 dark:bg-teal-950/40 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Icon name="box" size={18} className="text-teal-600 dark:text-teal-400" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className={`status-badge text-xs ${expenseColor(exp.status)}`}>{exp.status}</span>
+                      {exp.ban&&<span className="status-badge tag-gray text-xs">{exp.ban}</span>}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">{item.name}</p>
-                        <span className={`status-badge text-xs ${item.status === 'Tốt' ? 'tag-green' : item.status === 'Hỏng/Mất phụ kiện' ? 'tag-red' : 'tag-yellow'}`}>
-                          {item.status}
-                        </span>
-                        {item.quantity && <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">SL: {item.quantity}</span>}
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-1 text-xs text-slate-400">
-                        {item.keeper && <span className="flex items-center gap-1"><Icon name="user" size={11} />Người giữ: {item.keeper}</span>}
-                        {item.location && <span className="flex items-center gap-1"><Icon name="map-pin" size={11} />{item.location}</span>}
-                      </div>
-                      {item.note && <p className="text-xs text-slate-400 mt-1 italic">{item.note}</p>}
+                    <p className="font-bold text-slate-800 text-sm">{exp.name}</p>
+                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-slate-500">
+                      {exp.amount&&<span className="text-base font-black text-slate-800">{fmtVND(exp.amount)}</span>}
+                      {exp.person&&<span className="flex items-center gap-1 mt-0.5"><Icon name="user" size={11}/>Ứng tiền: <b className="text-slate-700">{exp.person}</b></span>}
                     </div>
+                    {exp.note&&<p className="text-xs text-slate-400 mt-1">{exp.note}</p>}
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => openEditInv(item)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                      <Icon name="pencil" size={14} />
-                    </button>
-                    <button onClick={() => setConfirmDelInv(item.id)} className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-400">
-                      <Icon name="trash-2" size={14} />
-                    </button>
+                    <button onClick={()=>openEdit(exp)} className="p-2 rounded-lg hover:bg-slate-100"><Icon name="pencil" size={14} className="text-slate-400"/></button>
+                    <button onClick={()=>setConfirmDel(exp.id)} className="p-2 rounded-lg hover:bg-red-50"><Icon name="trash-2" size={14} className="text-red-400"/></button>
                   </div>
                 </div>
               </div>
@@ -5884,456 +5564,56 @@ function ResourcesPage() {
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* TAB 3: SỔ QUỸ CLB & CÁC BAN */}
-      {/* ============================================================ */}
-      {tab === 'funds' && (
-        <div className="space-y-4">
-          {/* 3 Thẻ thống kê số liệu tự động tính toán */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Card 1: Tổng quỹ hiện có */}
-            <div className="card p-4 bg-gradient-to-br from-indigo-50/80 via-white to-blue-50/80 dark:from-slate-800 dark:via-slate-800 dark:to-indigo-950/40 border border-indigo-100 dark:border-indigo-900 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                  Tổng quỹ hiện có
-                </span>
-                <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
-                  <Icon name="wallet" size={16} />
-                </div>
-              </div>
-              <p className={`text-2xl font-black ${totalBalance >= 0 ? 'text-indigo-950 dark:text-indigo-200' : 'text-rose-600 dark:text-rose-400'}`}>
-                {fmtVND(totalBalance)}
-              </p>
-              <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                <span>Số dư thực tế ({fundBanFilter})</span>
-              </p>
+      <Modal open={modal} onClose={handleClose} title={modalTitle}>
+        {tab==='links'&&(
+          <div className="space-y-4">
+            <div><label className="form-label">Tên tài liệu <span className="text-red-500">*</span></label><input value={linkForm.title} onChange={e=>setLinkForm(p=>({...p,title:e.target.value}))} className="form-input" placeholder="VD: Kế hoạch Talkshow tháng 11..."/></div>
+            <div><label className="form-label">Đường dẫn (URL) <span className="text-red-500">*</span></label><input value={linkForm.url} onChange={e=>setLinkForm(p=>({...p,url:e.target.value}))} className="form-input" placeholder="https://docs.google.com/..."/></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="form-label">Loại tài liệu</label><select value={linkForm.type} onChange={e=>setLinkForm(p=>({...p,type:e.target.value}))} className="form-input">{LINK_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+              <div><label className="form-label">Ban phụ trách</label><select value={linkForm.ban} onChange={e=>setLinkForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
             </div>
-
-            {/* Card 2: Tổng đã thu (+) */}
-            <div className="card p-4 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/80 dark:from-slate-800 dark:via-slate-800 dark:to-emerald-950/40 border border-emerald-100 dark:border-emerald-900 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  Tổng đã thu (+)
-                </span>
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center">
-                  <Icon name="trending-up" size={16} />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                +{fmtVND(totalIncome)}
-              </p>
-              <p className="text-[11px] text-slate-400 mt-1">
-                Thu quỹ, tài trợ, tiền phạt...
-              </p>
-            </div>
-
-            {/* Card 3: Tổng đã chi (-) */}
-            <div className="card p-4 bg-gradient-to-br from-rose-50/80 via-white to-amber-50/80 dark:from-slate-800 dark:via-slate-800 dark:to-rose-950/40 border border-rose-100 dark:border-rose-900 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                  Tổng đã chi (-)
-                </span>
-                <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-300 flex items-center justify-center">
-                  <Icon name="trending-down" size={16} />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-rose-600 dark:text-rose-400">
-                -{fmtVND(totalExpense)}
-              </p>
-              <p className="text-[11px] text-slate-400 mt-1">
-                Chi sự kiện, in ấn, đạo cụ...
-              </p>
-            </div>
+            <div><label className="form-label">Ghi chú</label><input value={linkForm.note} onChange={e=>setLinkForm(p=>({...p,note:e.target.value}))} className="form-input" placeholder="Mô tả ngắn về tài liệu..."/></div>
+            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu':'Thêm link'}</button></div>
           </div>
-
-          {/* Controls: Search & Ban filter chips */}
-          <div className="card p-3 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2.5">
-              {/* Chips filter by Ban */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {['Tất cả', ...FUND_BANS].map(b => (
-                  <button
-                    key={b}
-                    onClick={() => setFundBanFilter(b)}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-                      fundBanFilter === b
-                        ? 'bg-indigo-600 text-white shadow'
-                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    {b}
-                  </button>
-                ))}
-              </div>
-
-              {/* Search box */}
-              <div className="relative w-full sm:w-64">
-                <Icon name="search" size={14} className="absolute left-3 top-2.5 text-slate-400" />
-                <input
-                  type="text"
-                  value={fundSearch}
-                  onChange={e => setFundSearch(e.target.value)}
-                  placeholder="Tìm nội dung, người phụ trách..."
-                  className="form-input text-xs pl-8 py-1.5 w-full"
-                />
-              </div>
+        )}
+        {tab==='inventory'&&(
+          <div className="space-y-4">
+            <div><label className="form-label">Tên đồ vật <span className="text-red-500">*</span></label><input value={invForm.name} onChange={e=>setInvForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="VD: Loa di động JBL..."/></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="form-label">Số lượng</label><input type="number" min="1" value={invForm.quantity} onChange={e=>setInvForm(p=>({...p,quantity:e.target.value}))} className="form-input"/></div>
+              <div><label className="form-label">Tình trạng</label><select value={invForm.status} onChange={e=>setInvForm(p=>({...p,status:e.target.value}))} className="form-input">{INVENTORY_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
             </div>
-          </div>
-
-          {/* Table / List of Income & Expense */}
-          {displayFunds.length === 0 ? (
-            <div className="card py-14 text-center">
-              <Icon name="book-open" size={42} className="text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500 font-bold">Chưa có giao dịch thu/chi nào</p>
-              <p className="text-xs text-slate-400 mt-1">Bấm nút "+ Thêm khoản thu/chi" ở góc trên để ghi chép sổ quỹ.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="form-label">Người đang giữ</label><input value={invForm.keeper} onChange={e=>setInvForm(p=>({...p,keeper:e.target.value}))} className="form-input" placeholder="Tên người giữ"/></div>
+              <div><label className="form-label">Vị trí lưu trữ</label><input value={invForm.location} onChange={e=>setInvForm(p=>({...p,location:e.target.value}))} className="form-input" placeholder="Tủ phòng BCN, nhà..."/></div>
             </div>
-          ) : (
-            <div className="card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 uppercase text-[11px] font-bold border-b border-slate-200 dark:border-slate-700">
-                    <tr>
-                      <th className="py-3 px-3.5">Ngày tháng</th>
-                      <th className="py-3 px-3">Ban / Đơn vị</th>
-                      <th className="py-3 px-3">Nội dung thu / chi</th>
-                      <th className="py-3 px-3">Loại</th>
-                      <th className="py-3 px-3 text-right">Số tiền</th>
-                      <th className="py-3 px-3">Người phụ trách</th>
-                      <th className="py-3 px-3.5 text-center">Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {displayFunds.map(fund => {
-                      const isThu = fund.type === 'thu' || (Number(fund.amount) > 0 && fund.type !== 'chi');
-                      const absAmount = Math.abs(Number(fund.amount) || 0);
-
-                      return (
-                        <tr key={fund.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                          {/* Ngày tháng */}
-                          <td className="py-3 px-3.5 whitespace-nowrap text-slate-600 dark:text-slate-300 font-medium">
-                            <span className="flex items-center gap-1.5">
-                              <Icon name="calendar" size={12} className="text-slate-400" />
-                              {fund.date || '—'}
-                            </span>
-                          </td>
-
-                          {/* Ban */}
-                          <td className="py-3 px-3 whitespace-nowrap">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                              fund.ban === 'Quỹ CLB'
-                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                                : fund.ban === 'Ban Nội Vụ'
-                                ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300'
-                                : fund.ban === 'Ban Sự Kiện'
-                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                                : fund.ban === 'Ban Truyền Thông'
-                                ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300'
-                                : 'bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300'
-                            }`}>
-                              {fund.ban || 'Quỹ CLB'}
-                            </span>
-                          </td>
-
-                          {/* Nội dung */}
-                          <td className="py-3 px-3 min-w-[200px]">
-                            <p className="font-bold text-slate-800 dark:text-slate-200">{fund.content || fund.name || '—'}</p>
-                            {fund.note && (
-                              <p className="text-[11px] text-slate-400 mt-0.5 italic">{fund.note}</p>
-                            )}
-                          </td>
-
-                          {/* Loại */}
-                          <td className="py-3 px-3 whitespace-nowrap">
-                            {isThu ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                <Icon name="arrow-up-right" size={11} /> Thu (+)
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                                <Icon name="arrow-down-left" size={11} /> Chi (-)
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Số tiền */}
-                          <td className="py-3 px-3 whitespace-nowrap text-right font-mono font-black text-sm">
-                            <span className={isThu ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
-                              {isThu ? `+${fmtVND(absAmount)}` : `-${fmtVND(absAmount)}`}
-                            </span>
-                          </td>
-
-                          {/* Người phụ trách */}
-                          <td className="py-3 px-3 whitespace-nowrap text-slate-600 dark:text-slate-300 text-xs">
-                            {fund.person ? (
-                              <span className="flex items-center gap-1">
-                                <Icon name="user" size={12} className="text-slate-400" />
-                                {fund.person}
-                              </span>
-                            ) : '—'}
-                          </td>
-
-                          {/* Thao tác */}
-                          <td className="py-3 px-3.5 whitespace-nowrap text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <button
-                                onClick={() => openEditFund(fund)}
-                                title="Chỉnh sửa khoản thu/chi"
-                                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 transition-colors"
-                              >
-                                <Icon name="pencil" size={14} />
-                              </button>
-                              <button
-                                onClick={() => setConfirmDelFund(fund.id)}
-                                title="Xóa khoản thu/chi"
-                                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-500 transition-colors"
-                              >
-                                <Icon name="trash-2" size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            <div><label className="form-label">Ghi chú</label><textarea value={invForm.note} onChange={e=>setInvForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="Thêm ghi chú..."/></div>
+            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu':'Thêm vật dụng'}</button></div>
+          </div>
+        )}
+        {tab==='expenses'&&(
+          <div className="space-y-4">
+            <div><label className="form-label">Tên khoản chi <span className="text-red-500">*</span></label><input value={expForm.name} onChange={e=>setExpForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="VD: In ấn backdrop sự kiện..."/></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="form-label">Số tiền (VNĐ)</label><input type="number" value={expForm.amount} onChange={e=>setExpForm(p=>({...p,amount:e.target.value}))} className="form-input" placeholder="500000"/></div>
+              <div><label className="form-label">Người ứng tiền</label><input value={expForm.person} onChange={e=>setExpForm(p=>({...p,person:e.target.value}))} className="form-input" placeholder="Tên người ứng tiền"/></div>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* MODAL 1: THÊM / SỬA LINK */}
-      {/* ============================================================ */}
-      <Modal open={linkModal} onClose={() => { setLinkModal(false); setEditingLink(null); }} title={editingLink ? 'Chỉnh Sửa Link Tài Liệu' : 'Thêm Link Tài Liệu Mới'}>
-        <div className="space-y-4">
-          <div>
-            <label className="form-label">Tên tài liệu <span className="text-red-500">*</span></label>
-            <input value={linkForm.title} onChange={e => setLinkForm(p => ({ ...p, title: e.target.value }))} className="form-input" placeholder="VD: Kế hoạch Talkshow tháng 11..." />
-          </div>
-          <div>
-            <label className="form-label">Đường dẫn (URL) <span className="text-red-500">*</span></label>
-            <input value={linkForm.url} onChange={e => setLinkForm(p => ({ ...p, url: e.target.value }))} className="form-input" placeholder="https://docs.google.com/..." />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="form-label">Loại tài liệu</label>
-              <select value={linkForm.type} onChange={e => setLinkForm(p => ({ ...p, type: e.target.value }))} className="form-input">
-                {LINK_TYPES.map(t => <option key={t}>{t}</option>)}
-              </select>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="form-label">Ban phụ trách</label><select value={expForm.ban} onChange={e=>setExpForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
+              <div><label className="form-label">Trạng thái</label><select value={expForm.status} onChange={e=>setExpForm(p=>({...p,status:e.target.value}))} className="form-input">{EXPENSE_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
             </div>
-            <div>
-              <label className="form-label">Ban phụ trách</label>
-              <select value={linkForm.ban} onChange={e => setLinkForm(p => ({ ...p, ban: e.target.value }))} className="form-input">
-                <option value="">Chọn ban...</option>
-                {BANS.map(b => <option key={b}>{b}</option>)}
-              </select>
-            </div>
+            <div><label className="form-label">Ghi chú</label><textarea value={expForm.note} onChange={e=>setExpForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="Mô tả chi tiết, link hóa đơn..."/></div>
+            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu':'Thêm khoản chi'}</button></div>
           </div>
-          <div>
-            <label className="form-label">Ghi chú</label>
-            <input value={linkForm.note} onChange={e => setLinkForm(p => ({ ...p, note: e.target.value }))} className="form-input" placeholder="Mô tả ngắn về tài liệu..." />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => { setLinkModal(false); setEditingLink(null); }} className="btn-secondary flex-1">Hủy</button>
-            <button onClick={() => handleSaveLink(false)} className="btn-primary flex-1 font-bold">{editingLink ? 'Lưu thay đổi' : 'Thêm link'}</button>
-          </div>
-        </div>
+        )}
       </Modal>
 
-      {/* ============================================================ */}
-      {/* MODAL 2: THÊM / SỬA VẬT DỤNG */}
-      {/* ============================================================ */}
-      <Modal open={invModal} onClose={() => { setInvModal(false); setEditingInv(null); }} title={editingInv ? 'Chỉnh Sửa Vật Dụng' : 'Thêm Vật Dụng Mới'}>
-        <div className="space-y-4">
-          <div>
-            <label className="form-label">Tên đồ vật <span className="text-red-500">*</span></label>
-            <input value={invForm.name} onChange={e => setInvForm(p => ({ ...p, name: e.target.value }))} className="form-input" placeholder="VD: Loa di động JBL, Standee CLB..." />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="form-label">Số lượng</label>
-              <input type="number" min="1" value={invForm.quantity} onChange={e => setInvForm(p => ({ ...p, quantity: e.target.value }))} className="form-input" />
-            </div>
-            <div>
-              <label className="form-label">Tình trạng</label>
-              <select value={invForm.status} onChange={e => setInvForm(p => ({ ...p, status: e.target.value }))} className="form-input">
-                {INVENTORY_STATUSES.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="form-label">Người đang giữ</label>
-              <input value={invForm.keeper} onChange={e => setInvForm(p => ({ ...p, keeper: e.target.value }))} className="form-input" placeholder="Tên người giữ" />
-            </div>
-            <div>
-              <label className="form-label">Vị trí lưu trữ</label>
-              <input value={invForm.location} onChange={e => setInvForm(p => ({ ...p, location: e.target.value }))} className="form-input" placeholder="Tủ phòng BCN, nhà..." />
-            </div>
-          </div>
-          <div>
-            <label className="form-label">Ghi chú</label>
-            <textarea value={invForm.note} onChange={e => setInvForm(p => ({ ...p, note: e.target.value }))} className="form-input resize-none min-h-[60px]" placeholder="Thêm ghi chú..." />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => { setInvModal(false); setEditingInv(null); }} className="btn-secondary flex-1">Hủy</button>
-            <button onClick={handleSaveInv} className="btn-primary flex-1 font-bold">{editingInv ? 'Lưu thay đổi' : 'Thêm vật dụng'}</button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* ============================================================ */}
-      {/* MODAL 3: THÊM / SỬA KHOẢN THU / CHI SỔ QUỸ */}
-      {/* ============================================================ */}
-      <Modal open={fundModal} onClose={() => { setFundModal(false); setEditingFund(null); }} title={editingFund ? 'Chỉnh Sửa Khoản Thu / Chi' : 'Ghi Nhận Khoản Thu / Chi Mới'}>
-        <form onSubmit={handleSaveFund} className="space-y-4">
-          {/* Segmented Button: Thu vs Chi */}
-          <div>
-            <label className="form-label block mb-1.5">Loại giao dịch <span className="text-red-500">*</span></label>
-            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setFundForm(p => ({ ...p, type: 'thu' }))}
-                className={`py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  fundForm.type === 'thu'
-                    ? 'bg-emerald-600 text-white shadow'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                <Icon name="arrow-up-right" size={14} />
-                + Thu vào quỹ
-              </button>
-              <button
-                type="button"
-                onClick={() => setFundForm(p => ({ ...p, type: 'chi' }))}
-                className={`py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  fundForm.type === 'chi'
-                    ? 'bg-rose-600 text-white shadow'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                <Icon name="arrow-down-left" size={14} />
-                - Chi từ quỹ
-              </button>
-            </div>
-          </div>
-
-          {/* Số tiền */}
-          <div>
-            <label className="form-label">
-              Số tiền (VNĐ) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              min="1000"
-              step="1000"
-              value={fundForm.amount}
-              onChange={e => setFundForm(p => ({ ...p, amount: e.target.value }))}
-              className="form-input text-base font-mono font-bold"
-              placeholder="VD: 500000"
-              required
-            />
-            {fundForm.amount && Number(fundForm.amount) > 0 && (
-              <p className="text-[11px] text-slate-500 mt-1">
-                Bằng chữ: <strong>{fmtVND(fundForm.amount)}</strong>
-              </p>
-            )}
-          </div>
-
-          {/* Nội dung */}
-          <div>
-            <label className="form-label">
-              Nội dung thu / chi <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={fundForm.content}
-              onChange={e => setFundForm(p => ({ ...p, content: e.target.value }))}
-              className="form-input font-medium"
-              placeholder="VD: Thu quỹ thành viên kỳ I, Chi mua nước Workshop..."
-              required
-            />
-          </div>
-
-          {/* Ban & Ngày tháng */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="form-label">Ban / Quỹ thụ hưởng</label>
-              <select
-                value={fundForm.ban}
-                onChange={e => setFundForm(p => ({ ...p, ban: e.target.value }))}
-                className="form-input font-bold"
-              >
-                {FUND_BANS.map(b => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="form-label">Ngày thực hiện</label>
-              <input
-                type="date"
-                value={fundForm.date}
-                onChange={e => setFundForm(p => ({ ...p, date: e.target.value }))}
-                className="form-input"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Người phụ trách */}
-          <div>
-            <label className="form-label">Người phụ trách / Người nộp / Người nhận</label>
-            <input
-              type="text"
-              value={fundForm.person}
-              onChange={e => setFundForm(p => ({ ...p, person: e.target.value }))}
-              className="form-input"
-              placeholder="VD: Trần Thị Thu Trang (Thủ quỹ)"
-            />
-          </div>
-
-          {/* Ghi chú */}
-          <div>
-            <label className="form-label">Ghi chú / Link hóa đơn, chứng từ</label>
-            <textarea
-              value={fundForm.note}
-              onChange={e => setFundForm(p => ({ ...p, note: e.target.value }))}
-              className="form-input resize-none min-h-[60px]"
-              placeholder="VD: Link drive hóa đơn mua hàng, ghi chú chi tiết..."
-            />
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => { setFundModal(false); setEditingFund(null); }}
-              className="btn-secondary flex-1"
-              disabled={fundSaving}
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="btn-primary flex-1 font-bold"
-              disabled={fundSaving}
-            >
-              {fundSaving ? 'Đang lưu...' : (editingFund ? '💾 Lưu thay đổi' : '💾 Lưu khoản ' + (fundForm.type === 'thu' ? 'thu' : 'chi'))}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Confirm Deletion Dialogs */}
-      <ConfirmDialog open={!!confirmDelLink} onClose={() => setConfirmDelLink(null)} onConfirm={handleDeleteLink} message="Bạn có chắc muốn xóa link tài liệu này?" />
-      <ConfirmDialog open={!!confirmDelInv} onClose={() => setConfirmDelInv(null)} onConfirm={handleDeleteInv} message="Bạn có chắc muốn xóa vật dụng này?" />
-      <ConfirmDialog open={!!confirmDelFund} onClose={() => setConfirmDelFund(null)} onConfirm={handleDeleteFund} message="Bạn có chắc muốn xóa bản ghi thu/chi này khỏi sổ quỹ?" />
-      <DuplicateLinkDialog open={!!dupWarning} creator={dupWarning?.creator} onCancel={() => setDupWarning(null)} onConfirm={dupWarning?.onConfirm} />
+      <ConfirmDialog open={!!confirmDel} onClose={()=>setConfirmDel(null)} onConfirm={handleDeleteItem} message="Bạn có chắc muốn xóa mục này?"/>
+      <DuplicateLinkDialog open={!!dupWarning} creator={dupWarning?.creator} onCancel={()=>setDupWarning(null)} onConfirm={dupWarning?.onConfirm}/>
     </div>
   );
 }
-
 
 // ============================================================
 // GÓC HỌC TẬP NVC (STUDY HUB MODULE)
@@ -6442,7 +5722,7 @@ function StudyHubPage(){
       setModalOpen(false);
       setEditingId(null);
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi lưu tài liệu học tập:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -6456,7 +5736,7 @@ function StudyHubPage(){
       try{addNotification('Đã xóa tài liệu khỏi Góc Học Tập','info');}catch(e){}
       setConfirmDeleteId(null);
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi xóa tài liệu:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -6471,7 +5751,7 @@ function StudyHubPage(){
       try{playSound('pop');}catch(e){}
       try{addNotification(newPinned?`Đã ghim tài liệu trọng tâm: ${item.title}`:`Đã bỏ ghim: ${item.title}`,'info');}catch(e){}
     }catch(err){
-      console.error('[NewVision HUP] Init Error',err);
+      console.error('Lỗi ghim tài liệu:',err);
       alert('Lỗi lưu Firebase: '+err.message);
     }
   };
@@ -7055,7 +6335,7 @@ const NAV_ITEMS=[
   {id:'members',label:'Thành viên',icon:'users'},
   {id:'penalties',label:'Thưởng & Phạt',icon:'scale'},
   {id:'decisions',label:'Quyết định',icon:'file-check-2'},
-  {id:'resources',label:'Tài nguyên & Quỹ',icon:'folder-open',isLocked:true},
+  {id:'resources',label:'Tài nguyên',icon:'folder-open',isLocked:true},
   {id:'bcn',label:'Phòng BCN',icon:'shield',isBcn:true,isLocked:true},
 ];
 
@@ -7087,19 +6367,6 @@ function App(){
   useEffect(()=>{
     function h(e){if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setCmdOpen(o=>!o)}}
     document.addEventListener('keydown',h);return()=>document.removeEventListener('keydown',h);
-  },[]);
-
-  // Tự động gỡ bỏ overlay loading sau 1.5 giây để hiện bảng điều khiển ngay khi CSS nạp xong
-  useEffect(()=>{
-    const timer = setTimeout(() => {
-      const loader = document.getElementById('app-loading-overlay') || document.getElementById('initial-loading-view');
-      if (loader) {
-        loader.style.opacity = '0';
-        loader.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 300);
-      }
-    }, 1500);
-    return () => clearTimeout(timer);
   },[]);
 
   const renderPage=()=>{
@@ -7342,33 +6609,5 @@ function App(){
   );
 }
 
-// ============================================================
-// SAFE APPLICATION MOUNTING & INITIALIZATION
-// ============================================================
-function initNewVisionApp() {
-  try {
-    const rootEl = document.getElementById('root');
-    if (rootEl && !rootEl.dataset.mounted) {
-      rootEl.dataset.mounted = 'true';
-      const root = ReactDOM.createRoot(rootEl);
-      root.render(<AppProvider><App/></AppProvider>);
-    }
-  } catch (err) {
-    console.error('[NewVision HUP] Init Error', err);
-  } finally {
-    setTimeout(function() {
-      var loader = document.getElementById('app-loading-overlay') || document.getElementById('initial-loading-view');
-      if (loader) {
-        loader.style.opacity = '0';
-        loader.style.transition = 'opacity 0.3s ease';
-        setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 300);
-      }
-    }, 1500);
-  }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initNewVisionApp);
-} else {
-  initNewVisionApp();
-}
+const root=ReactDOM.createRoot(document.getElementById('root'));
+root.render(<AppProvider><App/></AppProvider>);
