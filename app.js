@@ -5448,9 +5448,19 @@ function ResourcesPage(){
   const[confirmDel,setConfirmDel]=useState(null);
   const[filterBan,setFilterBan]=useState('');
   const[filterType,setFilterType]=useState('');
+  const[fundTypeFilter,setFundTypeFilter]=useState('all'); // 'all' | 'thu' | 'chi'
+  const[fundUnitFilter,setFundUnitFilter]=useState(''); // '' (Tất cả) | 'Toàn CLB' | 'Ban Nội Vụ'...
   const emptyLink={title:'',url:'',ban:'',type:LINK_TYPES[0],note:''};
   const emptyInv={name:'',quantity:1,status:'Tốt',keeper:'',location:'',note:''};
-  const emptyExp={name:'',amount:'',person:'',ban:'',status:'Dự trù',note:''};
+  const emptyExp={
+    name:'',
+    type:'chi', // 'thu' | 'chi'
+    amount:'',
+    ban:'Toàn CLB',
+    person:'',
+    date:new Date().toISOString().slice(0,10),
+    note:''
+  };
   const[linkForm,setLinkForm]=useState(emptyLink);
   const[invForm,setInvForm]=useState(emptyInv);
   const[expForm,setExpForm]=useState(emptyExp);
@@ -5459,14 +5469,26 @@ function ResourcesPage(){
     setEditing(null);
     if(tab==='links')setLinkForm(emptyLink);
     if(tab==='inventory')setInvForm(emptyInv);
-    if(tab==='expenses')setExpForm(emptyExp);
+    if(tab==='expenses')setExpForm({
+      ...emptyExp,
+      ban: fundUnitFilter || 'Toàn CLB',
+      date: new Date().toISOString().slice(0,10)
+    });
     setModal(true);
   };
   const openEdit=item=>{
     setEditing(item.id);
     if(tab==='links')setLinkForm({...item});
     if(tab==='inventory')setInvForm({...item});
-    if(tab==='expenses')setExpForm({...item});
+    if(tab==='expenses')setExpForm({
+      name: item.name || item.title || '',
+      type: (item.type === 'thu' || item.transType === 'thu') ? 'thu' : 'chi',
+      amount: Math.abs(Number(item.amount) || 0),
+      ban: normalizePenaltyUnit(item.ban || item.unit || 'Toàn CLB'),
+      person: item.person || '',
+      date: item.date || (item.createdAt ? item.createdAt.slice(0,10) : new Date().toISOString().slice(0,10)),
+      note: item.note || ''
+    });
     setModal(true);
   };
   const handleClose=()=>{setModal(false);setEditing(null)};
@@ -5512,19 +5534,27 @@ function ResourcesPage(){
           try{addNotification(`Đã thêm vật dụng mới: ${invForm.name}`,'success');}catch(e){}
         }
       }else if(tab==='expenses'){
-        if(!expForm.name.trim()){alert('Vui lòng nhập tên khoản chi!');return}
+        if(!expForm.name.trim()){alert('Vui lòng nhập nội dung khoản thu/chi!');return}
+        if(!expForm.amount || Number(expForm.amount) <= 0){alert('Vui lòng nhập số tiền hợp lệ (> 0)!');return}
+        const cleanExp = {
+          name: expForm.name.trim(),
+          type: expForm.type || 'chi',
+          amount: Math.abs(Number(expForm.amount)),
+          ban: expForm.ban || 'Toàn CLB',
+          person: (expForm.person || '').trim(),
+          date: expForm.date || new Date().toISOString().slice(0,10),
+          note: (expForm.note || '').trim(),
+          updatedAt: new Date().toISOString()
+        };
         if(editing){
-          await fbDb.collection('expenses').doc(editing).set(expForm,{merge:true});
+          await fbDb.collection('expenses').doc(editing).set(cleanExp,{merge:true});
           try{playSound('success');}catch(e){}
-          try{addNotification(`Đã cập nhật khoản chi: ${expForm.name}`,'success');}catch(e){}
+          try{addNotification(`Đã cập nhật khoản ${cleanExp.type === 'thu' ? 'thu' : 'chi'}: ${cleanExp.name}`,'success');}catch(e){}
         }else{
           const id=uid();
-          await fbDb.collection('expenses').doc(id).set({...expForm,id,createdAt:new Date().toISOString()});
+          await fbDb.collection('expenses').doc(id).set({...cleanExp,id,createdAt:new Date().toISOString()});
           try{playSound('success');}catch(e){}
-          try{addNotification(`Đã thêm khoản chi mới: ${expForm.name}`,'success');}catch(e){}
-          if(expForm.status==='Đã chi - Chờ hoàn tiền'){
-            try{addNotification(`💰 Khoản chi chờ hoàn tiền: ${expForm.name} – ${fmtVND(expForm.amount)}`,'warning');}catch(e){}
-          }
+          try{addNotification(`Đã ghi nhận khoản ${cleanExp.type === 'thu' ? 'thu vào quỹ' : 'chi từ quỹ'}: ${cleanExp.name}`,'success');}catch(e){}
         }
       }
       handleClose();
@@ -5551,18 +5581,42 @@ function ResourcesPage(){
   if(filterBan)filteredResources=filteredResources.filter(r=>r.ban===filterBan);
   if(filterType)filteredResources=filteredResources.filter(r=>r.type===filterType);
 
-  const totalExp=expenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
-  const pendingReim=expenses.filter(e=>e.status==='Đã chi - Chờ hoàn tiền').reduce((s,e)=>s+(Number(e.amount)||0),0);
-  const modalTitle=tab==='links'?(editing?'Chỉnh sửa link':'Thêm link tài liệu'):tab==='inventory'?(editing?'Chỉnh sửa vật dụng':'Thêm vật dụng'):(editing?'Chỉnh sửa khoản chi':'Thêm khoản chi mới');
+  // Lọc quỹ theo đơn vị (Toàn CLB hoặc Ban cụ thể)
+  const unitFilteredExpenses = expenses.filter(e => {
+    if (!fundUnitFilter) return true;
+    const itemUnit = normalizePenaltyUnit(e.ban || e.unit || 'Toàn CLB');
+    return itemUnit === fundUnitFilter;
+  });
+
+  // 3 thẻ thống kê tự động tính toán riêng cho đơn vị đang chọn
+  const fundTotalIncome = unitFilteredExpenses
+    .filter(e => (e.type === 'thu' || e.transType === 'thu'))
+    .reduce((sum, e) => sum + Math.abs(Number(e.amount) || 0), 0);
+
+  const fundTotalExpense = unitFilteredExpenses
+    .filter(e => (e.type !== 'thu' && e.transType !== 'thu'))
+    .reduce((sum, e) => sum + Math.abs(Number(e.amount) || 0), 0);
+
+  const fundBalance = fundTotalIncome - fundTotalExpense;
+
+  // Danh sách các khoản thu/chi theo loại giao dịch
+  const fundFilteredList = unitFilteredExpenses.filter(e => {
+    const isIncome = e.type === 'thu' || e.transType === 'thu';
+    if (fundTypeFilter === 'thu') return isIncome;
+    if (fundTypeFilter === 'chi') return !isIncome;
+    return true;
+  });
+
+  const modalTitle=tab==='links'?(editing?'Chỉnh sửa link':'Thêm link tài liệu'):tab==='inventory'?(editing?'Chỉnh sửa vật dụng':'Thêm vật dụng'):(editing?'Chỉnh sửa khoản thu / chi':'Ghi nhận thu / chi mới');
 
   return(
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-bold text-slate-800">Kho Tài Nguyên & Quỹ CLB</h1><p className="text-xs text-slate-500 mt-0.5">Link tài liệu, vật dụng CLB và chi tiêu sự kiện</p></div>
+        <div><h1 className="text-xl font-bold text-slate-800">Kho Tài Nguyên & Quỹ CLB</h1><p className="text-xs text-slate-500 mt-0.5">Link tài liệu, vật dụng CLB và quản lý thu chi quỹ các Ban</p></div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>Thêm mới</button>
       </div>
       <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
-        {[['links','🔗 Kho Link'],['inventory','📦 Vật Dụng'],['expenses','💰 Chi Tiêu']].map(([v,l])=>(
+        {[['links','🔗 Kho Link'],['inventory','📦 Vật Dụng'],['expenses','💰 Quỹ CLB & Các Ban']].map(([v,l])=>(
           <button key={v} onClick={()=>setTab(v)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${tab===v?'bg-white shadow text-slate-800':'text-slate-500 hover:text-slate-700'}`}>{l}</button>
         ))}
       </div>
@@ -5642,43 +5696,139 @@ function ResourcesPage(){
       )}
 
       {tab==='expenses'&&(
-        <div className="space-y-3">
-          {expenses.length>0&&(
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl p-3 text-white" style={{background:'linear-gradient(135deg,#4f46e5,#2563eb)'}}>
-                <p className="text-xs opacity-80 mb-1">Tổng chi tiêu</p>
-                <p className="text-xl font-black">{fmtVND(totalExp)}</p>
-              </div>
-              <div className="rounded-2xl p-3 text-white" style={{background:'linear-gradient(135deg,#f59e0b,#ea580c)'}}>
-                <p className="text-xs opacity-80 mb-1">Chờ hoàn tiền</p>
-                <p className="text-xl font-black">{fmtVND(pendingReim)}</p>
-              </div>
+        <div className="space-y-4 fade-in">
+          {/* HÀNG 1: 3 THẺ THỐNG KÊ TỰ ĐỘNG TÍNH TOÁN */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="card p-3 border-l-4 border-emerald-500 dark:bg-slate-800">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">TỔNG THU (+)</span>
+              <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">+{fundTotalIncome.toLocaleString('vi-VN')} đ</p>
+            </div>
+            <div className="card p-3 border-l-4 border-rose-500 dark:bg-slate-800">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">TỔNG CHI (-)</span>
+              <p className="text-lg font-black text-rose-600 dark:text-rose-400 mt-1">-{fundTotalExpense.toLocaleString('vi-VN')} đ</p>
+            </div>
+            <div className="card p-3 border-l-4 border-indigo-500 dark:bg-slate-800 col-span-1">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">SỐ DƯ HIỆN TẠI (=)</span>
+              <p className={`text-lg font-black mt-1 ${fundBalance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                {fundBalance >= 0 ? `+${fundBalance.toLocaleString('vi-VN')} đ` : `-${Math.abs(fundBalance).toLocaleString('vi-VN')} đ`}
+              </p>
+            </div>
+          </div>
+
+          {/* HÀNG 2: BỘ LỌC THEO LOẠI GIAO DỊCH VÀ CHỌN QUỸ ĐƠN VỊ */}
+          <div className="card p-3 flex flex-wrap items-center justify-between gap-2 dark:bg-slate-800">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setFundTypeFilter('all')}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition ${fundTypeFilter === 'all' ? 'bg-orange-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
+              >
+                Tất cả ({fundFilteredList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFundTypeFilter('thu')}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition ${fundTypeFilter === 'thu' ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
+              >
+                Khoản Thu (+) ({unitFilteredExpenses.filter(e => (e.type === 'thu' || e.transType === 'thu')).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFundTypeFilter('chi')}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition ${fundTypeFilter === 'chi' ? 'bg-rose-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
+              >
+                Khoản Chi (-) ({unitFilteredExpenses.filter(e => (e.type !== 'thu' && e.transType !== 'thu')).length})
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <select
+                value={fundUnitFilter}
+                onChange={e => setFundUnitFilter(e.target.value)}
+                className="form-input text-xs py-1 px-2.5 min-w-[150px] font-semibold dark:bg-slate-800"
+              >
+                <option value="">Tất cả quỹ</option>
+                <option value="Toàn CLB">Quỹ Toàn CLB</option>
+                <option value="Ban Nội Vụ">Quỹ Ban Nội Vụ</option>
+                <option value="Ban Sự Kiện">Quỹ Ban Sự Kiện</option>
+                <option value="Ban Truyền Thông">Quỹ Ban Truyền Thông</option>
+                <option value="Ban Đối Ngoại">Quỹ Ban Đối Ngoại</option>
+              </select>
+            </div>
+          </div>
+
+          {/* HÀNG 3: DANH SÁCH CÁC KHOẢN THU / CHI */}
+          {fundFilteredList.length === 0 && (
+            <div className="card py-14 text-center dark:bg-slate-800">
+              <Icon name="wallet" size={40} className="text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-400 font-medium">Chưa có giao dịch thu/chi nào phù hợp bộ lọc</p>
+              <p className="text-sm text-slate-400 mt-1">Bấm "+ Thêm mới" ở góc trên để ghi nhận thu/chi cho quỹ CLB & các Ban</p>
             </div>
           )}
-          {expenses.length===0&&<div className="card py-14 text-center"><Icon name="wallet" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có khoản chi nào</p><p className="text-sm text-slate-300 mt-1">Quản lý thu chi quỹ CLB và các Ban</p></div>}
+
           <div className="space-y-2">
-            {expenses.map(exp=>(
-              <div key={exp.id} className="card p-3.5 fade-in">
-                <div className="flex items-start justify-between gap-3">
+            {fundFilteredList.map(exp => {
+              const isIncome = exp.type === 'thu' || exp.transType === 'thu';
+              const amt = Math.abs(Number(exp.amount) || 0);
+              const unitName = normalizePenaltyUnit(exp.ban || exp.unit || 'Toàn CLB');
+              return (
+                <div key={exp.id} className="card p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-sm transition dark:bg-slate-800">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className={`status-badge text-xs ${expenseColor(exp.status)}`}>{exp.status}</span>
-                      {exp.ban&&<span className="status-badge tag-gray text-xs">{exp.ban}</span>}
+                      <span className={`status-badge text-[11px] font-bold ${isIncome ? 'tag-green' : 'tag-red'}`}>
+                        {isIncome ? 'Thu vào quỹ (+)' : 'Chi từ quỹ (-)'}
+                      </span>
+                      <span className="status-badge tag-gray text-[11px] font-semibold">
+                        {unitName}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        {exp.date || (exp.createdAt ? exp.createdAt.slice(0,10) : '')}
+                      </span>
                     </div>
-                    <p className="font-bold text-slate-800 text-sm">{exp.name}</p>
-                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-slate-500">
-                      {exp.amount&&<span className="text-base font-black text-slate-800">{fmtVND(exp.amount)}</span>}
-                      {exp.person&&<span className="flex items-center gap-1 mt-0.5"><Icon name="user" size={11}/>Ứng tiền: <b className="text-slate-700">{exp.person}</b></span>}
+                    <p className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug">{exp.name || exp.title}</p>
+                    <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      {exp.person && (
+                        <span className="flex items-center gap-1">
+                          <Icon name="user" size={12} className="text-slate-400" />
+                          Người phụ trách: <b className="text-slate-700 dark:text-slate-300">{exp.person}</b>
+                        </span>
+                      )}
+                      {exp.note && (
+                        <span className="text-slate-400 italic">
+                          {exp.note}
+                        </span>
+                      )}
                     </div>
-                    {exp.note&&<p className="text-xs text-slate-400 mt-1">{exp.note}</p>}
                   </div>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={()=>openEdit(exp)} className="p-2 rounded-lg hover:bg-slate-100"><Icon name="pencil" size={14} className="text-slate-400"/></button>
-                    <button onClick={()=>setConfirmDel(exp.id)} className="p-2 rounded-lg hover:bg-red-50"><Icon name="trash-2" size={14} className="text-red-400"/></button>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-700">
+                    <div className="text-right">
+                      <p className={`font-mono font-bold text-base ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                        {isIncome ? `+${amt.toLocaleString('vi-VN')} đ` : `-${amt.toLocaleString('vi-VN')} đ`}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(exp)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 transition"
+                        title="Chỉnh sửa khoản thu/chi"
+                      >
+                        <Icon name="pencil" size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDel(exp.id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-slate-700 transition"
+                        title="Xóa khoản thu/chi"
+                      >
+                        <Icon name="trash-2" size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -5712,19 +5862,101 @@ function ResourcesPage(){
           </div>
         )}
         {tab==='expenses'&&(
-          <div className="space-y-4">
-            <div><label className="form-label">Tên khoản chi <span className="text-red-500">*</span></label><input value={expForm.name} onChange={e=>setExpForm(p=>({...p,name:e.target.value}))} className="form-input" placeholder="VD: In ấn backdrop sự kiện..."/></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><label className="form-label">Số tiền (VNĐ)</label><input type="number" value={expForm.amount} onChange={e=>setExpForm(p=>({...p,amount:e.target.value}))} className="form-input" placeholder="500000"/></div>
-              <div><label className="form-label">Người ứng tiền</label><input value={expForm.person} onChange={e=>setExpForm(p=>({...p,person:e.target.value}))} className="form-input" placeholder="Tên người ứng tiền"/></div>
+          <form onSubmit={e=>{e.preventDefault();handleSave();}} className="space-y-4">
+            <div>
+              <label className="form-label">Loại giao dịch</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={()=>setExpForm(p=>({...p,type:'thu'}))}
+                  className={`py-2 rounded-xl text-xs font-bold border transition ${expForm.type==='thu'?'bg-emerald-50 border-emerald-500 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300':'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
+                >
+                  💰 Thu vào quỹ (+)
+                </button>
+                <button
+                  type="button"
+                  onClick={()=>setExpForm(p=>({...p,type:'chi'}))}
+                  className={`py-2 rounded-xl text-xs font-bold border transition ${expForm.type==='chi'?'bg-rose-50 border-rose-500 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300':'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
+                >
+                  💸 Chi từ quỹ (-)
+                </button>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><label className="form-label">Ban phụ trách</label><select value={expForm.ban} onChange={e=>setExpForm(p=>({...p,ban:e.target.value}))} className="form-input"><option value="">Chọn ban...</option>{BANS.map(b=><option key={b}>{b}</option>)}</select></div>
-              <div><label className="form-label">Trạng thái</label><select value={expForm.status} onChange={e=>setExpForm(p=>({...p,status:e.target.value}))} className="form-input">{EXPENSE_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="form-label">Thuộc quỹ đơn vị <span className="text-red-500">*</span></label>
+                <select
+                  value={expForm.ban}
+                  onChange={e=>setExpForm(p=>({...p,ban:e.target.value}))}
+                  className="form-input font-medium"
+                >
+                  {PENALTY_UNITS.map(u=>(
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+                <input
+                  type="number"
+                  step="1000"
+                  value={expForm.amount}
+                  onChange={e=>setExpForm(p=>({...p,amount:e.target.value}))}
+                  className="form-input font-bold font-mono"
+                  placeholder="500000"
+                  required
+                />
+              </div>
             </div>
-            <div><label className="form-label">Ghi chú</label><textarea value={expForm.note} onChange={e=>setExpForm(p=>({...p,note:e.target.value}))} className="form-input resize-none min-h-[60px]" placeholder="Mô tả chi tiết, link hóa đơn..."/></div>
-            <div className="flex gap-2 pt-2"><button onClick={handleClose} className="btn-secondary flex-1">Hủy</button><button onClick={handleSave} className="btn-primary flex-1">{editing?'Lưu':'Thêm khoản chi'}</button></div>
-          </div>
+
+            <div>
+              <label className="form-label">Nội dung khoản thu / chi <span className="text-red-500">*</span></label>
+              <input
+                value={expForm.name}
+                onChange={e=>setExpForm(p=>({...p,name:e.target.value}))}
+                className="form-input"
+                placeholder="VD: Thu quỹ hội viên tháng 11, Chi in ấn backdrop sự kiện..."
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="form-label">Ngày thực hiện</label>
+                <input
+                  type="date"
+                  value={expForm.date}
+                  onChange={e=>setExpForm(p=>({...p,date:e.target.value}))}
+                  className="form-input"
+                />
+              </div>
+              <div>
+                <label className="form-label">Người phụ trách / thực hiện</label>
+                <input
+                  value={expForm.person}
+                  onChange={e=>setExpForm(p=>({...p,person:e.target.value}))}
+                  className="form-input"
+                  placeholder="VD: Trần Văn A (Thủ quỹ)"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="form-label">Ghi chú thêm</label>
+              <textarea
+                value={expForm.note}
+                onChange={e=>setExpForm(p=>({...p,note:e.target.value}))}
+                className="form-input resize-none min-h-[60px]"
+                placeholder="Mô tả chi tiết, số hóa đơn, link ảnh chứng từ..."
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={handleClose} className="btn-secondary flex-1">Hủy</button>
+              <button type="submit" className="btn-primary flex-1 font-bold">{editing?'Lưu thay đổi':'Ghi nhận giao dịch'}</button>
+            </div>
+          </form>
         )}
       </Modal>
 
