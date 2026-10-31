@@ -4458,7 +4458,7 @@ const getVietQrBankCode = (bankCode) => {
   }
 };
 
-// Hàm nén ảnh mã QR sang Base64 nhỏ gọn (max 600px, quality 0.85, an toàn Firestore < 1MB)
+// Hàm nén ảnh mã QR sang Base64 nhỏ gọn (max 500x500px, quality 0.8, dung lượng nhẹ ~30KB an toàn Firestore & LocalStorage)
 const compressQrImageFile = (file) => {
   return new Promise((resolve, reject) => {
     if (!file) return reject(new Error('Chưa chọn file!'));
@@ -4470,7 +4470,7 @@ const compressQrImageFile = (file) => {
       const img = new Image();
       img.onload = () => {
         try {
-          const maxDim = 600;
+          const maxDim = 500;
           let w = img.width;
           let h = img.height;
           if (w > maxDim || h > maxDim) {
@@ -4487,15 +4487,11 @@ const compressQrImageFile = (file) => {
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
           resolve(dataUrl);
         } catch (err) {
           const rawUrl = e.target.result;
-          if (rawUrl && rawUrl.length < 900000) {
-            resolve(rawUrl);
-          } else {
-            reject(new Error('Kích thước ảnh quá lớn, vui lòng chọn ảnh dung lượng dưới 1MB!'));
-          }
+          resolve(rawUrl);
         }
       };
       img.onerror = () => reject(new Error('Không thể đọc file ảnh đã chọn!'));
@@ -4530,224 +4526,241 @@ function normalizePenaltyUnit(ban) {
 function VietQRModal({ isOpen, onClose, penalty }) {
   const { playSound, addNotification, penaltyAccount } = useContext(AppCtx);
   const [copied, setCopied] = useState(false);
-  const qrImgRef = useRef(null);
 
   if (!isOpen || !penalty) return null;
 
+  // Lấy nguồn cấu hình tài khoản/QR từ Context hoặc LocalStorage dự phòng
+  let accountSource = penaltyAccount;
   try {
-    const item = penalty || {};
-    const itemDept = item?.department || item?.ban || item?.unit || 'Toàn CLB';
-    const targetUnit = normalizePenaltyUnit(itemDept);
-
-    const getUnitAccount = (unit) => {
-      try {
-        if (!penaltyAccount || typeof penaltyAccount !== 'object') return null;
-
-        const findInObj = (u) => {
-          if (!penaltyAccount.accounts || typeof penaltyAccount.accounts !== 'object') return null;
-          if (penaltyAccount.accounts[u]) return penaltyAccount.accounts[u];
-          const norm = normalizePenaltyUnit(u);
-          for (const k of Object.keys(penaltyAccount.accounts)) {
-            if (normalizePenaltyUnit(k) === norm) return penaltyAccount.accounts[k];
+    const rawLocal = localStorage.getItem('nv_qr_configs') || localStorage.getItem('nv_cache_penalty_account');
+    if (rawLocal) {
+      const parsedLocal = JSON.parse(rawLocal);
+      if (!accountSource || typeof accountSource !== 'object' || !accountSource.accounts) {
+        accountSource = parsedLocal;
+      } else if (parsedLocal && parsedLocal.accounts) {
+        accountSource = {
+          ...parsedLocal,
+          ...accountSource,
+          accounts: {
+            ...parsedLocal.accounts,
+            ...accountSource.accounts
           }
-          return null;
         };
-
-        const hasData = (a) => a && typeof a === 'object' && (
-          (a.accountNo && String(a.accountNo).trim()) ||
-          (a.accountNumber && String(a.accountNumber).trim()) ||
-          (a.customQrImage && String(a.customQrImage).trim()) ||
-          (a.customQrUrl && String(a.customQrUrl).trim()) ||
-          (a.qrImage && String(a.qrImage).trim())
-        );
-
-        const target = findInObj(unit);
-        if (hasData(target)) return target;
-
-        const club = findInObj('Toàn CLB');
-        if (hasData(club)) return club;
-
-        if (hasData(penaltyAccount)) return penaltyAccount;
-        return null;
-      } catch (err) {
-        console.error('getUnitAccount error:', err);
-        return null;
-      }
-    };
-
-    const currentAcc = getUnitAccount(targetUnit) || {};
-
-    // Hỗ trợ cả bankCode / bank, accountNumber / accountNo, accountName / owner
-    const rawBank = String(currentAcc?.bankCode || currentAcc?.bank || 'MB').trim().toUpperCase();
-    const bankDisplay = currentAcc?.bankName || currentAcc?.bank || rawBank;
-    const accNo = String(currentAcc?.accountNumber || currentAcc?.accountNo || '').trim();
-    const cleanAccNo = accNo.replace(/\s+/g, '');
-    const accName = String(currentAcc?.accountName || currentAcc?.owner || '').trim().toUpperCase();
-
-    // Lấy ảnh QR tải lên riêng nếu có (hỗ trợ customQrImage, customQrUrl, qrImage)
-    const rawCustomImg = currentAcc?.customQrImage || currentAcc?.customQrUrl || currentAcc?.qrImage || '';
-    const uploadedQrRaw = typeof rawCustomImg === 'string' ? rawCustomImg.trim() : '';
-    const hasCustomQr = !!uploadedQrRaw;
-    const isBase64 = uploadedQrRaw.startsWith('data:image');
-
-    let customQrSrc = '';
-    if (hasCustomQr) {
-      if (isBase64) {
-        customQrSrc = uploadedQrRaw;
-      } else {
-        customQrSrc = uploadedQrRaw.includes('?') ? `${uploadedQrRaw}&_t=${Date.now()}` : `${uploadedQrRaw}?_t=${Date.now()}`;
       }
     }
+  } catch (e) {}
 
-    const amount = Math.abs(Number(item?.amount) || 20000);
-    const itemName = String(item?.name || item?.person || item?.title || '').trim();
-    const qrIdentifier = getVietQrBankCode(rawBank);
-    const addInfo = `NVPHAT ${itemName}`.trim();
+  const item = penalty || {};
+  const itemDept = item.department || item.ban || item.unit || 'Toàn CLB';
+  const targetUnit = normalizePenaltyUnit(itemDept);
 
-    const dynamicVietQrSrc = `https://img.vietqr.io/image/${qrIdentifier}-${cleanAccNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}${accName ? `&accountName=${encodeURIComponent(accName)}` : ''}`;
+  const getUnitAccount = (unit) => {
+    try {
+      if (!accountSource || typeof accountSource !== 'object') return null;
 
-    const finalQrSrc = hasCustomQr ? customQrSrc : dynamicVietQrSrc;
+      const accountsMap = accountSource.accounts && typeof accountSource.accounts === 'object'
+        ? accountSource.accounts
+        : accountSource;
 
-    useEffect(() => {
-      if (isOpen && qrImgRef.current && finalQrSrc) {
-        try {
-          qrImgRef.current.src = finalQrSrc;
-        } catch (e) {
-          console.error('Lỗi cập nhật ảnh QR:', e);
+      const normTarget = normalizePenaltyUnit(unit);
+
+      const hasData = (a) => a && typeof a === 'object' && (
+        (a.accountNo && String(a.accountNo).trim()) ||
+        (a.accountNumber && String(a.accountNumber).trim()) ||
+        (a.customQrImage && String(a.customQrImage).trim()) ||
+        (a.customQrUrl && String(a.customQrUrl).trim()) ||
+        (a.qrImage && String(a.qrImage).trim()) ||
+        (a.customQr && String(a.customQr).trim())
+      );
+
+      // 1. Tìm chính xác theo tên đơn vị đã chuẩn hóa
+      if (accountsMap[normTarget] && hasData(accountsMap[normTarget])) {
+        return accountsMap[normTarget];
+      }
+
+      // 2. Tìm không phân biệt hoa thường / khoảng trắng
+      for (const k of Object.keys(accountsMap)) {
+        if (normalizePenaltyUnit(k) === normTarget && hasData(accountsMap[k])) {
+          return accountsMap[k];
         }
       }
-    }, [isOpen, finalQrSrc, targetUnit, penalty]);
 
-    const hasBankAcc = !!cleanAccNo;
-    const isConfigured = hasCustomQr || hasBankAcc;
-
-    if (!isConfigured) {
-      return (
-        <Modal open={isOpen} onClose={onClose} title={`Quét Mã QR Nộp Quỹ - ${targetUnit}`}>
-          <div className="flex flex-col items-center py-6 px-4 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <Icon name="alert-triangle" size={32} />
-            </div>
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">
-                Chưa cấu hình tài khoản nộp quỹ cho {targetUnit}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-                Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng hoặc tải ảnh mã QR cho đơn vị <strong>{targetUnit}</strong>. Vui lòng liên hệ BCN hoặc mở "⚙️ Cài đặt tài khoản nộp phạt" để cấu hình riêng cho đơn vị này hoặc tài khoản chung của Toàn CLB.
-              </p>
-            </div>
-            <button onClick={onClose} type="button" className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl cursor-pointer">
-              Đóng
-            </button>
-          </div>
-        </Modal>
-      );
-    }
-
-    const copyInfo = () => {
-      try {
-        const namePart = accName ? ` - Chu TK: ${accName}` : '';
-        const accPart = cleanAccNo ? ` - STK: ${cleanAccNo}` : '';
-        const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: ${addInfo}`;
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        try { playSound('pop'); } catch (e) {}
-        try { addNotification('Đã sao chép thông tin chuyển khoản!', 'success'); } catch (e) {}
-        setTimeout(() => setCopied(false), 2000);
-      } catch (e) {
-        console.error('Lỗi sao chép thông tin:', e);
+      // 3. Fallback 1: Lấy cấu hình "Toàn CLB"
+      if (accountsMap['Toàn CLB'] && hasData(accountsMap['Toàn CLB'])) {
+        return accountsMap['Toàn CLB'];
       }
-    };
+      for (const k of Object.keys(accountsMap)) {
+        if (normalizePenaltyUnit(k) === 'Toàn CLB' && hasData(accountsMap[k])) {
+          return accountsMap[k];
+        }
+      }
 
-    const qrKey = `${targetUnit}-${cleanAccNo}-${amount}-${hasCustomQr ? 'custom' : 'vietqr'}-${String(finalQrSrc).slice(-20)}`;
+      // 4. Fallback 2: Lấy cấu hình đầu tiên có dữ liệu trong danh sách
+      for (const k of Object.keys(accountsMap)) {
+        if (hasData(accountsMap[k])) {
+          return accountsMap[k];
+        }
+      }
 
+      // 5. Fallback 3: Kiểm tra trực tiếp trên root của accountSource
+      if (hasData(accountSource)) {
+        return accountSource;
+      }
+
+      return null;
+    } catch (err) {
+      console.error('getUnitAccount error:', err);
+      return null;
+    }
+  };
+
+  const currentAcc = getUnitAccount(targetUnit) || {};
+
+  // Hỗ trợ cả bankCode / bank, accountNumber / accountNo, accountName / owner
+  const rawBank = String(currentAcc.bankCode || currentAcc.bank || 'MB').trim().toUpperCase();
+  const bankDisplay = currentAcc.bankName || currentAcc.bank || rawBank;
+  const accNo = String(currentAcc.accountNumber || currentAcc.accountNo || '').trim();
+  const cleanAccNo = accNo.replace(/\s+/g, '');
+  const accName = String(currentAcc.accountName || currentAcc.owner || '').trim().toUpperCase();
+
+  // Lấy ảnh QR tải lên riêng nếu có (hỗ trợ customQrImage, customQrUrl, qrImage, customQr)
+  const rawCustomImg = currentAcc.customQrImage || currentAcc.customQrUrl || currentAcc.qrImage || currentAcc.customQr || '';
+  const uploadedQrRaw = typeof rawCustomImg === 'string' ? rawCustomImg.trim() : '';
+  const hasCustomQr = !!uploadedQrRaw;
+  const isBase64 = uploadedQrRaw.startsWith('data:image');
+
+  let customQrSrc = '';
+  if (hasCustomQr) {
+    if (isBase64) {
+      customQrSrc = uploadedQrRaw;
+    } else {
+      customQrSrc = uploadedQrRaw.includes('?') ? `${uploadedQrRaw}&_t=${Date.now()}` : `${uploadedQrRaw}?_t=${Date.now()}`;
+    }
+  }
+
+  const amount = Math.abs(Number(item.amount) || 20000);
+  const itemName = String(item.name || item.person || item.title || '').trim();
+  const qrIdentifier = getVietQrBankCode(rawBank);
+  const addInfo = `NVPHAT ${itemName}`.trim();
+
+  const dynamicVietQrSrc = `https://img.vietqr.io/image/${qrIdentifier}-${cleanAccNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}${accName ? `&accountName=${encodeURIComponent(accName)}` : ''}`;
+
+  const finalQrSrc = hasCustomQr ? customQrSrc : dynamicVietQrSrc;
+  const hasBankAcc = !!cleanAccNo;
+  const isConfigured = hasCustomQr || hasBankAcc;
+
+  if (!isConfigured) {
     return (
-      <Modal open={isOpen} onClose={onClose} title={hasCustomQr ? `Quét Mã QR Nộp Quỹ - ${targetUnit}` : `Quét Mã VietQR Nộp Quỹ - ${targetUnit}`}>
-        <div className="flex flex-col items-center space-y-4 py-2">
-          <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
-            <img
-              key={qrKey}
-              ref={qrImgRef}
-              src={finalQrSrc}
-              alt={`Mã QR Nộp Quỹ ${targetUnit}`}
-              className="w-64 h-auto rounded-xl mx-auto max-h-72 object-contain"
-              onError={e => {
-                try {
-                  if (!hasCustomQr && cleanAccNo) {
-                    e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20${encodeURIComponent(itemName)}`;
-                  }
-                } catch (err) {}
-              }}
-            />
-            <div className="mt-2 text-center flex flex-wrap justify-center gap-1.5">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full">
-                Đơn vị: {targetUnit}
-              </span>
-              {hasCustomQr && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                  <Icon name="check-circle" size={12} /> Ảnh QR do BCN tải lên
-                </span>
-              )}
-            </div>
+      <Modal open={isOpen} onClose={onClose} title={`Quét Mã QR Nộp Quỹ - ${targetUnit}`}>
+        <div className="flex flex-col items-center py-6 px-4 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <Icon name="alert-triangle" size={32} />
           </div>
-
-          <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Đơn vị nhận:</span>
-              <span className="font-bold text-orange-600 dark:text-orange-400">{targetUnit}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Ngân hàng / Ví:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
-            </div>
-            {cleanAccNo && (
-              <div className="flex justify-between">
-                <span className="text-slate-500">Số tài khoản / SĐT:</span>
-                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{cleanAccNo}</span>
-              </div>
-            )}
-            {accName && (
-              <div className="flex justify-between">
-                <span className="text-slate-500">Chủ tài khoản / ví:</span>
-                <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{accName}</span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-slate-500">Số tiền nộp:</span>
-              <span className="font-bold text-amber-600">{amount.toLocaleString('vi-VN')} đ</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Nội dung CK:</span>
-              <span className="font-mono font-bold text-emerald-600">{addInfo}</span>
-            </div>
+          <div className="space-y-1.5">
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">
+              Chưa cấu hình tài khoản nộp quỹ cho {targetUnit}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
+              Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng hoặc tải ảnh mã QR cho đơn vị <strong>{targetUnit}</strong>. Vui lòng liên hệ BCN hoặc mở "⚙️ Cài đặt tài khoản nộp phạt" để cấu hình riêng cho đơn vị này hoặc tài khoản chung của Toàn CLB.
+            </p>
           </div>
-
-          <div className="flex gap-2 w-full pt-1">
-            <button type="button" onClick={copyInfo} className="btn-secondary flex-1 py-2 text-xs flex items-center justify-center gap-1.5 cursor-pointer">
-              <Icon name={copied ? 'check' : 'copy'} size={14} />
-              <span>{copied ? 'Đã sao chép' : 'Sao chép thông tin'}</span>
-            </button>
-            <button type="button" onClick={onClose} className="btn-primary flex-1 py-2 text-xs font-bold cursor-pointer">
-              Đóng
-            </button>
-          </div>
-        </div>
-      </Modal>
-    );
-  } catch (err) {
-    console.error('Lỗi runtime trong VietQRModal:', err);
-    return (
-      <Modal open={isOpen} onClose={onClose} title="Quét Mã QR Nộp Quỹ">
-        <div className="py-6 px-4 text-center space-y-4">
-          <p className="text-sm text-red-500 font-semibold">Đã xảy ra sự cố khi tải mã QR nộp phạt.</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Vui lòng kiểm tra lại cấu hình tài khoản hoặc liên hệ BCN.</p>
-          <button type="button" onClick={onClose} className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl cursor-pointer">
+          <button onClick={onClose} type="button" className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl cursor-pointer">
             Đóng
           </button>
         </div>
       </Modal>
     );
   }
+
+  const copyInfo = () => {
+    try {
+      const namePart = accName ? ` - Chu TK: ${accName}` : '';
+      const accPart = cleanAccNo ? ` - STK: ${cleanAccNo}` : '';
+      const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: ${addInfo}`;
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+      try { playSound('pop'); } catch (e) {}
+      try { addNotification('Đã sao chép thông tin chuyển khoản!', 'success'); } catch (e) {}
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error('Lỗi sao chép thông tin:', e);
+    }
+  };
+
+  const qrKey = `${targetUnit}-${cleanAccNo}-${amount}-${hasCustomQr ? 'custom' : 'vietqr'}`;
+
+  return (
+    <Modal open={isOpen} onClose={onClose} title={hasCustomQr ? `Quét Mã QR Nộp Quỹ - ${targetUnit}` : `Quét Mã VietQR Nộp Quỹ - ${targetUnit}`}>
+      <div className="flex flex-col items-center space-y-4 py-2">
+        <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
+          <img
+            key={qrKey}
+            src={finalQrSrc}
+            alt={`Mã QR Nộp Quỹ ${targetUnit}`}
+            className="w-64 h-auto rounded-xl mx-auto max-h-72 object-contain"
+            onError={e => {
+              try {
+                if (!hasCustomQr && cleanAccNo) {
+                  e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20${encodeURIComponent(itemName)}`;
+                }
+              } catch (err) {}
+            }}
+          />
+          <div className="mt-2 text-center flex flex-wrap justify-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full">
+              Đơn vị: {targetUnit}
+            </span>
+            {hasCustomQr && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                <Icon name="check-circle" size={12} /> Ảnh QR do BCN tải lên
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Đơn vị nhận:</span>
+            <span className="font-bold text-orange-600 dark:text-orange-400">{targetUnit}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Ngân hàng / Ví:</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
+          </div>
+          {cleanAccNo && (
+            <div className="flex justify-between">
+              <span className="text-slate-500">Số tài khoản / SĐT:</span>
+              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{cleanAccNo}</span>
+            </div>
+          )}
+          {accName && (
+            <div className="flex justify-between">
+              <span className="text-slate-500">Chủ tài khoản / ví:</span>
+              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{accName}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-slate-500">Số tiền nộp:</span>
+            <span className="font-bold text-amber-600">{amount.toLocaleString('vi-VN')} đ</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Nội dung CK:</span>
+            <span className="font-mono font-bold text-emerald-600">{addInfo}</span>
+          </div>
+        </div>
+
+        <div className="flex gap-2 w-full pt-1">
+          <button type="button" onClick={copyInfo} className="btn-secondary flex-1 py-2 text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+            <Icon name={copied ? 'check' : 'copy'} size={14} />
+            <span>{copied ? 'Đã sao chép' : 'Sao chép thông tin'}</span>
+          </button>
+          <button type="button" onClick={onClose} className="btn-primary flex-1 py-2 text-xs font-bold cursor-pointer">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
 }
 
 // ============================================================
@@ -4789,15 +4802,34 @@ function PenaltiesPage() {
 
   const openBankModal = () => {
     let initialMap = {};
-    if (penaltyAccount && penaltyAccount.accounts) {
-      initialMap = { ...penaltyAccount.accounts };
-    } else if (penaltyAccount) {
-      const qrImg = (penaltyAccount.customQrImage || penaltyAccount.customQrUrl || penaltyAccount.qrImage || '').trim();
+    let source = penaltyAccount;
+    try {
+      const rawLocal = localStorage.getItem('nv_qr_configs') || localStorage.getItem('nv_cache_penalty_account');
+      if (rawLocal) {
+        const parsedLocal = JSON.parse(rawLocal);
+        if (!source || typeof source !== 'object' || !source.accounts) {
+          source = parsedLocal;
+        } else if (parsedLocal && parsedLocal.accounts) {
+          source = {
+            ...parsedLocal,
+            ...source,
+            accounts: {
+              ...parsedLocal.accounts,
+              ...source.accounts
+            }
+          };
+        }
+      }
+    } catch (e) {}
+    if (source && source.accounts && typeof source.accounts === 'object') {
+      initialMap = { ...source.accounts };
+    } else if (source) {
+      const qrImg = (source.customQrImage || source.customQrUrl || source.qrImage || '').trim();
       initialMap['Toàn CLB'] = {
-        bank: penaltyAccount.bank || 'MB',
-        bankName: penaltyAccount.bankName || 'MB Bank (Quân Đội)',
-        accountNo: penaltyAccount.accountNo || '',
-        accountName: penaltyAccount.accountName || '',
+        bank: source.bank || 'MB',
+        bankName: source.bankName || 'MB Bank (Quân Đội)',
+        accountNo: source.accountNo || source.accountNumber || '',
+        accountName: source.accountName || '',
         customQrUrl: qrImg,
         customQrImage: qrImg,
         qrImage: qrImg
@@ -4811,7 +4843,7 @@ function PenaltiesPage() {
     const curr = {
       bank: clubData.bank || 'MB',
       bankName: clubData.bankName || 'MB Bank (Quân Đội)',
-      accountNo: clubData.accountNo || '',
+      accountNo: clubData.accountNo || clubData.accountNumber || '',
       accountName: clubData.accountName || '',
       customQrUrl: clubQr,
       customQrImage: clubQr,
@@ -4822,6 +4854,8 @@ function PenaltiesPage() {
   };
 
   const handleUnitChange = (newUnit) => {
+    const fromUnit = String(selectedUnit || 'Toàn CLB').trim();
+    const toUnit = String(newUnit || 'Toàn CLB').trim();
     const qrImg = (bankForm.customQrImage || bankForm.customQrUrl || bankForm.qrImage || '').trim();
     const currentSnapshot = {
       ...bankForm,
@@ -4835,12 +4869,12 @@ function PenaltiesPage() {
     };
     const updatedMap = {
       ...unitAccounts,
-      [selectedUnit]: currentSnapshot
+      [fromUnit]: currentSnapshot
     };
     setUnitAccounts(updatedMap);
-    setSelectedUnit(newUnit);
+    setSelectedUnit(toUnit);
 
-    const target = updatedMap[newUnit] || {};
+    const target = updatedMap[toUnit] || {};
     const targetQr = (target.customQrImage || target.customQrUrl || target.qrImage || '').trim();
     const targetAcc = {
       bank: target.bank || 'MB',
@@ -4857,6 +4891,7 @@ function PenaltiesPage() {
   const handleQrFileUpload = async e => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    const curUnit = String(selectedUnit || 'Toàn CLB').trim();
     setUploadingQr(true);
     try {
       const dataUrl = await compressQrImageFile(file);
@@ -4868,8 +4903,8 @@ function PenaltiesPage() {
       }));
       setUnitAccounts(prev => ({
         ...prev,
-        [selectedUnit]: {
-          ...(prev[selectedUnit] || {}),
+        [curUnit]: {
+          ...(prev[curUnit] || {}),
           ...bankForm,
           customQrUrl: dataUrl,
           customQrImage: dataUrl,
@@ -4877,7 +4912,7 @@ function PenaltiesPage() {
         }
       }));
       try { playSound('pop'); } catch (err) {}
-      try { addNotification(`Đã tải ảnh mã QR cho ${selectedUnit}!`, 'success'); } catch (err) {}
+      try { addNotification(`Đã tải ảnh mã QR cho ${curUnit}!`, 'success'); } catch (err) {}
     } catch (err) {
       alert(err.message || 'Lỗi khi tải ảnh!');
     } finally {
@@ -4887,6 +4922,7 @@ function PenaltiesPage() {
   };
 
   const handleRemoveQrImage = () => {
+    const curUnit = String(selectedUnit || 'Toàn CLB').trim();
     setBankForm(p => ({
       ...p,
       customQrUrl: '',
@@ -4895,8 +4931,8 @@ function PenaltiesPage() {
     }));
     setUnitAccounts(prev => ({
       ...prev,
-      [selectedUnit]: {
-        ...(prev[selectedUnit] || {}),
+      [curUnit]: {
+        ...(prev[curUnit] || {}),
         ...bankForm,
         customQrUrl: '',
         customQrImage: '',
@@ -4904,14 +4940,14 @@ function PenaltiesPage() {
       }
     }));
     try { playSound('pop'); } catch (err) {}
-    try { addNotification(`Đã xóa ảnh QR của ${selectedUnit}, quay về VietQR tự sinh.`, 'info'); } catch (err) {}
+    try { addNotification(`Đã xóa ảnh QR của ${curUnit}, quay về VietQR tự sinh.`, 'info'); } catch (err) {}
   };
 
   const handleSaveBank = async e => {
     if (e && e.preventDefault) e.preventDefault();
     setBankSaving(true);
     try {
-      if (!fbDb) throw new Error('Firebase chưa kết nối!');
+      const curUnit = String(selectedUnit || 'Toàn CLB').trim();
       const qrImg = (bankForm.customQrImage || bankForm.customQrUrl || bankForm.qrImage || '').trim();
       const currentSnapshot = {
         bank: (bankForm.bank || 'MB').trim().toUpperCase(),
@@ -4925,9 +4961,10 @@ function PenaltiesPage() {
 
       const updatedAccounts = {
         ...unitAccounts,
-        [selectedUnit]: currentSnapshot
+        [curUnit]: currentSnapshot
       };
 
+      // Đảm bảo Toàn CLB luôn có giá trị hợp lệ
       const clubAcc = updatedAccounts['Toàn CLB'] || currentSnapshot;
       const cleanData = {
         accounts: updatedAccounts,
@@ -4941,14 +4978,34 @@ function PenaltiesPage() {
         updatedAt: new Date().toISOString(),
         updatedBy: 'Admin BCN'
       };
-      await fbDb.collection('club_settings').doc('penalty_account').set(cleanData, { merge: true });
+
+      // 1. Lưu đồng thời vào LocalStorage trước tiên (luôn có sẵn tức thì, không bị rỗng)
+      try {
+        localStorage.setItem('nv_qr_configs', JSON.stringify(cleanData));
+        localStorage.setItem('nv_cache_penalty_account', JSON.stringify(cleanData));
+        if (typeof saveCache === 'function') saveCache('penalty_account', cleanData);
+      } catch (storageErr) {
+        console.warn('Lỗi lưu LocalStorage:', storageErr);
+      }
+
+      // 2. Cập nhật state AppContext ngay lập tức
       if (setPenaltyAccount) setPenaltyAccount(cleanData);
-      try { saveCache('penalty_account', cleanData); } catch (err) {}
+
+      // 3. Đồng bộ lên Firestore Realtime nếu có kết nối
+      if (fbDb) {
+        try {
+          await fbDb.collection('club_settings').doc('penalty_account').set(cleanData, { merge: true });
+        } catch (dbErr) {
+          console.warn('Đồng bộ Firestore gặp lỗi, đã lưu cục bộ an toàn:', dbErr);
+        }
+      }
+
       try { playSound('success'); } catch (err) {}
-      try { addNotification(`✅ Đã lưu cấu hình QR cho ${selectedUnit} lên Firestore!`, 'success'); } catch (err) {}
+      try { addNotification(`✅ Đã lưu cấu hình QR cho ${curUnit}!`, 'success'); } catch (err) {}
       setBankModal(false);
     } catch (err) {
-      alert('Lỗi lưu tài khoản: ' + err.message);
+      console.error('handleSaveBank error:', err);
+      alert('Lỗi lưu tài khoản: ' + (err.message || 'Không xác định'));
     } finally {
       setBankSaving(false);
     }
