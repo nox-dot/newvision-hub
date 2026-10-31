@@ -305,24 +305,39 @@ const SAMPLE_STUDY_RESOURCES = [
 
 const AppCtx = createContext(null);
 
+const getInitialCache = (key, fallback = []) => {
+  try {
+    const val = localStorage.getItem('nv_cache_' + key);
+    return val ? JSON.parse(val) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
+const saveCache = (key, data) => {
+  try {
+    localStorage.setItem('nv_cache_' + key, JSON.stringify(data));
+  } catch (e) {}
+};
+
 function AppProvider({children}){
-  const[decisions,setDecisions]=useState([]);
-  const[events,setEvents]=useState([]);
-  const[members,setMembers]=useState([]);
-  const[quickChecklist,setQuickChecklist]=useState([]);
-  const[quickLinks,setQuickLinks]=useState([]);
-  const[notifications,setNotifications]=useState([]);
-  const[resources,setResources]=useState([]);
-  const[studyResources,setStudyResources]=useState([]);
-  const[penalties,setPenalties]=useState([]);
-  const[inventory,setInventory]=useState([]);
-  const[expenses,setExpenses]=useState([]);
-  const[sessions,setSessions]=useState([]);
-  const[assignTasks,setAssignTasks]=useState([]);
+  const[decisions,setDecisions]=useState(()=>getInitialCache('decisions',[]));
+  const[events,setEvents]=useState(()=>getInitialCache('events',[]));
+  const[members,setMembers]=useState(()=>getInitialCache('members',[]));
+  const[quickChecklist,setQuickChecklist]=useState(()=>getInitialCache('quickChecklist',[]));
+  const[quickLinks,setQuickLinks]=useState(()=>getInitialCache('quickLinks',[]));
+  const[notifications,setNotifications]=useState(()=>getInitialCache('notifications',[]));
+  const[resources,setResources]=useState(()=>getInitialCache('resources',[]));
+  const[studyResources,setStudyResources]=useState(()=>getInitialCache('study_resources',SAMPLE_STUDY_RESOURCES));
+  const[penalties,setPenalties]=useState(()=>getInitialCache('penalties',[]));
+  const[inventory,setInventory]=useState(()=>getInitialCache('inventory',[]));
+  const[expenses,setExpenses]=useState(()=>getInitialCache('expenses',[]));
+  const[sessions,setSessions]=useState(()=>getInitialCache('sessions',[]));
+  const[assignTasks,setAssignTasks]=useState(()=>getInitialCache('assignTasks',[]));
   const[adminMode,setAdminMode]=useState(false);
   const[userIdentity,setUserIdentity]=useLocalStorage('nv_user_identity','');
-  const[clubRules,setClubRules]=useState('');
-  const[penaltyAccount,setPenaltyAccount]=useState(null);
+  const[clubRules,setClubRules]=useState(()=>localStorage.getItem('nv_cache_rules')||'');
+  const[penaltyAccount,setPenaltyAccount]=useState(()=>getInitialCache('penalty_account',null));
   const[loadedTabs,setLoadedTabs]=useState(()=>new Set(['dashboard']));
   const activeUnsubsRef=useRef({});
   const loadTab=useCallback(tab=>{
@@ -489,6 +504,7 @@ function AppProvider({children}){
 
           if(sortFn) list = sortFn(list);
           setter(list);
+          saveCache(colName, list);
           setCloudStatus('connected');
           setLastSynced(new Date());
 
@@ -506,24 +522,21 @@ function AppProvider({children}){
       }
     };
 
-    // 1. CHỈ TẢI TAB TỔNG QUAN KHI VỪA MỞ TRANG (Checklist & Quick links):
+    // 1. TẢI NGẦM (ASYNC) CÁC DỮ LIỆU HIỂN THỊ TRÊN DASHBOARD (Checklist, Quick links, Events, Members, Decisions)
+    // Dữ liệu đã được nạp sẵn từ Cache, listener chỉ cập nhật số liệu êm ái khi mạng tải xong:
     listenCol('quickChecklist',setQuickChecklist,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
     listenCol('quickLinks',setQuickLinks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
+    listenCol('events',setEvents,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('members',setMembers,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
+    listenCol('decisions',setDecisions,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
 
-    // 2. LAZY LOAD - CHỈ TẢI CÁC TAB KHÁC KHI ĐƯỢC KÍCH HOẠT:
-    if(loadedTabs.has('events')){
-      listenCol('events',setEvents,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
-    }
+    // 2. LAZY LOAD - CHỈ TẢI CÁC TAB CHUYÊN SÂU KHI ĐƯỢC KÍCH HOẠT:
     if(loadedTabs.has('study')){
       listenCol('study_resources',setStudyResources,list=>list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.createdAt||'').localeCompare(a.createdAt||'')));
     }
     if(loadedTabs.has('members')){
-      listenCol('members',setMembers,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
       listenCol('sessions',setSessions,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
       listenCol('assignTasks',setAssignTasks,list=>list.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')));
-    }
-    if(loadedTabs.has('decisions')){
-      listenCol('decisions',setDecisions,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
     }
     if(loadedTabs.has('penalties')){
       listenCol('penalties',setPenalties,list=>list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')));
@@ -532,6 +545,7 @@ function AppProvider({children}){
           const unsubBank=fbDb.collection('club_settings').doc('penalty_account').onSnapshot(d=>{
             if(d.exists&&d.data()){
               setPenaltyAccount(d.data());
+              saveCache('penalty_account', d.data());
             }
             setCloudStatus('connected');
             setLastSynced(new Date());
@@ -543,7 +557,9 @@ function AppProvider({children}){
         try{
           const unsubRules=fbDb.collection('club_settings').doc('rules').onSnapshot(d=>{
             if(d.exists&&d.data()?.content!==undefined){
-              setClubRules(d.data().content||'');
+              const content = d.data().content||'';
+              setClubRules(content);
+              try { localStorage.setItem('nv_cache_rules', content); } catch(e) {}
             }
             setCloudStatus('connected');
             setLastSynced(new Date());
@@ -575,16 +591,6 @@ function AppProvider({children}){
       }
     }
   },[loadedTabs]);
-
-  // Tải trước nhẹ nhàng số liệu tổng quan (events, members, decisions) sau 2.5s khi máy rảnh
-  useEffect(()=>{
-    const idleTimer=setTimeout(()=>{
-      loadTab('events');
-      loadTab('members');
-      loadTab('decisions');
-    },2500);
-    return()=>clearTimeout(idleTimer);
-  },[loadTab]);
 
   // Hoãn di chuyển dữ liệu cũ sau 6s để trang mở tức thì dưới 1s
   useEffect(()=>{
@@ -6722,5 +6728,19 @@ function App(){
   );
 }
 
-const root=ReactDOM.createRoot(document.getElementById('root'));
-root.render(<AppProvider><App/></AppProvider>);
+// Render khung giao diện chính (Sidebar, Header, Dashboard) NGAY LẬP TỨC khi DOMContentLoaded
+// Tuyệt đối không chờ (await) kết nối Firestore hoàn tất
+function renderAppImmediate() {
+  const rootEl = document.getElementById('root');
+  if (!rootEl) return;
+  if (!window.__nv_root) {
+    window.__nv_root = ReactDOM.createRoot(rootEl);
+    window.__nv_root.render(<AppProvider><App/></AppProvider>);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderAppImmediate);
+} else {
+  renderAppImmediate();
+}
