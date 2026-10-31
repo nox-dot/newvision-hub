@@ -23,6 +23,17 @@
   </script>
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="style.css">
+  <script>
+    try {
+      if (localStorage.getItem('nv_dark') === 'true') {
+        document.documentElement.classList.add('dark');
+      }
+      var savedTheme = localStorage.getItem('nv_theme') ? JSON.parse(localStorage.getItem('nv_theme')) : (localStorage.getItem('nv_theme') || 'orange');
+      if (savedTheme) {
+        document.documentElement.classList.add('theme-' + savedTheme.toString().replace(/[^a-z]/g, ''));
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body style="background-color: #0b1120; margin: 0; overflow-x: hidden;">
 
@@ -36,124 +47,382 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 
 <div id="root">
-  <div style="min-height: 100vh; background-color: #0b1120; color: #f8fafc; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column;">
-    <!-- Top Instant Skeleton Header -->
-    <header style="background: #0f172a; border-bottom: 1px solid #1e293b; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; position: sticky; top: 0; z-index: 40;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(234,88,12,0.3); font-size: 15px;">
-          👁️
+  <div class="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans">
+    <!-- Real Header Skeleton -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button class="md:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300">
+            <span class="text-lg">☰</span>
+          </button>
+          <div class="flex items-center gap-2.5 cursor-pointer">
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center shadow-md text-white text-base font-bold theme-brand-bg" style="background:var(--brand-gradient, linear-gradient(135deg, #ea580c 0%, #f97316 100%));">
+              👁️
+            </div>
+            <div>
+              <span class="font-extrabold text-slate-800 dark:text-slate-100 text-base tracking-tight leading-none block">NewVision HUP</span>
+              <span class="hidden sm:block text-[10px] text-slate-400 leading-none mt-0.5">CLB Kỹ năng mềm – ĐH Dược HN</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <div style="font-size: 15px; font-weight: 800; letter-spacing: -0.02em; color: #f8fafc; line-height: 1.2;">NewVision HUP</div>
-          <div style="font-size: 10px; color: #94a3b8; line-height: 1;">CLB Kỹ năng mềm – ĐH Dược HN</div>
-        </div>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <div style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #34d399; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 9999px; display: flex; align-items: center; gap: 6px;">
-          <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
-          <span>Cloud Live</span>
-        </div>
-        <div style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 10px;">
-          👑 BCN
+
+        <div class="flex items-center gap-1.5">
+          <!-- User Identity Selector -->
+          <div class="hidden lg:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl px-2.5 py-1 text-xs border border-slate-200 dark:border-slate-700">
+            <span class="text-slate-400 font-medium flex items-center gap-1 flex-shrink-0">
+              👤 Tôi là:
+            </span>
+            <span id="skeleton-user-id" class="font-semibold text-slate-700 dark:text-slate-200">-- Chọn tên bạn --</span>
+          </div>
+
+          <!-- Gacha Daily Button -->
+          <button class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-xs shadow-xs">
+            <span>🎴</span>
+            <span class="hidden sm:inline">Quẻ Hôm Nay</span>
+          </button>
+
+          <!-- Admin Mode Pill -->
+          <button class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700">
+            <span>👑</span>
+            <span class="hidden sm:inline">BCN</span>
+          </button>
+
+          <!-- Cloud Status Pill -->
+          <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]"></span>
+            <span class="text-[11px]">Cloud Live</span>
+          </div>
+
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl text-slate-500 text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <span class="text-xs">🔍</span><span class="text-xs text-slate-400">Tìm kiếm...</span><kbd class="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-400 rounded px-1">Ctrl K</kbd>
+          </div>
+          <button class="p-2 rounded-xl text-slate-500">🌙</button>
+          <button class="p-2 rounded-xl text-slate-500">⚙️</button>
+          <button class="p-2 rounded-xl text-slate-500">🔔</button>
         </div>
       </div>
     </header>
 
-    <!-- Main Container: Sidebar + Dashboard Content -->
-    <div style="display: flex; flex: 1; max-width: 1280px; width: 100%; margin: 0 auto;">
-      <!-- Desktop Sidebar Skeleton -->
-      <aside style="width: 240px; background: #0f172a; border-right: 1px solid #1e293b; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px;" class="hidden md:flex">
-        <div style="background: rgba(234,88,12,0.15); color: #fb923c; border: 1px solid rgba(234,88,12,0.3); border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-          <span>📊</span> <span>Tổng quan</span>
+    <div class="flex flex-1 max-w-7xl mx-auto w-full">
+      <!-- Real Sidebar Skeleton -->
+      <aside class="hidden md:flex flex-col w-60 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 px-3 gap-1 sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto flex-shrink-0">
+        <!-- 1. Tổng quan -->
+        <div class="sidebar-link active flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="text-base">📊</span>
+            <span>Tổng quan</span>
+          </div>
         </div>
-        <div style="color: #94a3b8; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span>📢</span> <span>Cổng thông tin</span>
+        <!-- 2. Sự kiện -->
+        <div class="sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left text-slate-600 dark:text-slate-400 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="text-base text-slate-400">📅</span>
+            <span>Sự kiện</span>
+          </div>
         </div>
-        <div style="color: #94a3b8; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span>👥</span> <span>Quản lý thành viên</span>
+        <!-- 3. Góc học tập -->
+        <div class="sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left text-slate-600 dark:text-slate-400 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="text-base text-slate-400">📚</span>
+            <span>Góc học tập</span>
+          </div>
         </div>
-        <div style="color: #94a3b8; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span>📅</span> <span>Lịch & Sự kiện</span>
+        <!-- 4. Thành viên -->
+        <div class="sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left text-slate-600 dark:text-slate-400 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="text-base text-slate-400">👥</span>
+            <span>Thành viên</span>
+          </div>
         </div>
-        <div style="color: #94a3b8; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span>📋</span> <span>Giao việc & Tiến độ</span>
+        <!-- 5. Thưởng & Phạt -->
+        <div class="sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left text-slate-600 dark:text-slate-400 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="text-base text-slate-400">⚖️</span>
+            <span>Thưởng & Phạt</span>
+          </div>
         </div>
-        <div style="color: #94a3b8; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span>⚖️</span> <span>Thưởng & Phạt</span>
+        <!-- 6. Quyết định -->
+        <div class="sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left text-slate-600 dark:text-slate-400 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="text-base text-slate-400">📋</span>
+            <span>Quyết định</span>
+          </div>
         </div>
-        <div style="color: #94a3b8; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span>💰</span> <span>Quỹ CLB & Các Ban</span>
+        <!-- 7. Tài nguyên -->
+        <div class="sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left text-slate-600 dark:text-slate-400 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="text-base text-slate-400">📁</span>
+            <span>Tài nguyên</span>
+          </div>
+          <span class="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-400 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">🔒 Khóa</span>
         </div>
-        <div style="color: #94a3b8; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span>📚</span> <span>Học tập & Ôn thi</span>
+        <!-- 8. Phòng BCN -->
+        <div class="sidebar-link flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium w-full text-left text-slate-600 dark:text-slate-400 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="text-base text-amber-500">🛡️</span>
+            <span class="font-bold text-amber-700 dark:text-amber-400">Phòng BCN</span>
+          </div>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">PIN</span>
+        </div>
+        <!-- 9. Thông báo -->
+        <div class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 w-full text-left cursor-pointer">
+          <span class="text-base text-slate-400">🔔</span>
+          <span>Thông báo</span>
+        </div>
+
+        <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 px-2">
+          <div class="flex items-center gap-2 text-[10px] text-slate-400">
+            <div class="w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-[10px] theme-brand-bg" style="background:var(--brand-gradient, linear-gradient(135deg, #ea580c 0%, #f97316 100%));">👁️</div>
+            <div><p class="font-bold text-slate-600 dark:text-slate-300 text-[11px]">NewVision HUP v2.5</p><p>ĐH Dược HN • Cloud Firestore ✓</p></div>
+          </div>
         </div>
       </aside>
 
-      <!-- Main Content Skeleton -->
-      <main style="flex: 1; padding: 20px; overflow-y: auto;">
-        <!-- Welcome Banner -->
-        <div style="background: linear-gradient(135deg, rgba(234,88,12,0.12) 0%, rgba(30,41,59,0.5) 100%); border: 1px solid rgba(234,88,12,0.25); border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+      <!-- Main Dashboard Content -->
+      <main class="flex-1 p-4 md:p-6 min-w-0 pb-28 md:pb-6">
+        <div class="space-y-6">
           <div>
-            <h1 style="font-size: 18px; font-weight: 800; color: #f8fafc; margin: 0 0 4px 0;">Chào mừng đến với NewVision HUP! 👋</h1>
-            <p style="font-size: 12.5px; color: #94a3b8; margin: 0;">Nền tảng Quản trị & Điều hành CLB Kỹ năng mềm Dược Hà Nội</p>
+            <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">Bảng Điều Khiển</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Tổng quan hoạt động CLB NewVision HUP – ĐH Dược HN</p>
           </div>
-          <div style="background: rgba(234,88,12,0.2); color: #fb923c; font-size: 11.5px; font-weight: 700; padding: 6px 14px; border-radius: 9999px; border: 1px solid rgba(234,88,12,0.3);">
-            Sẵn sàng ⚡
-          </div>
-        </div>
 
-        <!-- 4 Stat Cards Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px;">
-          <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
-            <div style="font-size: 11.5px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">👥 THÀNH VIÊN CLB</div>
-            <div style="font-size: 22px; font-weight: 800; color: #38bdf8;">--</div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Đang kết nối danh sách...</div>
-          </div>
-          <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
-            <div style="font-size: 11.5px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">📅 SỰ KIỆN SẮP DIỄN RA</div>
-            <div style="font-size: 22px; font-weight: 800; color: #a855f7;">--</div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Lịch hoạt động tháng</div>
-          </div>
-          <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
-            <div style="font-size: 11.5px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">⚖️ THƯỞNG & PHẠT</div>
-            <div style="font-size: 22px; font-weight: 800; color: #f59e0b;">--</div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Ghi nhận nội quy</div>
-          </div>
-          <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
-            <div style="font-size: 11.5px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">💰 QUỸ CLB & CÁC BAN</div>
-            <div style="font-size: 22px; font-weight: 800; color: #10b981;">--</div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Số dư quỹ hiện tại</div>
-          </div>
-        </div>
+          <!-- 4 Stat Cards: Việc đang chạy, Việc quá hạn, Quyết định chờ chốt, Tổng thành viên/CTV -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <!-- Card 1: Việc đang chạy -->
+            <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl p-4 text-left shadow-md cursor-pointer hover:opacity-90 transition-opacity">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3 text-lg">📋</div>
+              <div id="stat-active-tasks" class="text-3xl font-bold leading-none">0</div>
+              <div class="text-xs font-medium opacity-80 mt-1">Việc đang chạy</div>
+            </div>
 
-        <!-- Dashboard Skeleton Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
-          <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
-            <div style="font-size: 13.5px; font-weight: 700; color: #f8fafc; margin-bottom: 12px;">
-              ✅ Công việc cần làm ngay
+            <!-- Card 2: Việc quá hạn -->
+            <div class="bg-gradient-to-br from-red-500 to-red-700 text-white rounded-2xl p-4 text-left shadow-md cursor-pointer hover:opacity-90 transition-opacity">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3 text-lg">⏰</div>
+              <div id="stat-overdue-tasks" class="text-3xl font-bold leading-none">0</div>
+              <div class="text-xs font-medium opacity-80 mt-1">Việc quá hạn</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div style="height: 38px; background: #1e293b; border-radius: 8px; opacity: 0.7;"></div>
-              <div style="height: 38px; background: #1e293b; border-radius: 8px; opacity: 0.5;"></div>
-              <div style="height: 38px; background: #1e293b; border-radius: 8px; opacity: 0.3;"></div>
+
+            <!-- Card 3: Quyết định chờ chốt -->
+            <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-2xl p-4 text-left shadow-md cursor-pointer hover:opacity-90 transition-opacity">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3 text-lg">❓</div>
+              <div id="stat-pending-decisions" class="text-3xl font-bold leading-none">0</div>
+              <div class="text-xs font-medium opacity-80 mt-1">Quyết định chờ chốt</div>
+            </div>
+
+            <!-- Card 4: Tổng thành viên/CTV -->
+            <div class="bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-2xl p-4 text-left shadow-md cursor-pointer hover:opacity-90 transition-opacity">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3 text-lg">👥</div>
+              <div id="stat-total-members" class="text-3xl font-bold leading-none">0</div>
+              <div class="text-xs font-medium opacity-80 mt-1">Tổng thành viên/CTV</div>
             </div>
           </div>
-          <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
-            <div style="font-size: 13.5px; font-weight: 700; color: #f8fafc; margin-bottom: 12px;">
-              ⚡ Phím tắt truy cập nhanh
+
+          <!-- Two Widgets: Checklist 15 Phút & Link Nhanh -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Checklist Widget -->
+            <div class="card p-4">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 bg-amber-100 dark:bg-amber-950/40 rounded-lg flex items-center justify-center text-amber-600 font-bold text-xs">⚡</div>
+                  <span class="font-bold text-sm text-slate-800 dark:text-slate-100">Checklist 15 Phút Trước Giờ G</span>
+                </div>
+                <span class="text-xs bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg font-medium">+ Thêm</span>
+              </div>
+
+              <!-- Đếm ngược giờ G -->
+              <div class="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/5 rounded-xl p-2.5 mb-3 border border-orange-200 dark:border-orange-900/50 flex items-center justify-between">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                  </span>
+                  <span class="text-xs font-bold text-orange-950 dark:text-orange-200">Đếm Ngược Giờ G:</span>
+                  <span id="skeleton-countdown" class="font-mono font-black text-sm tracking-wider text-orange-600 dark:text-orange-400">--:--:--</span>
+                </div>
+                <span class="text-[10px] text-orange-600 font-semibold bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-orange-200 dark:border-slate-700 shadow-sm">⏱️ Giờ G</span>
+              </div>
+
+              <div id="skeleton-checklist-items" class="space-y-1.5 max-h-64 overflow-y-auto">
+                <div class="py-6 text-center text-slate-400 text-xs">Thêm các hạng mục kiểm tra nhanh</div>
+              </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="height: 48px; background: #1e293b; border-radius: 8px; opacity: 0.7;"></div>
-              <div style="height: 48px; background: #1e293b; border-radius: 8px; opacity: 0.7;"></div>
-              <div style="height: 48px; background: #1e293b; border-radius: 8px; opacity: 0.4;"></div>
-              <div style="height: 48px; background: #1e293b; border-radius: 8px; opacity: 0.4;"></div>
+
+            <!-- Link Nhanh Widget -->
+            <div class="card p-4">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 bg-purple-100 dark:bg-purple-950/40 rounded-lg flex items-center justify-center text-purple-600 font-bold text-xs">🔗</div>
+                  <span class="font-bold text-sm text-slate-800 dark:text-slate-100">Link Nhanh Dùng Chung</span>
+                </div>
+                <span class="text-xs bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 px-2.5 py-1 rounded-lg font-medium">+ Thêm</span>
+              </div>
+
+              <div id="skeleton-quick-links" class="grid grid-cols-2 gap-2">
+                <div class="py-6 col-span-2 text-center text-slate-400 text-xs">Chưa có link nhanh nào</div>
+              </div>
             </div>
           </div>
         </div>
       </main>
     </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="bottom-nav-bar md:hidden fixed bottom-0 left-0 right-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-40 shadow-lg">
+      <div class="grid grid-cols-5 h-[65px]">
+        <div class="bottom-nav-item active flex flex-col items-center justify-center gap-1">
+          <span class="text-orange-600 text-base">📊</span>
+          <span class="nav-label text-[10.5px] font-semibold text-orange-600">Tổng quan</span>
+          <div class="nav-dot"></div>
+        </div>
+        <div class="bottom-nav-item flex flex-col items-center justify-center gap-1">
+          <span class="text-slate-400 text-base">📅</span>
+          <span class="nav-label text-[10.5px] font-semibold text-slate-400">Sự kiện</span>
+        </div>
+        <div class="bottom-nav-item flex flex-col items-center justify-center gap-1">
+          <span class="text-slate-400 text-base">📚</span>
+          <span class="nav-label text-[10.5px] font-semibold text-slate-400">Học tập</span>
+        </div>
+        <div class="bottom-nav-item flex flex-col items-center justify-center gap-1">
+          <span class="text-slate-400 text-base">👥</span>
+          <span class="nav-label text-[10.5px] font-semibold text-slate-400">Thành viên</span>
+        </div>
+        <div class="bottom-nav-item flex flex-col items-center justify-center gap-1">
+          <span class="text-slate-400 text-base">⚖️</span>
+          <span class="nav-label text-[10.5px] font-semibold text-slate-400">Thưởng phạt</span>
+        </div>
+      </div>
+    </nav>
   </div>
 </div>
+
+<!-- Instant Cache Populator (Executes at 0.001s to fill 4 cards & widgets) -->
+<script>
+(function() {
+  try {
+    // 1. User Identity
+    var savedUser = localStorage.getItem('nv_user_identity');
+    if (savedUser) {
+      var userEl = document.getElementById('skeleton-user-id');
+      if (userEl) userEl.textContent = savedUser;
+    }
+
+    // 2. Events & Tasks Cache
+    var rawEvents = localStorage.getItem('nv_cache_events');
+    if (rawEvents) {
+      var events = JSON.parse(rawEvents);
+      if (Array.isArray(events)) {
+        var allTasks = [];
+        var now = Date.now();
+        var nextEvent = null;
+        events.forEach(function(e) {
+          if (e.tasks && Array.isArray(e.tasks)) {
+            e.tasks.forEach(function(t) {
+              allTasks.push(t);
+            });
+          }
+          if (e.date && new Date(e.date) >= new Date(now - 86400000)) {
+            if (!nextEvent || new Date(e.date) < new Date(nextEvent.date)) {
+              nextEvent = e;
+            }
+          }
+        });
+        var active = allTasks.filter(function(t) { return !t.done; });
+        var overdue = active.filter(function(t) {
+          if (!t.deadline) return false;
+          return new Date(t.deadline).getTime() < now;
+        });
+        var elActive = document.getElementById('stat-active-tasks');
+        if (elActive) elActive.textContent = active.length;
+        var elOverdue = document.getElementById('stat-overdue-tasks');
+        if (elOverdue) elOverdue.textContent = overdue.length;
+
+        // Target G countdown
+        var targetG = localStorage.getItem('nv_target_g_time') ? JSON.parse(localStorage.getItem('nv_target_g_time')) : '';
+        var effG = targetG || (nextEvent ? nextEvent.date + 'T18:00' : '');
+        if (effG) {
+          var diffG = new Date(effG).getTime() - now;
+          var cdEl = document.getElementById('skeleton-countdown');
+          if (cdEl) {
+            if (diffG <= 0) {
+              cdEl.textContent = '⚡ ĐÃ ĐẾN GIỜ G!';
+              cdEl.className = cdEl.className.replace('text-orange-600', 'text-emerald-500');
+            } else {
+              var d = Math.floor(diffG / (1000 * 60 * 60 * 24));
+              var h = Math.floor((diffG / (1000 * 60 * 60)) % 24);
+              var m = Math.floor((diffG / (1000 * 60)) % 60);
+              var s = Math.floor((diffG / 1000) % 60);
+              var pad = function(n) { return n < 10 ? '0' + n : n; };
+              cdEl.textContent = (d > 0 ? d + 'd ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s);
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Decisions Cache
+    var rawDecisions = localStorage.getItem('nv_cache_decisions');
+    if (rawDecisions) {
+      var decisions = JSON.parse(rawDecisions);
+      if (Array.isArray(decisions)) {
+        var pending = decisions.filter(function(d) { return d.status !== 'Đã chốt chính thức'; });
+        var elDec = document.getElementById('stat-pending-decisions');
+        if (elDec) elDec.textContent = pending.length;
+      }
+    }
+
+    // 4. Members Cache
+    var rawMembers = localStorage.getItem('nv_cache_members');
+    if (rawMembers) {
+      var members = JSON.parse(rawMembers);
+      if (Array.isArray(members)) {
+        var elMem = document.getElementById('stat-total-members');
+        if (elMem) elMem.textContent = members.length;
+      }
+    }
+
+    // 5. Checklist Cache
+    var rawCL = localStorage.getItem('nv_cache_quickChecklist');
+    if (rawCL) {
+      var cl = JSON.parse(rawCL);
+      if (Array.isArray(cl) && cl.length > 0) {
+        var clContainer = document.getElementById('skeleton-checklist-items');
+        if (clContainer) {
+          var html = '';
+          cl.slice(0, 6).forEach(function(item) {
+            html += '<div class="flex items-center gap-2.5 p-2 rounded-lg ' + (item.done ? 'opacity-60' : '') + '">' +
+              '<input type="checkbox" ' + (item.done ? 'checked' : '') + ' disabled class="w-4 h-4 accent-indigo-600 rounded">' +
+              '<span class="flex-1 text-sm ' + (item.done ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-300') + '">' +
+              (item.text || '').replace(/</g, '&lt;') +
+              '</span></div>';
+          });
+          clContainer.innerHTML = html;
+        }
+      }
+    }
+
+    // 6. Quick Links Cache
+    var rawLinks = localStorage.getItem('nv_cache_quickLinks');
+    if (rawLinks) {
+      var links = JSON.parse(rawLinks);
+      if (Array.isArray(links) && links.length > 0) {
+        var linksContainer = document.getElementById('skeleton-quick-links');
+        if (linksContainer) {
+          var linkHtml = '';
+          links.slice(0, 6).forEach(function(l) {
+            linkHtml += '<a href="' + (l.url || '#') + '" target="_blank" rel="noreferrer" class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 transition">' +
+              '<span class="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-xs shadow-xs">🔗</span>' +
+              '<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">' + (l.title || 'Link').replace(/</g, '&lt;') + '</span>' +
+              '</a>';
+          });
+          linksContainer.innerHTML = linkHtml;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Instant cache render error:', err);
+  }
+})();
+</script>
 
 <!-- Main Application Script -->
 <script type="text/babel" src="app.js" defer></script>
