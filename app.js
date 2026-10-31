@@ -4489,33 +4489,84 @@ function normalizePenaltyUnit(ban) {
 function VietQRModal({ isOpen, onClose, penalty }) {
   const { playSound, addNotification, penaltyAccount } = useContext(AppCtx);
   const [copied, setCopied] = useState(false);
+  const qrImgRef = useRef(null);
   if (!isOpen || !penalty) return null;
 
   const targetUnit = normalizePenaltyUnit(penalty.ban);
 
   const getUnitAccount = (unit) => {
     if (!penaltyAccount) return null;
-    if (penaltyAccount.accounts && penaltyAccount.accounts[unit]) {
-      const acc = penaltyAccount.accounts[unit];
-      if ((acc.accountNo && acc.accountNo.trim()) || (acc.customQrUrl && acc.customQrUrl.trim())) {
-        return acc;
+
+    const findInObj = (u) => {
+      if (!penaltyAccount.accounts) return null;
+      if (penaltyAccount.accounts[u]) return penaltyAccount.accounts[u];
+      const norm = normalizePenaltyUnit(u);
+      for (const k of Object.keys(penaltyAccount.accounts)) {
+        if (normalizePenaltyUnit(k) === norm) return penaltyAccount.accounts[k];
       }
-    }
-    if (penaltyAccount.accounts && penaltyAccount.accounts['Toàn CLB']) {
-      const acc = penaltyAccount.accounts['Toàn CLB'];
-      if ((acc.accountNo && acc.accountNo.trim()) || (acc.customQrUrl && acc.customQrUrl.trim())) {
-        return acc;
-      }
-    }
-    if ((penaltyAccount.accountNo && penaltyAccount.accountNo.trim()) || (penaltyAccount.customQrUrl && penaltyAccount.customQrUrl.trim())) {
-      return penaltyAccount;
-    }
+      return null;
+    };
+
+    const hasData = (a) => a && (
+      (a.accountNo && String(a.accountNo).trim()) ||
+      (a.customQrImage && String(a.customQrImage).trim()) ||
+      (a.customQrUrl && String(a.customQrUrl).trim()) ||
+      (a.qrImage && String(a.qrImage).trim())
+    );
+
+    const target = findInObj(unit);
+    if (hasData(target)) return target;
+
+    const club = findInObj('Toàn CLB');
+    if (hasData(club)) return club;
+
+    if (hasData(penaltyAccount)) return penaltyAccount;
     return null;
   };
 
   const currentAcc = getUnitAccount(targetUnit);
-  const hasCustomQr = !!(currentAcc && currentAcc.customQrUrl && currentAcc.customQrUrl.trim());
-  const hasBankAcc = !!(currentAcc && currentAcc.accountNo && currentAcc.accountNo.trim());
+
+  // Lấy ảnh QR tải lên riêng nếu có (hỗ trợ các tên trường: customQrImage, customQrUrl, qrImage)
+  const uploadedQrRaw = currentAcc
+    ? (currentAcc.customQrImage || currentAcc.customQrUrl || currentAcc.qrImage || '').trim()
+    : '';
+
+  const hasCustomQr = !!uploadedQrRaw;
+  const isBase64 = uploadedQrRaw.startsWith('data:image');
+
+  // Ưu tiên 1: Ảnh QR tải lên riêng từ máy (Base64 hoặc URL kèm tham số chống cache nếu là URL)
+  let customQrSrc = '';
+  if (hasCustomQr) {
+    if (isBase64) {
+      customQrSrc = uploadedQrRaw;
+    } else {
+      customQrSrc = uploadedQrRaw.includes('?') ? `${uploadedQrRaw}&_t=${Date.now()}` : `${uploadedQrRaw}?_t=${Date.now()}`;
+    }
+  }
+
+  // Ưu tiên 2: Cập nhật động (dynamic) đường dẫn VietQR theo đúng Ngân hàng, STK, Số tiền, Nội dung, Tên chủ TK của đúng Ban đó
+  const amount = Math.abs(penalty.amount || 20000);
+  const rawBank = currentAcc && currentAcc.bank ? String(currentAcc.bank).trim().toUpperCase() : 'MB';
+  const bankDisplay = (currentAcc && currentAcc.bankName) || rawBank;
+  const accNo = currentAcc && currentAcc.accountNo ? String(currentAcc.accountNo).trim() : '';
+  const cleanAccNo = accNo.replace(/\s+/g, '');
+  const qrIdentifier = getVietQrBankCode(rawBank);
+  const addInfo = `NVPHAT ${penalty.name || ''}`.trim();
+  const accName = currentAcc && currentAcc.accountName ? String(currentAcc.accountName).trim().toUpperCase() : '';
+
+  const dynamicVietQrSrc = `https://img.vietqr.io/image/${qrIdentifier}-${cleanAccNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}${accName ? `&accountName=${encodeURIComponent(accName)}` : ''}`;
+
+  // Nguồn ảnh QR cuối cùng: Ưu tiên 1 (ảnh riêng) -> Ưu tiên 2 (VietQR động)
+  const finalQrSrc = hasCustomQr ? customQrSrc : dynamicVietQrSrc;
+
+  // Cập nhật động trực tiếp vào thuộc tính src của thẻ ảnh (qrImgElement.src)
+  useEffect(() => {
+    if (isOpen && qrImgRef.current && finalQrSrc) {
+      qrImgRef.current.src = finalQrSrc;
+    }
+  }, [isOpen, finalQrSrc, targetUnit, penalty]);
+
+  const hasBankAcc = !!cleanAccNo;
   const isConfigured = hasCustomQr || hasBankAcc;
 
   if (!isConfigured) {
@@ -4541,21 +4592,10 @@ function VietQRModal({ isOpen, onClose, penalty }) {
     );
   }
 
-  const amount = Math.abs(penalty.amount || 20000);
-  const rawBank = currentAcc.bank ? currentAcc.bank.trim().toUpperCase() : 'MB';
-  const bankDisplay = currentAcc.bankName || rawBank;
-  const accNo = currentAcc.accountNo ? currentAcc.accountNo.trim() : '';
-  const qrIdentifier = getVietQrBankCode(rawBank);
-
-  // Ưu tiên ảnh QR tải lên nếu có, ngược lại tự động tạo mã VietQR chuẩn
-  const qrUrl = hasCustomQr
-    ? currentAcc.customQrUrl.trim()
-    : `https://img.vietqr.io/image/${qrIdentifier}-${accNo}-compact.png?amount=${amount}&addInfo=NVPHAT%20${encodeURIComponent(penalty.name || '')}`;
-
   const copyInfo = () => {
-    const namePart = currentAcc.accountName ? ` - Chu TK: ${currentAcc.accountName}` : '';
-    const accPart = accNo ? ` - STK: ${accNo}` : '';
-    const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: NVPHAT ${penalty.name}`;
+    const namePart = accName ? ` - Chu TK: ${accName}` : '';
+    const accPart = cleanAccNo ? ` - STK: ${cleanAccNo}` : '';
+    const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: ${addInfo}`;
     try {
       navigator.clipboard.writeText(text);
       setCopied(true);
@@ -4570,11 +4610,15 @@ function VietQRModal({ isOpen, onClose, penalty }) {
       <div className="flex flex-col items-center space-y-4 py-2">
         <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
           <img
-            src={qrUrl}
-            alt="Mã QR Chuyển Khoản"
+            key={`${targetUnit}-${cleanAccNo}-${amount}-${hasCustomQr ? 'custom' : 'vietqr'}-${finalQrSrc.slice(-20)}`}
+            ref={qrImgRef}
+            src={finalQrSrc}
+            alt={`Mã QR Nộp Quỹ ${targetUnit}`}
             className="w-64 h-auto rounded-xl mx-auto max-h-72 object-contain"
             onError={e => {
-              e.target.src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20' + encodeURIComponent(penalty.name || '');
+              if (!hasCustomQr && cleanAccNo) {
+                e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20${encodeURIComponent(penalty.name || '')}`;
+              }
             }}
           />
           <div className="mt-2 text-center flex flex-wrap justify-center gap-1.5">
@@ -4598,16 +4642,16 @@ function VietQRModal({ isOpen, onClose, penalty }) {
             <span className="text-slate-500">Ngân hàng / Ví:</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
           </div>
-          {accNo && (
+          {cleanAccNo && (
             <div className="flex justify-between">
               <span className="text-slate-500">Số tài khoản / SĐT:</span>
-              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{accNo}</span>
+              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{cleanAccNo}</span>
             </div>
           )}
-          {currentAcc.accountName && (
+          {accName && (
             <div className="flex justify-between">
               <span className="text-slate-500">Chủ tài khoản / ví:</span>
-              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{currentAcc.accountName}</span>
+              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{accName}</span>
             </div>
           )}
           <div className="flex justify-between">
@@ -4616,7 +4660,7 @@ function VietQRModal({ isOpen, onClose, penalty }) {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Nội dung CK:</span>
-            <span className="font-mono font-bold text-emerald-600">NVPHAT {penalty.name}</span>
+            <span className="font-mono font-bold text-emerald-600">{addInfo}</span>
           </div>
         </div>
 
@@ -4666,42 +4710,64 @@ function PenaltiesPage() {
     if (penaltyAccount && penaltyAccount.accounts) {
       initialMap = { ...penaltyAccount.accounts };
     } else if (penaltyAccount) {
+      const qrImg = (penaltyAccount.customQrImage || penaltyAccount.customQrUrl || penaltyAccount.qrImage || '').trim();
       initialMap['Toàn CLB'] = {
         bank: penaltyAccount.bank || 'MB',
         bankName: penaltyAccount.bankName || 'MB Bank (Quân Đội)',
         accountNo: penaltyAccount.accountNo || '',
         accountName: penaltyAccount.accountName || '',
-        customQrUrl: penaltyAccount.customQrUrl || ''
+        customQrUrl: qrImg,
+        customQrImage: qrImg,
+        qrImage: qrImg
       };
     }
     setUnitAccounts(initialMap);
     setSelectedUnit('Toàn CLB');
 
-    const curr = initialMap['Toàn CLB'] || {
-      bank: 'MB',
-      bankName: 'MB Bank (Quân Đội)',
-      accountNo: '',
-      accountName: '',
-      customQrUrl: ''
+    const clubData = initialMap['Toàn CLB'] || {};
+    const clubQr = (clubData.customQrImage || clubData.customQrUrl || clubData.qrImage || '').trim();
+    const curr = {
+      bank: clubData.bank || 'MB',
+      bankName: clubData.bankName || 'MB Bank (Quân Đội)',
+      accountNo: clubData.accountNo || '',
+      accountName: clubData.accountName || '',
+      customQrUrl: clubQr,
+      customQrImage: clubQr,
+      qrImage: clubQr
     };
     setBankForm(curr);
     setBankModal(true);
   };
 
   const handleUnitChange = (newUnit) => {
+    const qrImg = (bankForm.customQrImage || bankForm.customQrUrl || bankForm.qrImage || '').trim();
+    const currentSnapshot = {
+      ...bankForm,
+      bank: (bankForm.bank || 'MB').trim().toUpperCase(),
+      bankName: (bankForm.bankName || 'MB Bank (Quân Đội)').trim(),
+      accountNo: (bankForm.accountNo || '').trim(),
+      accountName: (bankForm.accountName || '').trim().toUpperCase(),
+      customQrUrl: qrImg,
+      customQrImage: qrImg,
+      qrImage: qrImg
+    };
     const updatedMap = {
       ...unitAccounts,
-      [selectedUnit]: { ...bankForm }
+      [selectedUnit]: currentSnapshot
     };
     setUnitAccounts(updatedMap);
     setSelectedUnit(newUnit);
 
-    const targetAcc = updatedMap[newUnit] || {
-      bank: 'MB',
-      bankName: 'MB Bank (Quân Đội)',
-      accountNo: '',
-      accountName: '',
-      customQrUrl: ''
+    const target = updatedMap[newUnit] || {};
+    const targetQr = (target.customQrImage || target.customQrUrl || target.qrImage || '').trim();
+    const targetAcc = {
+      bank: target.bank || 'MB',
+      bankName: target.bankName || 'MB Bank (Quân Đội)',
+      accountNo: target.accountNo || '',
+      accountName: target.accountName || '',
+      customQrUrl: targetQr,
+      customQrImage: targetQr,
+      qrImage: targetQr
     };
     setBankForm(targetAcc);
   };
@@ -4712,7 +4778,22 @@ function PenaltiesPage() {
     setUploadingQr(true);
     try {
       const dataUrl = await compressQrImageFile(file);
-      setBankForm(p => ({ ...p, customQrUrl: dataUrl }));
+      setBankForm(p => ({
+        ...p,
+        customQrUrl: dataUrl,
+        customQrImage: dataUrl,
+        qrImage: dataUrl
+      }));
+      setUnitAccounts(prev => ({
+        ...prev,
+        [selectedUnit]: {
+          ...(prev[selectedUnit] || {}),
+          ...bankForm,
+          customQrUrl: dataUrl,
+          customQrImage: dataUrl,
+          qrImage: dataUrl
+        }
+      }));
       try { playSound('pop'); } catch (err) {}
       try { addNotification(`Đã tải ảnh mã QR cho ${selectedUnit}!`, 'success'); } catch (err) {}
     } catch (err) {
@@ -4724,7 +4805,22 @@ function PenaltiesPage() {
   };
 
   const handleRemoveQrImage = () => {
-    setBankForm(p => ({ ...p, customQrUrl: '' }));
+    setBankForm(p => ({
+      ...p,
+      customQrUrl: '',
+      customQrImage: '',
+      qrImage: ''
+    }));
+    setUnitAccounts(prev => ({
+      ...prev,
+      [selectedUnit]: {
+        ...(prev[selectedUnit] || {}),
+        ...bankForm,
+        customQrUrl: '',
+        customQrImage: '',
+        qrImage: ''
+      }
+    }));
     try { playSound('pop'); } catch (err) {}
     try { addNotification(`Đã xóa ảnh QR của ${selectedUnit}, quay về VietQR tự sinh.`, 'info'); } catch (err) {}
   };
@@ -4734,18 +4830,23 @@ function PenaltiesPage() {
     setBankSaving(true);
     try {
       if (!fbDb) throw new Error('Firebase chưa kết nối!');
-      const updatedAccounts = {
-        ...unitAccounts,
-        [selectedUnit]: {
-          bank: (bankForm.bank || 'MB').trim().toUpperCase(),
-          bankName: (bankForm.bankName || 'MB Bank (Quân Đội)').trim(),
-          accountNo: (bankForm.accountNo || '').trim(),
-          accountName: (bankForm.accountName || '').trim().toUpperCase(),
-          customQrUrl: bankForm.customQrUrl ? bankForm.customQrUrl.trim() : ''
-        }
+      const qrImg = (bankForm.customQrImage || bankForm.customQrUrl || bankForm.qrImage || '').trim();
+      const currentSnapshot = {
+        bank: (bankForm.bank || 'MB').trim().toUpperCase(),
+        bankName: (bankForm.bankName || 'MB Bank (Quân Đội)').trim(),
+        accountNo: (bankForm.accountNo || '').trim(),
+        accountName: (bankForm.accountName || '').trim().toUpperCase(),
+        customQrUrl: qrImg,
+        customQrImage: qrImg,
+        qrImage: qrImg
       };
 
-      const clubAcc = updatedAccounts['Toàn CLB'] || updatedAccounts[selectedUnit] || {};
+      const updatedAccounts = {
+        ...unitAccounts,
+        [selectedUnit]: currentSnapshot
+      };
+
+      const clubAcc = updatedAccounts['Toàn CLB'] || currentSnapshot;
       const cleanData = {
         accounts: updatedAccounts,
         bank: clubAcc.bank || 'MB',
@@ -4753,11 +4854,14 @@ function PenaltiesPage() {
         accountNo: clubAcc.accountNo || '',
         accountName: clubAcc.accountName || '',
         customQrUrl: clubAcc.customQrUrl || '',
+        customQrImage: clubAcc.customQrImage || '',
+        qrImage: clubAcc.qrImage || '',
         updatedAt: new Date().toISOString(),
         updatedBy: 'Admin BCN'
       };
       await fbDb.collection('club_settings').doc('penalty_account').set(cleanData, { merge: true });
       if (setPenaltyAccount) setPenaltyAccount(cleanData);
+      try { saveCache('penalty_account', cleanData); } catch (err) {}
       try { playSound('success'); } catch (err) {}
       try { addNotification(`✅ Đã lưu cấu hình QR cho ${selectedUnit} lên Firestore!`, 'success'); } catch (err) {}
       setBankModal(false);
