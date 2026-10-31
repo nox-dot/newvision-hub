@@ -757,13 +757,48 @@ function Modal({open,onClose,title,children,wide}){
     else document.body.style.overflow='';
     return()=>{document.body.style.overflow=''};
   },[open]);
+
+  useEffect(()=>{
+    if(!open)return;
+    const handleKeyDown=(e)=>{
+      if(e.key==='Escape'||e.keyCode===27){
+        if(typeof onClose==='function')onClose();
+      }
+    };
+    window.addEventListener('keydown',handleKeyDown);
+    return()=>window.removeEventListener('keydown',handleKeyDown);
+  },[open,onClose]);
+
   if(!open)return null;
+
+  const handleClose=()=>{
+    try{
+      if(typeof onClose==='function')onClose();
+    }catch(e){
+      console.error('Error closing modal:',e);
+    }
+  };
+
   return(
-    <div className="modal-backdrop" onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
-      <div className={`modal-box slide-down ${wide?'modal-wide':''}`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h3 className="font-bold text-slate-800 text-base">{title}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100"><Icon name="x" size={20} className="text-slate-400"/></button>
+    <div 
+      className="modal-backdrop" 
+      style={{zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center',opacity:1,visibility:'visible'}}
+      onClick={e=>{if(e.target===e.currentTarget)handleClose();}}
+    >
+      <div 
+        className={`modal-box slide-down ${wide?'modal-wide':''} dark:bg-slate-800 dark:text-slate-100 dark:border dark:border-slate-700`}
+        style={{position:'relative',zIndex:100000,display:'block',opacity:1}}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">{title}</h3>
+          <button 
+            type="button" 
+            onClick={handleClose} 
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition"
+            title="Đóng (Esc)"
+          >
+            <Icon name="x" size={20}/>
+          </button>
         </div>
         <div className="px-6 py-4">{children}</div>
       </div>
@@ -4406,15 +4441,21 @@ const POPULAR_BANKS = [
 
 const getVietQrBankCode = (bankCode) => {
   if (!bankCode) return 'MB';
-  const upper = String(bankCode).trim().toUpperCase();
-  const found = POPULAR_BANKS.find(b => b.code.toUpperCase() === upper || (b.bin && b.bin === upper));
-  if (found) {
-    if (found.type === 'wallet') {
-      return found.bin || found.code;
+  try {
+    const upper = String(bankCode).trim().toUpperCase();
+    if (Array.isArray(POPULAR_BANKS)) {
+      const found = POPULAR_BANKS.find(b => b && ((b.code && String(b.code).toUpperCase() === upper) || (b.bin && String(b.bin) === upper)));
+      if (found) {
+        if (found.type === 'wallet') {
+          return found.bin || found.code || 'MB';
+        }
+        return found.code || 'MB';
+      }
     }
-    return found.code;
+    return upper;
+  } catch (e) {
+    return 'MB';
   }
-  return upper;
 };
 
 // Hàm nén ảnh mã QR sang Base64 nhỏ gọn (max 600px, quality 0.85, an toàn Firestore < 1MB)
@@ -4490,192 +4531,223 @@ function VietQRModal({ isOpen, onClose, penalty }) {
   const { playSound, addNotification, penaltyAccount } = useContext(AppCtx);
   const [copied, setCopied] = useState(false);
   const qrImgRef = useRef(null);
+
   if (!isOpen || !penalty) return null;
 
-  const targetUnit = normalizePenaltyUnit(penalty.ban);
+  try {
+    const item = penalty || {};
+    const itemDept = item?.department || item?.ban || item?.unit || 'Toàn CLB';
+    const targetUnit = normalizePenaltyUnit(itemDept);
 
-  const getUnitAccount = (unit) => {
-    if (!penaltyAccount) return null;
+    const getUnitAccount = (unit) => {
+      try {
+        if (!penaltyAccount || typeof penaltyAccount !== 'object') return null;
 
-    const findInObj = (u) => {
-      if (!penaltyAccount.accounts) return null;
-      if (penaltyAccount.accounts[u]) return penaltyAccount.accounts[u];
-      const norm = normalizePenaltyUnit(u);
-      for (const k of Object.keys(penaltyAccount.accounts)) {
-        if (normalizePenaltyUnit(k) === norm) return penaltyAccount.accounts[k];
+        const findInObj = (u) => {
+          if (!penaltyAccount.accounts || typeof penaltyAccount.accounts !== 'object') return null;
+          if (penaltyAccount.accounts[u]) return penaltyAccount.accounts[u];
+          const norm = normalizePenaltyUnit(u);
+          for (const k of Object.keys(penaltyAccount.accounts)) {
+            if (normalizePenaltyUnit(k) === norm) return penaltyAccount.accounts[k];
+          }
+          return null;
+        };
+
+        const hasData = (a) => a && typeof a === 'object' && (
+          (a.accountNo && String(a.accountNo).trim()) ||
+          (a.accountNumber && String(a.accountNumber).trim()) ||
+          (a.customQrImage && String(a.customQrImage).trim()) ||
+          (a.customQrUrl && String(a.customQrUrl).trim()) ||
+          (a.qrImage && String(a.qrImage).trim())
+        );
+
+        const target = findInObj(unit);
+        if (hasData(target)) return target;
+
+        const club = findInObj('Toàn CLB');
+        if (hasData(club)) return club;
+
+        if (hasData(penaltyAccount)) return penaltyAccount;
+        return null;
+      } catch (err) {
+        console.error('getUnitAccount error:', err);
+        return null;
       }
-      return null;
     };
 
-    const hasData = (a) => a && (
-      (a.accountNo && String(a.accountNo).trim()) ||
-      (a.customQrImage && String(a.customQrImage).trim()) ||
-      (a.customQrUrl && String(a.customQrUrl).trim()) ||
-      (a.qrImage && String(a.qrImage).trim())
-    );
+    const currentAcc = getUnitAccount(targetUnit) || {};
 
-    const target = findInObj(unit);
-    if (hasData(target)) return target;
+    // Hỗ trợ cả bankCode / bank, accountNumber / accountNo, accountName / owner
+    const rawBank = String(currentAcc?.bankCode || currentAcc?.bank || 'MB').trim().toUpperCase();
+    const bankDisplay = currentAcc?.bankName || currentAcc?.bank || rawBank;
+    const accNo = String(currentAcc?.accountNumber || currentAcc?.accountNo || '').trim();
+    const cleanAccNo = accNo.replace(/\s+/g, '');
+    const accName = String(currentAcc?.accountName || currentAcc?.owner || '').trim().toUpperCase();
 
-    const club = findInObj('Toàn CLB');
-    if (hasData(club)) return club;
+    // Lấy ảnh QR tải lên riêng nếu có (hỗ trợ customQrImage, customQrUrl, qrImage)
+    const rawCustomImg = currentAcc?.customQrImage || currentAcc?.customQrUrl || currentAcc?.qrImage || '';
+    const uploadedQrRaw = typeof rawCustomImg === 'string' ? rawCustomImg.trim() : '';
+    const hasCustomQr = !!uploadedQrRaw;
+    const isBase64 = uploadedQrRaw.startsWith('data:image');
 
-    if (hasData(penaltyAccount)) return penaltyAccount;
-    return null;
-  };
-
-  const currentAcc = getUnitAccount(targetUnit);
-
-  // Lấy ảnh QR tải lên riêng nếu có (hỗ trợ các tên trường: customQrImage, customQrUrl, qrImage)
-  const uploadedQrRaw = currentAcc
-    ? (currentAcc.customQrImage || currentAcc.customQrUrl || currentAcc.qrImage || '').trim()
-    : '';
-
-  const hasCustomQr = !!uploadedQrRaw;
-  const isBase64 = uploadedQrRaw.startsWith('data:image');
-
-  // Ưu tiên 1: Ảnh QR tải lên riêng từ máy (Base64 hoặc URL kèm tham số chống cache nếu là URL)
-  let customQrSrc = '';
-  if (hasCustomQr) {
-    if (isBase64) {
-      customQrSrc = uploadedQrRaw;
-    } else {
-      customQrSrc = uploadedQrRaw.includes('?') ? `${uploadedQrRaw}&_t=${Date.now()}` : `${uploadedQrRaw}?_t=${Date.now()}`;
+    let customQrSrc = '';
+    if (hasCustomQr) {
+      if (isBase64) {
+        customQrSrc = uploadedQrRaw;
+      } else {
+        customQrSrc = uploadedQrRaw.includes('?') ? `${uploadedQrRaw}&_t=${Date.now()}` : `${uploadedQrRaw}?_t=${Date.now()}`;
+      }
     }
-  }
 
-  // Ưu tiên 2: Cập nhật động (dynamic) đường dẫn VietQR theo đúng Ngân hàng, STK, Số tiền, Nội dung, Tên chủ TK của đúng Ban đó
-  const amount = Math.abs(penalty.amount || 20000);
-  const rawBank = currentAcc && currentAcc.bank ? String(currentAcc.bank).trim().toUpperCase() : 'MB';
-  const bankDisplay = (currentAcc && currentAcc.bankName) || rawBank;
-  const accNo = currentAcc && currentAcc.accountNo ? String(currentAcc.accountNo).trim() : '';
-  const cleanAccNo = accNo.replace(/\s+/g, '');
-  const qrIdentifier = getVietQrBankCode(rawBank);
-  const addInfo = `NVPHAT ${penalty.name || ''}`.trim();
-  const accName = currentAcc && currentAcc.accountName ? String(currentAcc.accountName).trim().toUpperCase() : '';
+    const amount = Math.abs(Number(item?.amount) || 20000);
+    const itemName = String(item?.name || item?.person || item?.title || '').trim();
+    const qrIdentifier = getVietQrBankCode(rawBank);
+    const addInfo = `NVPHAT ${itemName}`.trim();
 
-  const dynamicVietQrSrc = `https://img.vietqr.io/image/${qrIdentifier}-${cleanAccNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}${accName ? `&accountName=${encodeURIComponent(accName)}` : ''}`;
+    const dynamicVietQrSrc = `https://img.vietqr.io/image/${qrIdentifier}-${cleanAccNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}${accName ? `&accountName=${encodeURIComponent(accName)}` : ''}`;
 
-  // Nguồn ảnh QR cuối cùng: Ưu tiên 1 (ảnh riêng) -> Ưu tiên 2 (VietQR động)
-  const finalQrSrc = hasCustomQr ? customQrSrc : dynamicVietQrSrc;
+    const finalQrSrc = hasCustomQr ? customQrSrc : dynamicVietQrSrc;
 
-  // Cập nhật động trực tiếp vào thuộc tính src của thẻ ảnh (qrImgElement.src)
-  useEffect(() => {
-    if (isOpen && qrImgRef.current && finalQrSrc) {
-      qrImgRef.current.src = finalQrSrc;
+    useEffect(() => {
+      if (isOpen && qrImgRef.current && finalQrSrc) {
+        try {
+          qrImgRef.current.src = finalQrSrc;
+        } catch (e) {
+          console.error('Lỗi cập nhật ảnh QR:', e);
+        }
+      }
+    }, [isOpen, finalQrSrc, targetUnit, penalty]);
+
+    const hasBankAcc = !!cleanAccNo;
+    const isConfigured = hasCustomQr || hasBankAcc;
+
+    if (!isConfigured) {
+      return (
+        <Modal open={isOpen} onClose={onClose} title={`Quét Mã QR Nộp Quỹ - ${targetUnit}`}>
+          <div className="flex flex-col items-center py-6 px-4 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <Icon name="alert-triangle" size={32} />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">
+                Chưa cấu hình tài khoản nộp quỹ cho {targetUnit}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
+                Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng hoặc tải ảnh mã QR cho đơn vị <strong>{targetUnit}</strong>. Vui lòng liên hệ BCN hoặc mở "⚙️ Cài đặt tài khoản nộp phạt" để cấu hình riêng cho đơn vị này hoặc tài khoản chung của Toàn CLB.
+              </p>
+            </div>
+            <button onClick={onClose} type="button" className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl cursor-pointer">
+              Đóng
+            </button>
+          </div>
+        </Modal>
+      );
     }
-  }, [isOpen, finalQrSrc, targetUnit, penalty]);
 
-  const hasBankAcc = !!cleanAccNo;
-  const isConfigured = hasCustomQr || hasBankAcc;
+    const copyInfo = () => {
+      try {
+        const namePart = accName ? ` - Chu TK: ${accName}` : '';
+        const accPart = cleanAccNo ? ` - STK: ${cleanAccNo}` : '';
+        const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: ${addInfo}`;
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        try { playSound('pop'); } catch (e) {}
+        try { addNotification('Đã sao chép thông tin chuyển khoản!', 'success'); } catch (e) {}
+        setTimeout(() => setCopied(false), 2000);
+      } catch (e) {
+        console.error('Lỗi sao chép thông tin:', e);
+      }
+    };
 
-  if (!isConfigured) {
+    const qrKey = `${targetUnit}-${cleanAccNo}-${amount}-${hasCustomQr ? 'custom' : 'vietqr'}-${String(finalQrSrc).slice(-20)}`;
+
     return (
-      <Modal open={isOpen} onClose={onClose} title={`Quét Mã QR Nộp Quỹ - ${targetUnit}`}>
-        <div className="flex flex-col items-center py-6 px-4 text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-            <Icon name="alert-triangle" size={32} />
+      <Modal open={isOpen} onClose={onClose} title={hasCustomQr ? `Quét Mã QR Nộp Quỹ - ${targetUnit}` : `Quét Mã VietQR Nộp Quỹ - ${targetUnit}`}>
+        <div className="flex flex-col items-center space-y-4 py-2">
+          <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
+            <img
+              key={qrKey}
+              ref={qrImgRef}
+              src={finalQrSrc}
+              alt={`Mã QR Nộp Quỹ ${targetUnit}`}
+              className="w-64 h-auto rounded-xl mx-auto max-h-72 object-contain"
+              onError={e => {
+                try {
+                  if (!hasCustomQr && cleanAccNo) {
+                    e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20${encodeURIComponent(itemName)}`;
+                  }
+                } catch (err) {}
+              }}
+            />
+            <div className="mt-2 text-center flex flex-wrap justify-center gap-1.5">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full">
+                Đơn vị: {targetUnit}
+              </span>
+              {hasCustomQr && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <Icon name="check-circle" size={12} /> Ảnh QR do BCN tải lên
+                </span>
+              )}
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">
-              Chưa cấu hình tài khoản nộp quỹ cho {targetUnit}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-              Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng hoặc tải ảnh mã QR cho đơn vị <strong>{targetUnit}</strong>. Vui lòng liên hệ BCN hoặc mở "⚙️ Cài đặt tài khoản nộp phạt" để cấu hình riêng cho đơn vị này hoặc tài khoản chung của Toàn CLB.
-            </p>
+
+          <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Đơn vị nhận:</span>
+              <span className="font-bold text-orange-600 dark:text-orange-400">{targetUnit}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Ngân hàng / Ví:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
+            </div>
+            {cleanAccNo && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">Số tài khoản / SĐT:</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{cleanAccNo}</span>
+              </div>
+            )}
+            {accName && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">Chủ tài khoản / ví:</span>
+                <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{accName}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-slate-500">Số tiền nộp:</span>
+              <span className="font-bold text-amber-600">{amount.toLocaleString('vi-VN')} đ</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Nội dung CK:</span>
+              <span className="font-mono font-bold text-emerald-600">{addInfo}</span>
+            </div>
           </div>
-          <button onClick={onClose} className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl">
+
+          <div className="flex gap-2 w-full pt-1">
+            <button type="button" onClick={copyInfo} className="btn-secondary flex-1 py-2 text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+              <Icon name={copied ? 'check' : 'copy'} size={14} />
+              <span>{copied ? 'Đã sao chép' : 'Sao chép thông tin'}</span>
+            </button>
+            <button type="button" onClick={onClose} className="btn-primary flex-1 py-2 text-xs font-bold cursor-pointer">
+              Đóng
+            </button>
+          </div>
+        </div>
+      </Modal>
+    );
+  } catch (err) {
+    console.error('Lỗi runtime trong VietQRModal:', err);
+    return (
+      <Modal open={isOpen} onClose={onClose} title="Quét Mã QR Nộp Quỹ">
+        <div className="py-6 px-4 text-center space-y-4">
+          <p className="text-sm text-red-500 font-semibold">Đã xảy ra sự cố khi tải mã QR nộp phạt.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Vui lòng kiểm tra lại cấu hình tài khoản hoặc liên hệ BCN.</p>
+          <button type="button" onClick={onClose} className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl cursor-pointer">
             Đóng
           </button>
         </div>
       </Modal>
     );
   }
-
-  const copyInfo = () => {
-    const namePart = accName ? ` - Chu TK: ${accName}` : '';
-    const accPart = cleanAccNo ? ` - STK: ${cleanAccNo}` : '';
-    const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: ${addInfo}`;
-    try {
-      navigator.clipboard.writeText(text);
-      setCopied(true);
-      try { playSound('pop'); } catch (e) {}
-      try { addNotification('Đã sao chép thông tin chuyển khoản!', 'success'); } catch (e) {}
-      setTimeout(() => setCopied(false), 2000);
-    } catch (e) {}
-  };
-
-  return (
-    <Modal open={isOpen} onClose={onClose} title={hasCustomQr ? `Quét Mã QR Nộp Quỹ - ${targetUnit}` : `Quét Mã VietQR Nộp Quỹ - ${targetUnit}`}>
-      <div className="flex flex-col items-center space-y-4 py-2">
-        <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
-          <img
-            key={`${targetUnit}-${cleanAccNo}-${amount}-${hasCustomQr ? 'custom' : 'vietqr'}-${finalQrSrc.slice(-20)}`}
-            ref={qrImgRef}
-            src={finalQrSrc}
-            alt={`Mã QR Nộp Quỹ ${targetUnit}`}
-            className="w-64 h-auto rounded-xl mx-auto max-h-72 object-contain"
-            onError={e => {
-              if (!hasCustomQr && cleanAccNo) {
-                e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20${encodeURIComponent(penalty.name || '')}`;
-              }
-            }}
-          />
-          <div className="mt-2 text-center flex flex-wrap justify-center gap-1.5">
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full">
-              Đơn vị: {targetUnit}
-            </span>
-            {hasCustomQr && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                <Icon name="check-circle" size={12} /> Ảnh QR do BCN tải lên
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
-          <div className="flex justify-between">
-            <span className="text-slate-500">Đơn vị nhận:</span>
-            <span className="font-bold text-orange-600 dark:text-orange-400">{targetUnit}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-500">Ngân hàng / Ví:</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
-          </div>
-          {cleanAccNo && (
-            <div className="flex justify-between">
-              <span className="text-slate-500">Số tài khoản / SĐT:</span>
-              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{cleanAccNo}</span>
-            </div>
-          )}
-          {accName && (
-            <div className="flex justify-between">
-              <span className="text-slate-500">Chủ tài khoản / ví:</span>
-              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{accName}</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-slate-500">Số tiền nộp:</span>
-            <span className="font-bold text-amber-600">{amount.toLocaleString('vi-VN')} đ</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-500">Nội dung CK:</span>
-            <span className="font-mono font-bold text-emerald-600">{addInfo}</span>
-          </div>
-        </div>
-
-        <div className="flex gap-2 w-full pt-1">
-          <button onClick={copyInfo} className="btn-secondary flex-1 py-2 text-xs flex items-center justify-center gap-1.5">
-            <Icon name={copied ? 'check' : 'copy'} size={14} />
-            <span>{copied ? 'Đã sao chép' : 'Sao chép thông tin'}</span>
-          </button>
-          <button onClick={onClose} className="btn-primary flex-1 py-2 text-xs font-bold">
-            Đóng
-          </button>
-        </div>
-      </div>
-    </Modal>
-  );
 }
 
 // ============================================================
@@ -4687,6 +4759,16 @@ function PenaltiesPage() {
   const [modal, setModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [qrPenalty, setQrPenalty] = useState(null);
+
+  const openPayModal = (item) => {
+    try {
+      if (!item) return;
+      setQrPenalty(item);
+    } catch (err) {
+      console.error('Lỗi khi mở modal nộp phạt:', err);
+    }
+  };
+
   const [filterType, setFilterType] = useState('all');
   const [filterBan, setFilterBan] = useState('');
   const [confirmDel, setConfirmDel] = useState(null);
@@ -5224,8 +5306,9 @@ function PenaltiesPage() {
                     <div className="flex items-center gap-1.5">
                       {isPenalty && isPending && (
                         <button
-                          onClick={() => setQrPenalty(item)}
-                          className="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 font-bold text-xs flex items-center gap-1 border border-orange-200 transition"
+                          type="button"
+                          onClick={() => openPayModal(item)}
+                          className="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 font-bold text-xs flex items-center gap-1 border border-orange-200 transition cursor-pointer"
                           title="Mở mã QR nộp phạt"
                         >
                           <Icon name="qr-code" size={13} /> Nộp phạt
