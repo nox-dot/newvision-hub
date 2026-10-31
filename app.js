@@ -4460,30 +4460,71 @@ const compressQrImageFile = (file) => {
 };
 
 // ============================================================
-// VIETQR & PAYMENT QR MODAL
+// VIETQR & PAYMENT QR MODAL (HỖ TRỢ ĐA MÃ QR THEO ĐƠN VỊ / BAN)
 // ============================================================
+const PENALTY_UNITS = [
+  'Toàn CLB',
+  'Ban Nội Vụ',
+  'Ban Sự Kiện',
+  'Ban Truyền Thông',
+  'Ban Đối Ngoại'
+];
+
+function normalizePenaltyUnit(ban) {
+  if (!ban) return 'Toàn CLB';
+  const b = String(ban).trim().toLowerCase();
+  if (b.includes('nội vụ')) return 'Ban Nội Vụ';
+  if (b.includes('sự kiện')) return 'Ban Sự Kiện';
+  if (b.includes('truyền thông')) return 'Ban Truyền Thông';
+  if (b.includes('đối ngoại')) return 'Ban Đối Ngoại';
+  return 'Toàn CLB';
+}
+
 function VietQRModal({ isOpen, onClose, penalty }) {
   const { playSound, addNotification, penaltyAccount } = useContext(AppCtx);
   const [copied, setCopied] = useState(false);
   if (!isOpen || !penalty) return null;
 
-  const hasCustomQr = !!(penaltyAccount && penaltyAccount.customQrUrl && penaltyAccount.customQrUrl.trim());
-  const hasBankAcc = !!(penaltyAccount && penaltyAccount.accountNo && penaltyAccount.accountNo.trim());
+  const targetUnit = normalizePenaltyUnit(penalty.ban);
+
+  const getUnitAccount = (unit) => {
+    if (!penaltyAccount) return null;
+    if (penaltyAccount.accounts && penaltyAccount.accounts[unit]) {
+      const acc = penaltyAccount.accounts[unit];
+      if ((acc.accountNo && acc.accountNo.trim()) || (acc.customQrUrl && acc.customQrUrl.trim())) {
+        return acc;
+      }
+    }
+    if (penaltyAccount.accounts && penaltyAccount.accounts['Toàn CLB']) {
+      const acc = penaltyAccount.accounts['Toàn CLB'];
+      if ((acc.accountNo && acc.accountNo.trim()) || (acc.customQrUrl && acc.customQrUrl.trim())) {
+        return acc;
+      }
+    }
+    if ((penaltyAccount.accountNo && penaltyAccount.accountNo.trim()) || (penaltyAccount.customQrUrl && penaltyAccount.customQrUrl.trim())) {
+      return penaltyAccount;
+    }
+    return null;
+  };
+
+  const currentAcc = getUnitAccount(targetUnit);
+  const hasCustomQr = !!(currentAcc && currentAcc.customQrUrl && currentAcc.customQrUrl.trim());
+  const hasBankAcc = !!(currentAcc && currentAcc.accountNo && currentAcc.accountNo.trim());
   const isConfigured = hasCustomQr || hasBankAcc;
 
   if (!isConfigured) {
     return (
-      <Modal open={isOpen} onClose={onClose} title="Quét Mã QR Nộp Quỹ">
+      <Modal open={isOpen} onClose={onClose} title={`Quét Mã QR Nộp Quỹ - ${targetUnit}`}>
         <div className="flex flex-col items-center py-6 px-4 text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
             <Icon name="alert-triangle" size={32} />
           </div>
           <div className="space-y-1.5">
             <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">
-              BCN chưa cấu hình thông tin chuyển khoản
+              Chưa cấu hình tài khoản nộp quỹ cho {targetUnit}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-              Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng hoặc tải ảnh mã QR để nhận tiền nộp phạt vào quỹ CLB. Vui lòng liên hệ BCN hoặc Quản trị viên mở phần cài đặt tài khoản để cấu hình.
+              Ban Chủ Nhiệm chưa thiết lập số tài khoản ngân hàng hoặc tải ảnh mã QR cho đơn vị <strong>{targetUnit}</strong>. Vui lòng liên hệ BCN hoặc mở "⚙️ Cài đặt tài khoản nộp phạt" để cấu hình riêng cho đơn vị này hoặc tài khoản chung của Toàn CLB.
             </p>
           </div>
           <button onClick={onClose} className="btn-secondary px-6 py-2 text-xs font-bold rounded-xl">
@@ -4495,18 +4536,18 @@ function VietQRModal({ isOpen, onClose, penalty }) {
   }
 
   const amount = Math.abs(penalty.amount || 20000);
-  const rawBank = penaltyAccount.bank ? penaltyAccount.bank.trim().toUpperCase() : 'MB';
-  const bankDisplay = penaltyAccount.bankName || rawBank;
-  const accNo = penaltyAccount.accountNo ? penaltyAccount.accountNo.trim() : '';
+  const rawBank = currentAcc.bank ? currentAcc.bank.trim().toUpperCase() : 'MB';
+  const bankDisplay = currentAcc.bankName || rawBank;
+  const accNo = currentAcc.accountNo ? currentAcc.accountNo.trim() : '';
   const qrIdentifier = getVietQrBankCode(rawBank);
 
   // Ưu tiên ảnh QR tải lên nếu có, ngược lại tự động tạo mã VietQR chuẩn
   const qrUrl = hasCustomQr
-    ? penaltyAccount.customQrUrl.trim()
+    ? currentAcc.customQrUrl.trim()
     : `https://img.vietqr.io/image/${qrIdentifier}-${accNo}-compact.png?amount=${amount}&addInfo=NVPHAT%20${encodeURIComponent(penalty.name || '')}`;
 
   const copyInfo = () => {
-    const namePart = penaltyAccount.accountName ? ` - Chu TK: ${penaltyAccount.accountName}` : '';
+    const namePart = currentAcc.accountName ? ` - Chu TK: ${currentAcc.accountName}` : '';
     const accPart = accNo ? ` - STK: ${accNo}` : '';
     const text = `${bankDisplay}${accPart}${namePart} - So tien: ${amount.toLocaleString('vi-VN')}d - ND: NVPHAT ${penalty.name}`;
     try {
@@ -4519,7 +4560,7 @@ function VietQRModal({ isOpen, onClose, penalty }) {
   };
 
   return (
-    <Modal open={isOpen} onClose={onClose} title={hasCustomQr ? "Quét Mã QR Nộp Quỹ" : "Quét Mã VietQR Nộp Quỹ"}>
+    <Modal open={isOpen} onClose={onClose} title={hasCustomQr ? `Quét Mã QR Nộp Quỹ - ${targetUnit}` : `Quét Mã VietQR Nộp Quỹ - ${targetUnit}`}>
       <div className="flex flex-col items-center space-y-4 py-2">
         <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
           <img
@@ -4530,16 +4571,23 @@ function VietQRModal({ isOpen, onClose, penalty }) {
               e.target.src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NVPHAT%20' + encodeURIComponent(penalty.name || '');
             }}
           />
-          {hasCustomQr && (
-            <div className="mt-2 text-center">
+          <div className="mt-2 text-center flex flex-wrap justify-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full">
+              Đơn vị: {targetUnit}
+            </span>
+            {hasCustomQr && (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                <Icon name="check-circle" size={12} /> Ảnh QR chính thức do BCN tải lên
+                <Icon name="check-circle" size={12} /> Ảnh QR do BCN tải lên
               </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Đơn vị nhận:</span>
+            <span className="font-bold text-orange-600 dark:text-orange-400">{targetUnit}</span>
+          </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Ngân hàng / Ví:</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">{bankDisplay}</span>
@@ -4550,10 +4598,10 @@ function VietQRModal({ isOpen, onClose, penalty }) {
               <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{accNo}</span>
             </div>
           )}
-          {penaltyAccount.accountName && (
+          {currentAcc.accountName && (
             <div className="flex justify-between">
               <span className="text-slate-500">Chủ tài khoản / ví:</span>
-              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{penaltyAccount.accountName}</span>
+              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{currentAcc.accountName}</span>
             </div>
           )}
           <div className="flex justify-between">
@@ -4593,8 +4641,10 @@ function PenaltiesPage() {
   const [filterBan, setFilterBan] = useState('');
   const [confirmDel, setConfirmDel] = useState(null);
 
-    // Bank settings state
+    // Bank settings state with multi-unit support
   const [bankModal, setBankModal] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState('Toàn CLB');
+  const [unitAccounts, setUnitAccounts] = useState({});
   const [bankForm, setBankForm] = useState({
     bank: 'MB',
     bankName: 'MB Bank (Quân Đội)',
@@ -4606,16 +4656,48 @@ function PenaltiesPage() {
   const [uploadingQr, setUploadingQr] = useState(false);
 
   const openBankModal = () => {
-    if (penaltyAccount) {
-      setBankForm({
+    let initialMap = {};
+    if (penaltyAccount && penaltyAccount.accounts) {
+      initialMap = { ...penaltyAccount.accounts };
+    } else if (penaltyAccount) {
+      initialMap['Toàn CLB'] = {
         bank: penaltyAccount.bank || 'MB',
         bankName: penaltyAccount.bankName || 'MB Bank (Quân Đội)',
         accountNo: penaltyAccount.accountNo || '',
         accountName: penaltyAccount.accountName || '',
         customQrUrl: penaltyAccount.customQrUrl || ''
-      });
+      };
     }
+    setUnitAccounts(initialMap);
+    setSelectedUnit('Toàn CLB');
+
+    const curr = initialMap['Toàn CLB'] || {
+      bank: 'MB',
+      bankName: 'MB Bank (Quân Đội)',
+      accountNo: '',
+      accountName: '',
+      customQrUrl: ''
+    };
+    setBankForm(curr);
     setBankModal(true);
+  };
+
+  const handleUnitChange = (newUnit) => {
+    const updatedMap = {
+      ...unitAccounts,
+      [selectedUnit]: { ...bankForm }
+    };
+    setUnitAccounts(updatedMap);
+    setSelectedUnit(newUnit);
+
+    const targetAcc = updatedMap[newUnit] || {
+      bank: 'MB',
+      bankName: 'MB Bank (Quân Đội)',
+      accountNo: '',
+      accountName: '',
+      customQrUrl: ''
+    };
+    setBankForm(targetAcc);
   };
 
   const handleQrFileUpload = async e => {
@@ -4626,7 +4708,7 @@ function PenaltiesPage() {
       const dataUrl = await compressQrImageFile(file);
       setBankForm(p => ({ ...p, customQrUrl: dataUrl }));
       try { playSound('pop'); } catch (err) {}
-      try { addNotification('Đã tải ảnh mã QR từ thiết bị thành công!', 'success'); } catch (err) {}
+      try { addNotification(`Đã tải ảnh mã QR cho ${selectedUnit}!`, 'success'); } catch (err) {}
     } catch (err) {
       alert(err.message || 'Lỗi khi tải ảnh!');
     } finally {
@@ -4638,31 +4720,40 @@ function PenaltiesPage() {
   const handleRemoveQrImage = () => {
     setBankForm(p => ({ ...p, customQrUrl: '' }));
     try { playSound('pop'); } catch (err) {}
-    try { addNotification('Đã xóa ảnh QR tải lên, quay về VietQR tự sinh.', 'info'); } catch (err) {}
+    try { addNotification(`Đã xóa ảnh QR của ${selectedUnit}, quay về VietQR tự sinh.`, 'info'); } catch (err) {}
   };
 
   const handleSaveBank = async e => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!bankForm.accountNo.trim() && !bankForm.customQrUrl.trim()) {
-      alert('Vui lòng nhập Số tài khoản hoặc tải lên ảnh QR từ thiết bị!');
-      return;
-    }
     setBankSaving(true);
     try {
       if (!fbDb) throw new Error('Firebase chưa kết nối!');
+      const updatedAccounts = {
+        ...unitAccounts,
+        [selectedUnit]: {
+          bank: (bankForm.bank || 'MB').trim().toUpperCase(),
+          bankName: (bankForm.bankName || 'MB Bank (Quân Đội)').trim(),
+          accountNo: (bankForm.accountNo || '').trim(),
+          accountName: (bankForm.accountName || '').trim().toUpperCase(),
+          customQrUrl: bankForm.customQrUrl ? bankForm.customQrUrl.trim() : ''
+        }
+      };
+
+      const clubAcc = updatedAccounts['Toàn CLB'] || updatedAccounts[selectedUnit] || {};
       const cleanData = {
-        bank: bankForm.bank.trim().toUpperCase(),
-        bankName: bankForm.bankName.trim(),
-        accountNo: bankForm.accountNo.trim(),
-        accountName: bankForm.accountName.trim().toUpperCase(),
-        customQrUrl: bankForm.customQrUrl ? bankForm.customQrUrl.trim() : '',
+        accounts: updatedAccounts,
+        bank: clubAcc.bank || 'MB',
+        bankName: clubAcc.bankName || 'MB Bank (Quân Đội)',
+        accountNo: clubAcc.accountNo || '',
+        accountName: clubAcc.accountName || '',
+        customQrUrl: clubAcc.customQrUrl || '',
         updatedAt: new Date().toISOString(),
         updatedBy: 'Admin BCN'
       };
       await fbDb.collection('club_settings').doc('penalty_account').set(cleanData, { merge: true });
       if (setPenaltyAccount) setPenaltyAccount(cleanData);
       try { playSound('success'); } catch (err) {}
-      try { addNotification('✅ Đã lưu cấu hình tài khoản nộp phạt lên Firestore!', 'success'); } catch (err) {}
+      try { addNotification(`✅ Đã lưu cấu hình QR cho ${selectedUnit} lên Firestore!`, 'success'); } catch (err) {}
       setBankModal(false);
     } catch (err) {
       alert('Lỗi lưu tài khoản: ' + err.message);
@@ -4699,7 +4790,7 @@ function PenaltiesPage() {
     }
   };
 
-  const emptyForm = { name: '', ban: 'Nội vụ', reason: '', amount: 20000, type: 'phat', status: 'Chờ nộp' };
+  const emptyForm = { name: '', ban: 'Ban Nội Vụ', reason: '', amount: 20000, type: 'phat', status: 'Chờ nộp' };
   const [form, setForm] = useState(emptyForm);
 
   const openAdd = () => {
@@ -4712,7 +4803,7 @@ function PenaltiesPage() {
     setEditingId(item.id);
     setForm({
       name: item.name || '',
-      ban: item.ban || 'Nội vụ',
+      ban: item.ban ? normalizePenaltyUnit(item.ban) : 'Ban Nội Vụ',
       reason: item.reason || '',
       amount: Math.abs(item.amount || 20000),
       type: item.type || (item.amount < 0 ? 'phat' : 'thuong'),
@@ -4801,15 +4892,19 @@ function PenaltiesPage() {
     }
   };
 
-  const filtered = (penalties || []).filter(item => {
+  const banFilteredPenalties = (penalties || []).filter(item => {
+    if (!filterBan) return true;
+    return normalizePenaltyUnit(item.ban) === filterBan;
+  });
+
+  const filtered = banFilteredPenalties.filter(item => {
     if (filterType === 'pending' && item.status !== 'Chờ nộp') return false;
     if (filterType === 'done' && item.status === 'Chờ nộp') return false;
-    if (filterBan && item.ban !== filterBan) return false;
     return true;
   });
 
-  const totalPending = (penalties || []).filter(p => p.status === 'Chờ nộp').reduce((acc, cur) => acc + Math.abs(cur.amount || 0), 0);
-  const totalCollected = (penalties || []).filter(p => p.status === 'Đã nộp' && p.amount < 0).reduce((acc, cur) => acc + Math.abs(cur.amount || 0), 0);
+  const totalPending = banFilteredPenalties.filter(p => p.status === 'Chờ nộp').reduce((acc, cur) => acc + Math.abs(cur.amount || 0), 0);
+  const totalCollected = banFilteredPenalties.filter(p => p.status === 'Đã nộp' && p.amount < 0).reduce((acc, cur) => acc + Math.abs(cur.amount || 0), 0);
 
   return (
     <div className="space-y-4 fade-in">
@@ -4945,7 +5040,7 @@ function PenaltiesPage() {
             </div>
             <div className="card p-3 border-l-4 border-indigo-500 col-span-2 sm:col-span-1">
               <span className="text-[11px] font-semibold text-slate-500 uppercase">Tổng số lượt ghi nhận</span>
-              <p className="text-lg font-black text-indigo-600 mt-1">{(penalties || []).length} lượt</p>
+              <p className="text-lg font-black text-indigo-600 mt-1">{banFilteredPenalties.length} lượt</p>
             </div>
           </div>
 
@@ -4956,19 +5051,19 @@ function PenaltiesPage() {
                 onClick={() => setFilterType('all')}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType === 'all' ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}`}
               >
-                Tất cả ({(penalties || []).length})
+                Tất cả ({banFilteredPenalties.length})
               </button>
               <button
                 onClick={() => setFilterType('pending')}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType === 'pending' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600'}`}
               >
-                Chờ nộp ({(penalties || []).filter(p => p.status === 'Chờ nộp').length})
+                Chờ nộp ({banFilteredPenalties.filter(p => p.status === 'Chờ nộp').length})
               </button>
               <button
                 onClick={() => setFilterType('done')}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition ${filterType === 'done' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}`}
               >
-                Đã nộp / Trao ({(penalties || []).filter(p => p.status !== 'Chờ nộp').length})
+                Đã nộp / Trao ({banFilteredPenalties.filter(p => p.status !== 'Chờ nộp').length})
               </button>
             </div>
 
@@ -4978,7 +5073,7 @@ function PenaltiesPage() {
               className="form-input text-xs py-1 px-2.5 max-w-[140px]"
             >
               <option value="">Tất cả ban</option>
-              {['Nội vụ', 'Truyền thông', 'Sự kiện', 'Đối ngoại'].map(b => (
+              {PENALTY_UNITS.map(b => (
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
@@ -5109,9 +5204,9 @@ function PenaltiesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">Ban</label>
+                  <label className="form-label">Ban / Đơn vị</label>
                   <select value={form.ban} onChange={e => setForm(p => ({ ...p, ban: e.target.value }))} className="form-input">
-                    {['Nội vụ', 'Truyền thông', 'Sự kiện', 'Đối ngoại', 'Toàn CLB'].map(b => (
+                    {PENALTY_UNITS.map(b => (
                       <option key={b} value={b}>{b}</option>
                     ))}
                   </select>
@@ -5163,6 +5258,24 @@ function PenaltiesPage() {
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 Cấu hình thông tin tài khoản ngân hàng hoặc ví điện tử của Ban Chủ Nhiệm / Thủ quỹ để tự động sinh mã VietQR hoặc sử dụng ảnh QR riêng khi thành viên nộp phạt.
               </p>
+
+              <div>
+                <label className="form-label font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                  <Icon name="layers" size={15} /> Cấu hình QR cho đơn vị:
+                </label>
+                <select
+                  value={selectedUnit}
+                  onChange={e => handleUnitChange(e.target.value)}
+                  className="form-input font-bold text-sm bg-white dark:bg-slate-800 border-orange-300"
+                >
+                  {PENALTY_UNITS.map(u => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-snug">
+                  Đang cấu hình thông tin tài khoản / mã QR nộp phạt cho: <strong className="text-orange-600 dark:text-orange-400">{selectedUnit}</strong>.
+                </p>
+              </div>
 
               <div>
                 <label className="form-label">Ngân hàng / Ví điện tử thụ hưởng <span className="text-red-500">*</span></label>
@@ -5439,7 +5552,7 @@ function ResourcesPage(){
   return(
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-bold text-slate-800">Kho Tài Nguyên & Quỹ Nội Vụ</h1><p className="text-xs text-slate-500 mt-0.5">Link tài liệu, vật dụng CLB và chi tiêu sự kiện</p></div>
+        <div><h1 className="text-xl font-bold text-slate-800">Kho Tài Nguyên & Quỹ CLB</h1><p className="text-xs text-slate-500 mt-0.5">Link tài liệu, vật dụng CLB và chi tiêu sự kiện</p></div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-1.5"><Icon name="plus" size={15}/>Thêm mới</button>
       </div>
       <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
@@ -5536,7 +5649,7 @@ function ResourcesPage(){
               </div>
             </div>
           )}
-          {expenses.length===0&&<div className="card py-14 text-center"><Icon name="wallet" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có khoản chi nào</p><p className="text-sm text-slate-300 mt-1">Ghi lại dự trù và chi tiêu của Ban Nội Vụ</p></div>}
+          {expenses.length===0&&<div className="card py-14 text-center"><Icon name="wallet" size={40} className="text-slate-300 mx-auto mb-3"/><p className="text-slate-400 font-medium">Chưa có khoản chi nào</p><p className="text-sm text-slate-300 mt-1">Quản lý thu chi quỹ CLB và các Ban</p></div>}
           <div className="space-y-2">
             {expenses.map(exp=>(
               <div key={exp.id} className="card p-3.5 fade-in">
